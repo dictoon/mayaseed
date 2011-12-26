@@ -14,10 +14,45 @@
 
 import maya.cmds as cmds
 import os
+import re
 
 script_name = "mayaToAppleseed.py"
 version = "0.01"
 more_info_url = "https://github.com/jonathantopf/mayaToAppleseed"
+
+#
+# load params function
+#
+
+def getMayaParams():
+    #comile regular expression to check for non numeric chracters
+    is_numeric = re.compile('^[0-9]+$')
+    
+    params = {'error':False}
+    # custom intercative config
+    params['customInteractiveConfigCheck'] = cmds.checkBox('m2s_customInteractiveConfigCheck', query=True, value=True)
+    params['customInteractiveConfigEngine'] = cmds.optionMenu('m2s_customInteractiveConfigEngine', query=True, value=True)
+    params['customInteractiveConfigMinSamples'] = cmds.textField('m2s_customInteractiveConfigMinSamples', query=True, text=True)
+    if not is_numeric.match(params['customInteractiveConfigMinSamples']):
+        params['error'] = True
+        print('ERROR: Custom Interactive Config Min Samples may only contain whole numbers')
+    params['customInteractiveConfigMaxSamples'] = cmds.textField('m2s_customInteractiveConfigMaxSamples', query=True, text=True)
+    if not is_numeric.match(params['customInteractiveConfigMaxSamples']):
+        params['error'] = True
+        print('ERROR: Custom Interactive Config Max Samples is non int')
+    # custom Final config
+    params['customFinalConfigCheck'] = cmds.checkBox('m2s_customFinalConfigCheck', query=True, value=True)
+    params['customFinalConfigEngine'] = cmds.optionMenu('m2s_customFinalConfigEngine', query=True, value=True)
+    params['customFinalConfigMinSamples'] = cmds.textField('m2s_customFinalConfigMinSamples', query=True, text=True)
+    if not is_numeric.match(params['customFinalConfigMinSamples']):
+        params['error'] = True
+        print('ERROR: Custom Final Config Min Samples may only contain whole numbers')
+    params['customFinalConfigMaxSamples'] = cmds.textField('m2s_customInteractiveConfigMaxSamples', query=True, text=True)
+    if not is_numeric.match(params['customFinalConfigMaxSamples']):
+        params['error'] = True
+        print('ERROR: Custom Final Config Max Samples is non int')
+
+    return(params)
 
 #
 # maya shader object --
@@ -102,23 +137,26 @@ class mayaGeometry(): # (object_transfrm_name, obj_file)
 #
 
 class configurations():
+    params = None
+    def __init__(self, params):
+        self.params = params
     def writeXML(self,doc):
         doc.startElement("<configurations>")
         #if 'customise interactive configuration' is set read customised values
-        if cmds.checkBox('m2s_customInteractiveConfigCheck', query=True, value=True) == True:
+        if self.params['customInteractiveConfigCheck']:
             doc.startElement("<configuration name=\"interactive\"> base=\"base_interactive\">")
             engine = ""
-            if cmds.optionMenu('m2s_customInteractiveConfigEngine', query=True, value=True) == "Path Tracing":
+            if self.params['customInteractiveConfigEngine'] == "Path Tracing":
                 engine = "pt"
             else:
                 engine = "drt"
             doc.appendElement("<parameter name=\"lighting_engine\" value=\"{0}\"/>".format(engine))
-            doc.appendElement("<parameter name=\"min_samples\" value=\"{0}\" />".format(cmds.textField('m2s_customInteractiveConfigMinSamples', query=True, text=True)))
-            doc.appendElement("<parameter name=\"max_samples\" value=\"{0}\" />".format(cmds.textField('m2s_customInteractiveConfigMaxSamples', query=True, text=True)))
+            doc.appendElement("<parameter name=\"min_samples\" value=\"{0}\" />".format(self.params['customInteractiveConfigMinSamples']))
+            doc.appendElement("<parameter name=\"max_samples\" value=\"{0}\" />".format(self.params['customInteractiveConfigMaxSamples']))
             doc.endElement("</configuration>")
         else:# otherwise add default configurations
             doc.appendElement("<configuration name=\"interactive\" base=\"base_final\" />")
-        
+  
         #if 'customise final configuration' is set read customised values
         if cmds.checkBox('m2s_customFinalConfigCheck', query=True, value=True) == True:
             doc.startElement("<configuration name=\"final\"> base=\"base_final\">")
@@ -128,8 +166,8 @@ class configurations():
             else:
                 engine = "drt"
             doc.appendElement("<parameter name=\"lighting_engine\" value=\"{0}\"/>".format(engine))
-            doc.appendElement("<parameter name=\"min_samples\" value=\"{0}\" />".format(cmds.textField('m2s_customFinalConfigMinSamples', query=True, text=True)))
-            doc.appendElement("<parameter name=\"max_samples\" value=\"{0}\" />".format(cmds.textField('m2s_customFinalConfigMaxSamples', query=True, text=True)))
+            doc.appendElement("<parameter name=\"min_samples\" value=\"{0}\" />".format(self.params['customFinalConfigMinSamples']))
+            doc.appendElement("<parameter name=\"max_samples\" value=\"{0}\" />".format(self.params['customFinalConfigMaxSamples']))
             doc.endElement("</configuration>")
         else:# otherwise add default configurations
             doc.appendElement("<configuration name=\"final\" base=\"base_interactive\" />")
@@ -153,7 +191,7 @@ class writeXml(): #(file_path)
             self.file_object = open(self.file_path, 'w') #open file for editing
 
         except IOError:
-            raise RuntimeError("IO error, file not accesable")
+            raise RuntimeError("IO error: file not accesable")
             return
         
     def startElement(self,str):
@@ -177,17 +215,21 @@ class writeXml(): #(file_path)
 #
 
 def export():
-    print "--exporting to appleseed--"
-    doc = writeXml("/projects/test.xml")
-    doc.appendElement("<?xml version=\"1.0\" encoding=\"UTF-8\"?>") # XML format
-    doc.appendElement("<!-- File generated by {0} version {1} visit {2} for more info -->\n".format(script_name, version, more_info_url))
-    doc.startElement("<project>")
-    config = configurations()
-    config.writeXML(doc)
+    params = getMayaParams()
+    if not params['error']:
+        print('--exporting to appleseed--')
+        doc = writeXml("/projects/test.xml")
+        doc.appendElement("<?xml version=\"1.0\" encoding=\"UTF-8\"?>") # XML format string
+        doc.appendElement("<!-- File generated by {0} version {1} visit {2} for more info -->\n".format(script_name, version, more_info_url))
+        doc.startElement("<project>")
+        config = configurations(params)
+        config.writeXML(doc)
     
-    doc.endElement("</project>")
-    doc.close()
-    print "--export finished--"
+        doc.endElement("</project>")
+        doc.close()
+        print "--export finished--"
+    else:
+        raise RuntimeError('check script editor for details')
 
 
 
