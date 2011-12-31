@@ -30,6 +30,11 @@ def getMayaParams():
     
     params = {'error':False}
     
+    #scene
+    #cameras
+    params['sceneCameraExportAllCameras'] = cmds.checkBox('m2s_sceneCameraExportAllCameras', query=True, value=True)
+    params['sceneCameraDefaultThinLens'] = cmds.checkBox('m2s_sceneCameraDefaultThinLens', query=True, value=True)
+    
     # output 
     params['outputCamera'] = cmds.optionMenu('m2s_outputCamera', query=True, value=True)
     params['outputColorSpace'] = cmds.optionMenu('m2s_outputColorSpace', query=True, value=True)
@@ -95,15 +100,26 @@ class mayaShader(): #object transform name
 # maya camera object --
 #
 
-class mayaCamera(): #(camera_name)
-    name = ""
-    model = "pinhole_camera"
+class camera(): #(camera_name)
+    params = None
+    name = ''
+    model = 'pinhole_camera'
     controller_target = [0, 0, 0]
     film_dimensions = [1.417 , 0.945]
     focal_length = 35.000
     transform = [1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1] # XXX0, YYY0, ZZZ0, XYZ1
+    #thin lens only params
+    f_stop = 8.0
+    focal_distance = 1
+    diaphragm_blades = 0
+    diaphragm_tilt_angle = 0.0
    
-    def __init__(self, cam):
+    def __init__(self, params, cam):
+        self.params = params
+        if self.params['sceneCameraDefaultThinLens'] or cmds.getAttr(cam+'.depthOfField'):
+            self.model = 'thinlens_camera'
+            self.f_stop = cmds.getAttr(cam+'.fStop')
+            self.focal_distance = cmds.getAttr(cam+'.focusDistance')
         self.name = cam
         self.film_dimensions[0] = cmds.getAttr(cam+'.horizontalFilmAperture')
         self.film_dimensions[1] = cmds.getAttr(cam+'.verticalFilmAperture')
@@ -112,13 +128,26 @@ class mayaCamera(): #(camera_name)
         m = cmds.getAttr(cam+'.matrix')
         self.transform = [m[0],m[1],m[2],m[3]], [m[4],m[5],m[6],m[7]], [m[8],m[9],m[10],m[11]], [m[12],m[13],m[14],m[15]]
     
-    def info(self):
-        print("name: {0}".format(self.name))
-        print("camera model: {0}".format(self.model))
-        print("controller_target: {0}".format(self.controller_target))
-        print("film dimensions: {0}".format(self.film_dimensions))
-        print("focal length: {0}".format(self.focal_length))
-        print("transform matrix: {0} # XXX0 YYY0 ZZZ0 XYZ1\n".format(self.transform))
+    def writeXML(self, doc):
+        doc.startElement('<camera name="{0}" model="{1}">'.format(self.name, self.model))
+        doc.appendElement('<parameter name="film_dimensions" value="{0} {1}"/>'.format(self.film_dimensions[0], self.film_dimensions[1]))
+        doc.appendElement('<parameter name="focal_length" value="{0}" />'.format(self.focal_length))
+        if self.model == 'thinlens_camera':
+            print('exporting thinlens camera attribs')
+            doc.appendElement('<parameter name="focal_distance" value="{0}" />'.format(self.focal_distance))
+            doc.appendElement('<parameter name="f_stop" value="{0}" />'.format(self.f_stop))
+            doc.appendElement('<parameter name="diaphragm_blades" value="{0}" />'.format(self.diaphragm_blades))
+            doc.appendElement('<parameter name="diaphragm_tilt_angle" value="{0}"/>'.format(self.diaphragm_tilt_angle))
+        #output transform matrix
+        doc.startElement('<transform>')
+        doc.startElement('<matrix>')
+        doc.appendElement('{0:.16f} {1:.16f} {2:.16f} {3:.16f}'.format(self.transform[0][0], self.transform[1][0], self.transform[2][0], self.transform[3][0]))
+        doc.appendElement('{0:.16f} {1:.16f} {2:.16f} {3:.16f}'.format(self.transform[0][1], self.transform[1][1], self.transform[2][1], self.transform[3][1]))
+        doc.appendElement('{0:.16f} {1:.16f} {2:.16f} {3:.16f}'.format(self.transform[0][2], self.transform[1][2], self.transform[2][2], self.transform[3][2]))
+        doc.appendElement('{0:.16f} {1:.16f} {2:.16f} {3:.16f}'.format(self.transform[0][3], self.transform[1][3], self.transform[2][3], self.transform[3][3]))	
+        doc.endElement('<matrix/>')
+        doc.endElement('</transform>')
+        doc.endElement('</camera>')
 
 #
 # maya geometry object --
@@ -150,7 +179,26 @@ class mayaGeometry(): # (object_transfrm_name, obj_file)
         print("assembly name: {0}".format(self.assembly))
         print("shader name: {0}".format(self.shader))
         print("transform matrix: {0} # XXX0 YYY0 ZZZ0 XYZ1\n".format(self.transform))
-	
+
+#
+# scene object --
+#
+
+class scene():
+    params = None
+    def __init__(self,params):
+        self.params = params
+    def writeXML(self, doc):
+        doc.startElement('<scene>')
+        
+        cam_list = []
+        for c in cmds.listCameras(p=True):
+            camera_instance = camera(self.params, c)
+            camera_instance.writeXML(doc)
+            
+        
+        doc.endElement('</scene>')
+
 #
 # output object --
 #
@@ -254,18 +302,20 @@ def export():
     params = getMayaParams()
     if not params['error']:
         print('--exporting to appleseed--')
-        doc = writeXml("/projects/test.xml")
-        doc.appendElement("<?xml version=\"1.0\" encoding=\"UTF-8\"?>") # XML format string
-        doc.appendElement("<!-- File generated by {0} version {1} visit {2} for more info -->\n".format(script_name, version, more_info_url))
-        doc.startElement("<project>")
+        doc = writeXml('/projects/test.xml')
+        doc.appendElement('<?xml version="1.0" encoding="UTF-8"?>') # XML format string
+        doc.appendElement('<!-- File generated by {0} version {1} visit {2} for more info -->'.format(script_name, version, more_info_url))
+        doc.startElement('<project>')
+        scene_element = scene(params)
+        scene_element.writeXML(doc)
         output_element = output(params)
         output_element.writeXML(doc)
         config_element = configurations(params)
         config_element.writeXML(doc)
     
-        doc.endElement("</project>")
+        doc.endElement('</project>')
         doc.close()
-        print "--export finished--"
+        print ('--export finished--')
     else:
         raise RuntimeError('check script editor for details')
 
@@ -285,7 +335,7 @@ def export():
 
 
 #
-# setup and show ui --
+# initiallise and show ui --
 #
 
 def m2s():
@@ -296,8 +346,9 @@ def m2s():
     else:
         cmds.textField('m2s_fileName', edit=True, text='file.appleseed')
     #populate output > camera dropdown menu with maya cameras
-    for camera in cmds.ls(ca=True, v=True):
+    for camera in cmds.listCameras(p=True):
         cmds.menuItem(parent='m2s_outputCamera', label=camera)
+    cmds.menuItem(parent='m2s_outputCamera', label='none')
     #set default resolution to scene resolution
     cmds.textField('m2s_outputResWidth', edit=True, text=cmds.getAttr('defaultResolution.width'))
     cmds.textField('m2s_outputResHeight', edit=True, text=cmds.getAttr('defaultResolution.height'))
@@ -309,12 +360,24 @@ def m2s():
 #
 
 # create and populate a list of mayaCamera objects
-cam_list = []
-for c in cmds.ls(ca=True, v=True):
-    cam_list.append(mayaCamera(c))
+#cam_list = []
+#for c in cmds.ls(ca=True, v=True):
+#    cam_list.append(camera(getMayaParams(), c))
 
 # create and polulate a list of mayaGeometry objects
 shape_list = cmds.ls(g=True, v=True) # get maya geometry
 geo_transform_list = []
 for g in shape_list:
     geo_transform_list.append(cmds.listRelatives(g, ad=True, ap=True)[0]) # add first connected transform to the list
+
+#print matrix
+
+def printMatrix():
+	matrix = cmds.xform(q=True, ws=True, m=True) #get matrix from selected object
+	print "{0:.16f} {1:.16f} {2:.16f} {3:.16f}".format(matrix[ 0], matrix[ 4], matrix[ 8], matrix[12])
+	print "{0:.16f} {1:.16f} {2:.16f} {3:.16f}".format(matrix[ 1], matrix[ 5], matrix[ 9], matrix[13])
+	print "{0:.16f} {1:.16f} {2:.16f} {3:.16f}".format(matrix[ 2], matrix[ 6], matrix[10], matrix[14])
+	print "{0:.16f} {1:.16f} {2:.16f} {3:.16f}".format(matrix[ 3], matrix[ 7], matrix[11], matrix[15])
+	
+			 
+         
