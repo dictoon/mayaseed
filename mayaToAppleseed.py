@@ -191,11 +191,16 @@ class scene():
     def writeXML(self, doc):
         doc.startElement('<scene>')
         
-        cam_list = []
-        for c in cmds.listCameras(p=True):
-            camera_instance = camera(self.params, c)
+        if self.params['sceneCameraExportAllCameras']:
+            #export all cameras
+            cam_list = []
+            for c in cmds.listCameras(p=True):
+                camera_instance = camera(self.params, c)
+                camera_instance.writeXML(doc)
+        else:
+            #export only camera selected in output
+            camera_instance = camera(self.params, self.params['outputCamera'])
             camera_instance.writeXML(doc)
-            
         
         doc.endElement('</scene>')
 
