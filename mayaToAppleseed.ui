@@ -189,7 +189,7 @@
           <item>
            <widget class="QLineEdit" name="m2s_outputDir">
             <property name="text">
-             <string/>
+             <string>/projects</string>
             </property>
            </widget>
           </item>
@@ -266,7 +266,7 @@
              <x>0</x>
              <y>0</y>
              <width>599</width>
-             <height>667</height>
+             <height>663</height>
             </rect>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -345,7 +345,7 @@
                        </size>
                       </property>
                       <property name="text">
-                       <string>Default to 'thin lens'</string>
+                       <string>Export all as 'thin lens'</string>
                       </property>
                      </widget>
                     </item>
@@ -385,18 +385,58 @@
                 </widget>
                </item>
                <item>
-                <widget class="QGroupBox" name="groupBox_5">
-                 <property name="title">
-                  <string>environment</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
                 <widget class="QGroupBox" name="groupBox_6">
                  <property name="title">
-                  <string>asselblies</string>
+                  <string>assemblies</string>
                  </property>
-                 <zorder>groupBox_4</zorder>
+                 <layout class="QVBoxLayout" name="verticalLayout_10">
+                  <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_18">
+                    <item>
+                     <widget class="QLabel" name="label_29">
+                      <property name="minimumSize">
+                       <size>
+                        <width>150</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>99999</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <property name="text">
+                       <string>interpret sets as assemblies</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QCheckBox" name="m2s_sceneCameraExportAllCameras_2">
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="checked">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <spacer name="horizontalSpacer_16">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
                 </widget>
                </item>
               </layout>
