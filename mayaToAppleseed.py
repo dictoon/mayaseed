@@ -5,7 +5,7 @@
 # uncomment the next few lines replace the path and run them in the maya script editor to launch the script 
 #--------------------maya command (python)--------------------
 #import sys
-#sys.path.append('/projects/mayaToAppleseed')
+#sys.path.append('/projects/mayaToAppleseed') #where '/projects/mayaToAppleseed' is the file containing the scripts
 #import mayaToAppleseed
 #reload(mayaToAppleseed)
 #mayaToAppleseed.m2s()
@@ -104,28 +104,18 @@ class mayaShader(): #object transform name
 #
 
 class camera(): #(camera_name)
-    params = None
-    name = ''
-    model = 'pinhole_camera'
-    controller_target = [0, 0, 0]
-    film_dimensions = [1.417 , 0.945]
-    focal_length = 35.000
-    transform = [1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1] # XXX0, YYY0, ZZZ0, XYZ1
-    #thin lens only params
-    f_stop = 8.0
-    focal_distance = 1
-    diaphragm_blades = 0
-    diaphragm_tilt_angle = 0.0
-   
     def __init__(self, params, cam):
         self.params = params
         if self.params['sceneCameraDefaultThinLens'] or cmds.getAttr(cam+'.depthOfField'):
             self.model = 'thinlens_camera'
             self.f_stop = cmds.getAttr(cam+'.fStop')
             self.focal_distance = cmds.getAttr(cam+'.focusDistance')
+            self.diaphram_blades = 0
+            self.diaphram_tilt_angle = 0.0
+        else:
+            self.model = 'pinhole_camera'
         self.name = cam
-        self.film_dimensions[0] = cmds.getAttr(cam+'.horizontalFilmAperture')
-        self.film_dimensions[1] = cmds.getAttr(cam+'.verticalFilmAperture')
+        self.film_dimensions = [cmds.getAttr(cam+'.horizontalFilmAperture'), cmds.getAttr(cam+'.verticalFilmAperture')]
         self.focal_length = cmds.getAttr(cam+'.focalLength')
         # transpose camera matrix -> XXX0, YYY0, ZZZ0, XYZ1
         m = cmds.getAttr(cam+'.matrix')
@@ -139,8 +129,8 @@ class camera(): #(camera_name)
             print('exporting thinlens camera attribs')
             doc.appendElement('<parameter name="focal_distance" value="{0}" />'.format(self.focal_distance))
             doc.appendElement('<parameter name="f_stop" value="{0}" />'.format(self.f_stop))
-            doc.appendElement('<parameter name="diaphragm_blades" value="{0}" />'.format(self.diaphragm_blades))
-            doc.appendElement('<parameter name="diaphragm_tilt_angle" value="{0}"/>'.format(self.diaphragm_tilt_angle))
+            doc.appendElement('<parameter name="diaphragm_blades" value="{0}" />'.format(self.diaphram_blades))
+            doc.appendElement('<parameter name="diaphragm_tilt_angle" value="{0}"/>'.format(self.diaphram_tilt_angle))
         #output transform matrix
         writeTransform(doc, self.transform)
         doc.endElement('</camera>')
@@ -150,15 +140,10 @@ class camera(): #(camera_name)
 #
 
 class geometry(): # (object_transfrm_name, obj_file)
-    name = ""
-    output_file =""
-    shader = ""
-    transform = [1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1] # XXX0, YYY0, ZZZ0, XYZ1
-    
-    def __init__(self, name, output_file):
+    def __init__(self, name, output_file, assembly='main_assembly'):
         self.name = name
         self.output_file = output_file
-        self.assembly = cmds.listSets(object=name)[0]
+        self.assembly = assembly
         # get shader name
         shape = cmds.listRelatives(name, s=True)[0]
         shadingEngine = cmds.listConnections(shape, t='shadingEngine')[0]
@@ -167,6 +152,11 @@ class geometry(): # (object_transfrm_name, obj_file)
         # transpose camera matrix -> XXX0, YYY0, ZZZ0, XYZ1
         m = cmds.getAttr(name+'.matrix')
         self.transform = [m[0],m[1],m[2],m[3]], [m[4],m[5],m[6],m[7]], [m[8],m[9],m[10],m[11]], [m[12],m[13],m[14],m[15]]
+        
+        #material
+        self.material_name = 'name'
+        self.matrial_color = [0.0,0.0,0.0]
+        self.matrial_texture = '/texture_dir/texture.exr'
         
     def writeXMLObject(self, doc):
         doc.startElement('<object name="{0}" model="mesh_object">'.format(self.name))
@@ -181,14 +171,19 @@ class geometry(): # (object_transfrm_name, obj_file)
 #
 
 class assembly():
-    def __init__(self, params, name):
+    def __init__(self, params, name='main_assembly'):
         self.params = params
         self.name = name
         self.geo_objects = []
-        for obj in cmds.listConnections(self.name, sh=True):
-            print obj
-            self.geo_objects.append(geometry(obj, (self.name+'.obj')))
-            
+        #if name is default populate list with all geometry otherwise just geometry from set with the same name as the object
+        if (self.name == 'main_assembly'):
+            #create a list of all geometry objects and itterate over them
+            for obj in cmds.ls(g=True):
+                #find the name of the transform connected to the shape and append a new geometry object to the list based on it
+                self.geo_objects.append(geometry(cmds.listRelatives(obj, ad=True, ap=True)[0],('geo/'+self.name+'.obj'), self.name))
+        else:
+            for obj in cmds.listConnections(self.name, sh=True):
+                self.geo_objects.append(geometry(obj, ('geo/'+self.name+'.obj'), self.name	))
         
     def writeXML(self, doc):
         doc.startElement('<assembly name="{0}">'.format(self.name))
@@ -208,7 +203,10 @@ class assembly():
         cmds.select(cl=True)
         for geo in self.geo_objects:
             cmds.select(geo.name, add=True)
-        cmds.file(('{0}/{1}'.format(self.params['outputDir'], (self.name + '.obj'))), force=True, options='groups=1;ptgroups=0;materials=0;smoothing=0;normals=1', type='OBJexport', exportSelected=True)
+        #create geo directory if it doesnt already exist
+        if not os.path.exists(self.params['outputDir']+'/geo'):
+            os.makedirs(self.params['outputDir']+'/geo')
+        cmds.file(('{0}/{1}'.format(self.params['outputDir']+'/geo', (self.name + '.obj'))), force=True, options='groups=1;ptgroups=0;materials=0;smoothing=0;normals=1', type='OBJexport', exportSelected=True)
         cmds.select(cl=True)
 
 #
@@ -216,10 +214,9 @@ class assembly():
 #
 
 class scene():
-    params = None
-    assembly_list = []
     def __init__(self,params):
         self.params = params
+        self.assembly_list = []
     def writeXML(self, doc):
         doc.startElement('<scene>')
         #write cameras
@@ -235,16 +232,19 @@ class scene():
             camera_instance.writeXML(doc)
         
         #export assemblies
-        # get maya geometry
+        #get maya geometry
         shape_list = cmds.ls(g=True, v=True) 
         geo_transform_list = []
         for g in shape_list:
             # add first connected transform to the list
             geo_transform_list.append(cmds.listRelatives(g, ad=True, ap=True)[0]) 
 
+        #populate a list of assemblies
         for g in geo_transform_list:
-            if not cmds.listSets(object=g)[0] in self.assembly_list:
-                self.assembly_list.append(cmds.listSets(object=g)[0])
+            set = cmds.listSets(object=g)
+            if set:
+                if not set[0] in self.assembly_list:
+                    self.assembly_list.append(cmds.listSets(object=g)[0])
         
         #create assemblys is any assembly names are present otherwise create default assembly
         if self.assembly_list:
@@ -253,17 +253,15 @@ class scene():
                 new_assembly = assembly(self.params, a)
                 new_assembly.writeXML(doc)
         else:
-            new_assembly = asembly(self.params, 'main_assembly')
+            new_assembly = assembly(self.params, 'main_assembly')
             new_assembly.writeXML(doc)
         doc.endElement('</scene>')
-
 
 #
 # output object --
 #
 
 class output():
-    params = None
     def __init__(self, params):
         self.params = params
     def writeXML(self, doc):
@@ -280,7 +278,6 @@ class output():
 #
 
 class configurations():
-    params = None
     def __init__(self, params):
         self.params = params
     def writeXML(self,doc):
@@ -317,19 +314,16 @@ class configurations():
         # begin adding custom configurations
         doc.endElement('</configurations>')
 	
-
 #
 # writeXml Object --
 #
 
 class writeXml(): #(file_path)
-    file_path = '/'
-    indentation_level = 0
-    spaces_per_indentation_level = 4
-    file_object = None
-    
+    spaces_per_indentation_level = 4    
     def __init__(self, f_path):
         self.file_path = f_path
+        self.indentation_level = 0
+        self.file_object = None
         try:
             self.file_object = open(self.file_path, 'w') #open file for editing
 
@@ -392,21 +386,6 @@ def export():
     else:
         raise RuntimeError('check script editor for details')
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #
 # initiallise and show ui --
 #
@@ -426,20 +405,3 @@ def m2s():
     cmds.textField('m2s_outputResHeight', edit=True, text=cmds.getAttr('defaultResolution.height'))
     #show window
     cmds.showWindow(mayaToAppleseedUi)
-
-#
-# read maya scene and generate objects --
-#
-
-# create and populate a list of mayaCamera objects
-#cam_list = []
-#for c in cmds.ls(ca=True, v=True):
-#    cam_list.append(camera(getMayaParams(), c))
-
-# create and polulate a list of mayaGeometry objects
-shape_list = cmds.ls(g=True, v=True) # get maya geometry
-geo_transform_list = []
-for g in shape_list:
-    geo_transform_list.append(cmds.listRelatives(g, ad=True, ap=True)[0]) # add first connected transform to the list
-
- 
