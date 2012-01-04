@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>686</width>
-    <height>864</height>
+    <height>941</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -82,7 +82,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -232,6 +232,46 @@
              <string>mayaScene.appleseed</string>
             </property>
            </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_28">
+          <item>
+           <widget class="QLabel" name="label_42">
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>verbose output</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="m2s_verbose">
+            <property name="text">
+             <string/>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_26">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </item>
@@ -512,22 +552,22 @@
                   <widget class="QComboBox" name="m2s_outputColorSpace">
                    <item>
                     <property name="text">
-                     <string>sRGB</string>
+                     <string>srgb</string>
                     </property>
                    </item>
                    <item>
                     <property name="text">
-                     <string>Linear RGB</string>
+                     <string>linear_rgb</string>
                     </property>
                    </item>
                    <item>
                     <property name="text">
-                     <string>Spectral</string>
+                     <string>spectral</string>
                     </property>
                    </item>
                    <item>
                     <property name="text">
-                     <string>CIE XYZ</string>
+                     <string>ciexyz</string>
                     </property>
                    </item>
                   </widget>

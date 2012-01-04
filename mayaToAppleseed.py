@@ -33,7 +33,7 @@ def getMayaParams():
     #main settings
     params['outputDir'] = cmds.textField('m2s_outputDir', query=True, text=True)
     params['fileName'] = cmds.textField('m2s_fileName', query=True, text=True)
-
+    params['verbose'] = cmds.checkBox('m2s_verbose'), query=True, value=True)
     #scene
     #cameras
     params['sceneCameraExportAllCameras'] = cmds.checkBox('m2s_sceneCameraExportAllCameras', query=True, value=True)
@@ -85,20 +85,47 @@ def getDir(field_name):
 # maya shader object --
 #
 
-class mayaShader(): #object transform name
-    name = ""
-    color = [0.5,0.5,0.5]
-    color_texture = ""
-    specular_color = [0.5,0.5,0.5]
-    specular_color_texture = ""
-    
-    def __init__(self, obj): 
+class material(): #object transform name
+    def __init__(self, name): 
         #get shader name from transform name
-        shape = cmds.listRelatives(obj, s=True)[0]
-        shadingEngine = cmds.listConnections(shape, t='shadingEngine')[0]
-        shader = cmds.connectionInfo((shadingEngine + ".surfaceShader"),sourceFromDestination=True).split('.')[0] #find the attribute the surface shader is plugged into athen split off the attribute name to leave the shader name
-        self.name = shader
-        
+        self.name = name
+        self.shader_type = cmds.nodeType(self.name)
+        print self.shader_type
+        #for shaders with color & incandescence attributes interpret them as bsdf and edf
+        if (self.shader_type == 'lambert') or (self.shader_type == 'blinn') or (self.shader_type == 'phong') or (self.shader_type == 'phongE'):
+            self.bsdf_color = cmds.getAttr(self.name+'.color')
+            try:
+                self.bsd_texture = cmds.getAttr((cmds.connectionInfo((shader+'.color'), sourceFromDestination=True).split('.')[0]) + '.fileTextureName') #get connected texture file name
+            except:
+                self.bsd_texture = None
+                print('no texture connected to {0} color'.format(self.name))
+            self.edf_color = cmds.getAttr(self.name+'.incandescence')
+            try:
+                self.edf_texture = cmds.getAttr((cmds.connectionInfo((shader+'.incandescence'), sourceFromDestination=True).split('.')[0]) + '.fileTextureName') #get connected texture file name
+            except:
+                self.edf_texture = None
+                print('no texture connected to {0} incandescence'.format(self.name))
+        #for surface shaders interpret outColor as bsdf and edf
+        elif self.shader_type == 'surfaceShader':
+            self.bsdf_color = cmds.getAttr(self.name+'.outColor')
+            try:
+                self.bsd_texture = cmds.getAttr((cmds.connectionInfo((shader+'.outColor'), sourceFromDestination=True).split('.')[0]) + '.fileTextureName') #get connected texture file name
+            except:
+                self.bsd_texture = None
+                print('no texture connected to {0} outColor'.format(self.name))
+            self.edf_color = cmds.getAttr(self.name+'.outColor')
+            try:
+                self.edf_texture = cmds.getAttr((cmds.connectionInfo((shader+'.outColor'), sourceFromDestination=True).split('.')[0]) + '.fileTextureName') #get connected texture file name
+            except:
+                self.edf_texture = None
+        #else use default shader
+        else:
+            self.name = 'default_texture'
+            self.bsdf_color = [0.5, 0.5, 0.5]
+            self.bsdf_texture = None
+            self.edf_color = [0,0,0]
+            self.edf_texture = None
+            
 #
 # maya camera object --
 #
@@ -144,27 +171,23 @@ class geometry(): # (object_transfrm_name, obj_file)
         self.name = name
         self.output_file = output_file
         self.assembly = assembly
-        # get shader name
-        shape = cmds.listRelatives(name, s=True)[0]
+        # get material name
+        shape = cmds.listRelatives(self.name, s=True)[0]
         shadingEngine = cmds.listConnections(shape, t='shadingEngine')[0]
-        shader_name = cmds.connectionInfo((shadingEngine + ".surfaceShader"),sourceFromDestination=True).split('.')[0] #find the attribute the surface shader is plugged into athen split off the attribute name to leave the shader name
-        self.shader = shader_name
+        self.material = cmds.connectionInfo((shadingEngine + ".surfaceShader"),sourceFromDestination=True).split('.')[0] #find the attribute the surface shader is plugged into athen split off the attribute name to leave the shader name
+        print('material = '+self.material)
         # transpose camera matrix -> XXX0, YYY0, ZZZ0, XYZ1
         m = cmds.getAttr(name+'.matrix')
         self.transform = [m[0],m[1],m[2],m[3]], [m[4],m[5],m[6],m[7]], [m[8],m[9],m[10],m[11]], [m[12],m[13],m[14],m[15]]
-        
-        #material
-        self.material_name = 'name'
-        self.matrial_color = [0.0,0.0,0.0]
-        self.matrial_texture = '/texture_dir/texture.exr'
         
     def writeXMLObject(self, doc):
         doc.startElement('<object name="{0}" model="mesh_object">'.format(self.name))
         doc.appendElement('<parameter name="filename" value="{0}"/>'.format(self.output_file))
         doc.endElement('</object>')
     def writeXMLInstance(self, doc):
-        doc.startElement('<object_instance name="{0}_inst" object="{1}.{2}">'.format(self.name, self.name, self.name))
+        doc.startElement('<object_instance name="{0}_inst" object="{1}.{2}">'.format(self.name, self.assembly, self.name))
         writeTransform(doc)
+        #doc.appendElement('<assign_material slot="0" material="{0}"/>'.format(self.material))
         doc.endElement('</object_instance>')
 #
 # assembly object --
@@ -175,6 +198,8 @@ class assembly():
         self.params = params
         self.name = name
         self.geo_objects = []
+        self.mat_list = []
+        self.mat_objects = []
         #if name is default populate list with all geometry otherwise just geometry from set with the same name as the object
         if (self.name == 'main_assembly'):
             #create a list of all geometry objects and itterate over them
@@ -184,6 +209,14 @@ class assembly():
         else:
             for obj in cmds.listConnections(self.name, sh=True):
                 self.geo_objects.append(geometry(obj, ('geo/'+self.name+'.obj'), self.name	))
+        #populate list with individual materials
+        for geo in self.geo_objects:
+            if not geo.material in self.mat_list:
+                print ('adding ' + geo.material + ' to mat_list')
+                self.mat_list.append(geo.material)
+        #populate list with material objects        
+        for mat in self.mat_list:
+            self.mat_objects.append(material(mat))
         
     def writeXML(self, doc):
         doc.startElement('<assembly name="{0}">'.format(self.name))
