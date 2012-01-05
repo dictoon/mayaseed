@@ -9,7 +9,6 @@
 #import mayaToAppleseed
 #reload(mayaToAppleseed)
 #mayaToAppleseed.m2s()
-#-------------------------------------------------------------
 
 
 import maya.cmds as cmds
@@ -19,6 +18,8 @@ import re
 script_name = "mayaToAppleseed.py"
 version = "0.01"
 more_info_url = "https://github.com/jonathantopf/mayaToAppleseed"
+
+inch_to_meter = 0.02539999983236
 
 #
 # load params function
@@ -33,7 +34,7 @@ def getMayaParams():
     #main settings
     params['outputDir'] = cmds.textField('m2s_outputDir', query=True, text=True)
     params['fileName'] = cmds.textField('m2s_fileName', query=True, text=True)
-    params['verbose'] = cmds.checkBox('m2s_verbose'), query=True, value=True)
+    params['verbose'] = cmds.checkBox('m2s_verbose', query=True, value=True)
     #scene
     #cameras
     params['sceneCameraExportAllCameras'] = cmds.checkBox('m2s_sceneCameraExportAllCameras', query=True, value=True)
@@ -136,24 +137,26 @@ class camera(): #(camera_name)
         if self.params['sceneCameraDefaultThinLens'] or cmds.getAttr(cam+'.depthOfField'):
             self.model = 'thinlens_camera'
             self.f_stop = cmds.getAttr(cam+'.fStop')
-            self.focal_distance = cmds.getAttr(cam+'.focusDistance')
+            self.focal_distance = cmds.getAttr(cam+'.focusDistance') * inch_to_meter
             self.diaphram_blades = 0
             self.diaphram_tilt_angle = 0.0
         else:
             self.model = 'pinhole_camera'
         self.name = cam
-        self.film_dimensions = [cmds.getAttr(cam+'.horizontalFilmAperture'), cmds.getAttr(cam+'.verticalFilmAperture')]
-        self.focal_length = cmds.getAttr(cam+'.focalLength')
+        self.aspect = float(params['outputResWidth'])/float(params['outputResHeight'])
+        self.horizontal_fov = float(cmds.getAttr(self.name + '.horizontalFilmAperture')) * inch_to_meter
+        self.vertical_fov = self.horizontal_fov / self.aspect
+        self.focal_length = float(cmds.getAttr(self.name+'.focalLength')) / 1000
         # transpose camera matrix -> XXX0, YYY0, ZZZ0, XYZ1
         m = cmds.getAttr(cam+'.matrix')
         self.transform = [m[0],m[1],m[2],m[3]], [m[4],m[5],m[6],m[7]], [m[8],m[9],m[10],m[11]], [m[12],m[13],m[14],m[15]]
-    
+   
     def writeXML(self, doc):
         doc.startElement('<camera name="{0}" model="{1}">'.format(self.name, self.model))
-        doc.appendElement('<parameter name="film_dimensions" value="{0} {1}"/>'.format(self.film_dimensions[0], self.film_dimensions[1]))
+        doc.appendElement('<parameter name="film_dimensions" value="{0} {1}"/>'.format(self.horizontal_fov, self.vertical_fov))
         doc.appendElement('<parameter name="focal_length" value="{0}" />'.format(self.focal_length))
         if self.model == 'thinlens_camera':
-            print('exporting thinlens camera attribs')
+            print('exporting ' + self.name + ' as thinlens camera attribs')
             doc.appendElement('<parameter name="focal_distance" value="{0}" />'.format(self.focal_distance))
             doc.appendElement('<parameter name="f_stop" value="{0}" />'.format(self.f_stop))
             doc.appendElement('<parameter name="diaphragm_blades" value="{0}" />'.format(self.diaphram_blades))
@@ -181,11 +184,11 @@ class geometry(): # (object_transfrm_name, obj_file)
         self.transform = [m[0],m[1],m[2],m[3]], [m[4],m[5],m[6],m[7]], [m[8],m[9],m[10],m[11]], [m[12],m[13],m[14],m[15]]
         
     def writeXMLObject(self, doc):
-        doc.startElement('<object name="{0}" model="mesh_object">'.format(self.name))
+        doc.startElement('<object name="{0}" model="mesh_object">'.format(self.assembly))
         doc.appendElement('<parameter name="filename" value="{0}"/>'.format(self.output_file))
         doc.endElement('</object>')
     def writeXMLInstance(self, doc):
-        doc.startElement('<object_instance name="{0}_inst" object="{1}.{2}">'.format(self.name, self.assembly, self.name))
+        doc.startElement('<object_instance name="{0}_inst" object="{1}.{2}">'.format(self.name, self.assembly, self.name,))
         writeTransform(doc)
         #doc.appendElement('<assign_material slot="0" material="{0}"/>'.format(self.material))
         doc.endElement('</object_instance>')
@@ -221,9 +224,12 @@ class assembly():
     def writeXML(self, doc):
         doc.startElement('<assembly name="{0}">'.format(self.name))
         
-        #write geo objects and object instances
-        for geo in self.geo_objects:
-            geo.writeXMLObject(doc)
+        #write .obj object
+        doc.startElement('<object name="{0}" model="mesh_object">'.format(self.name))
+        doc.appendElement('<parameter name="filename" value="geo/{0}.obj"/>'.format(self.name))
+        doc.endElement('</object>')
+        
+        #write geo object instances
         for geo in self.geo_objects:
             geo.writeXMLInstance(doc)
         
