@@ -83,6 +83,15 @@ def getDir(field_name):
     if new_state:
         cmds.textField(field_name, edit=True, text=new_state[0])
 
+def hideLog():
+    if cmds.scrollField('m2s_log', query=True, vis=True):
+        cmds.button('m2s_hideLog', edit=True, label='Show log')
+        cmds.scrollField('m2s_log', edit=True, vis=False)
+    else:
+        cmds.button('m2s_hideLog', edit=True, label='Hide log')
+        cmds.scrollField('m2s_log', edit=True, vis=True)
+
+
 #
 # color object ---
 #
@@ -514,7 +523,7 @@ def m2s():
     if cmds.file(query=True, sceneName=True, shortName=True):
         cmds.textField('m2s_fileName', edit=True, text=(os.path.splitext(cmds.file(query=True, sceneName=True, shortName=True))[0] + '.appleseed'))
     else:
-        cmds.textField('m2s_fileName', edit=True, text='file.xml')
+        cmds.textField('m2s_fileName', edit=True, text='file.appleseed')
     #populate output > camera dropdown menu with maya cameras
     for camera in cmds.listCameras(p=True):
         cmds.menuItem(parent='m2s_outputCamera', label=camera)

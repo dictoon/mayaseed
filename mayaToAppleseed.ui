@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>864</width>
-    <height>941</height>
+    <width>586</width>
+    <height>915</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -82,7 +82,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -189,7 +189,7 @@
           <item>
            <widget class="QLineEdit" name="m2s_outputDir">
             <property name="text">
-             <string>/projects</string>
+             <string>/projects/m2s</string>
             </property>
            </widget>
           </item>
@@ -354,7 +354,7 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>777</width>
+             <width>516</width>
              <height>663</height>
             </rect>
            </property>
@@ -1061,7 +1061,37 @@
      </widget>
     </item>
     <item>
+     <widget class="QTextEdit" name="m2s_log">
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+      <property name="html">
+       <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Lucida Grande'; font-size:13pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+     </widget>
+    </item>
+    <item>
      <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <item>
+       <widget class="QPushButton" name="m2s_hideLog">
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Hide log</string>
+        </property>
+        <property name="+command" stdset="0">
+         <string>&quot;mayaToAppleseed.hideLog()&quot;</string>
+        </property>
+       </widget>
+      </item>
       <item>
        <spacer name="horizontalSpacer">
         <property name="orientation">
@@ -1076,7 +1106,7 @@
        </spacer>
       </item>
       <item>
-       <widget class="QPushButton" name="mayaToAppleseed_export">
+       <widget class="QPushButton" name="m2s_export">
         <property name="minimumSize">
          <size>
           <width>150</width>
