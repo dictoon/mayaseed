@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>586</width>
-    <height>915</height>
+    <width>804</width>
+    <height>927</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -353,9 +353,9 @@
            <property name="geometry">
             <rect>
              <x>0</x>
-             <y>0</y>
-             <width>516</width>
-             <height>663</height>
+             <y>-145</y>
+             <width>717</width>
+             <height>952</height>
             </rect>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -524,6 +524,690 @@
                      </spacer>
                     </item>
                    </layout>
+                  </item>
+                  <item>
+                   <widget class="QGroupBox" name="groupBox_9">
+                    <property name="title">
+                     <string>materials</string>
+                    </property>
+                    <layout class="QVBoxLayout" name="verticalLayout_14">
+                     <item>
+                      <layout class="QHBoxLayout" name="horizontalLayout_21">
+                       <item>
+                        <widget class="QLabel" name="label_33">
+                         <property name="minimumSize">
+                          <size>
+                           <width>150</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <property name="maximumSize">
+                          <size>
+                           <width>99999</width>
+                           <height>16777215</height>
+                          </size>
+                         </property>
+                         <property name="text">
+                          <string>shader interpretation</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <spacer name="horizontalSpacer_20">
+                         <property name="orientation">
+                          <enum>Qt::Horizontal</enum>
+                         </property>
+                         <property name="sizeHint" stdset="0">
+                          <size>
+                           <width>40</width>
+                           <height>20</height>
+                          </size>
+                         </property>
+                        </spacer>
+                       </item>
+                      </layout>
+                     </item>
+                     <item>
+                      <layout class="QGridLayout" name="gridLayout" columnstretch="0,1,1,1">
+                       <item row="3" column="0">
+                        <widget class="QLabel" name="label_35">
+                         <property name="minimumSize">
+                          <size>
+                           <width>150</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <property name="maximumSize">
+                          <size>
+                           <width>99999</width>
+                           <height>16777215</height>
+                          </size>
+                         </property>
+                         <property name="text">
+                          <string>lambert -&gt;</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item row="1" column="1">
+                        <widget class="QLabel" name="label_17">
+                         <property name="minimumSize">
+                          <size>
+                           <width>100</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <property name="text">
+                          <string>BSDF</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item row="1" column="2">
+                        <widget class="QLabel" name="label_18">
+                         <property name="minimumSize">
+                          <size>
+                           <width>100</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <property name="text">
+                          <string>EDF</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item row="1" column="3">
+                        <widget class="QLabel" name="label_19">
+                         <property name="minimumSize">
+                          <size>
+                           <width>100</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <property name="text">
+                          <string>Surface shader</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item row="3" column="3">
+                        <widget class="QComboBox" name="m2s_matLambertSurfaceShader">
+                         <property name="minimumSize">
+                          <size>
+                           <width>100</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <item>
+                          <property name="text">
+                           <string>Physical</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Constant</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Ambient Occlusion</string>
+                          </property>
+                         </item>
+                        </widget>
+                       </item>
+                       <item row="3" column="2">
+                        <widget class="QComboBox" name="m2s_matLambertEDF">
+                         <property name="minimumSize">
+                          <size>
+                           <width>100</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <item>
+                          <property name="text">
+                           <string>None</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Diffuse</string>
+                          </property>
+                         </item>
+                        </widget>
+                       </item>
+                       <item row="4" column="0">
+                        <widget class="QLabel" name="label_38">
+                         <property name="minimumSize">
+                          <size>
+                           <width>150</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <property name="maximumSize">
+                          <size>
+                           <width>99999</width>
+                           <height>16777215</height>
+                          </size>
+                         </property>
+                         <property name="text">
+                          <string>blinn -&gt;</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item row="4" column="1">
+                        <widget class="QComboBox" name="m2s_matBlinnBSDF">
+                         <property name="minimumSize">
+                          <size>
+                           <width>100</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <item>
+                          <property name="text">
+                           <string>Kleeman</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Ashikhmin-Shirley</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Lambertian</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Phong</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Specular_BRDF</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Specular_BTDF</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>None</string>
+                          </property>
+                         </item>
+                        </widget>
+                       </item>
+                       <item row="4" column="2">
+                        <widget class="QComboBox" name="m2s_matBlinnEDF">
+                         <property name="minimumSize">
+                          <size>
+                           <width>100</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <item>
+                          <property name="text">
+                           <string>None</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Diffuse</string>
+                          </property>
+                         </item>
+                        </widget>
+                       </item>
+                       <item row="4" column="3">
+                        <widget class="QComboBox" name="m2s_matBlinnSurfaceShader">
+                         <property name="minimumSize">
+                          <size>
+                           <width>100</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <item>
+                          <property name="text">
+                           <string>Physical</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Constant</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Ambient Occlusion</string>
+                          </property>
+                         </item>
+                        </widget>
+                       </item>
+                       <item row="5" column="0">
+                        <widget class="QLabel" name="label_39">
+                         <property name="minimumSize">
+                          <size>
+                           <width>150</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <property name="maximumSize">
+                          <size>
+                           <width>99999</width>
+                           <height>16777215</height>
+                          </size>
+                         </property>
+                         <property name="text">
+                          <string>phong -&gt;</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item row="6" column="0">
+                        <widget class="QLabel" name="label_40">
+                         <property name="minimumSize">
+                          <size>
+                           <width>150</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <property name="maximumSize">
+                          <size>
+                           <width>99999</width>
+                           <height>16777215</height>
+                          </size>
+                         </property>
+                         <property name="text">
+                          <string>surface shader -&gt;</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item row="5" column="1">
+                        <widget class="QComboBox" name="m2s_matPhongBSDF">
+                         <property name="minimumSize">
+                          <size>
+                           <width>100</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <item>
+                          <property name="text">
+                           <string>Phong</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Ashikhmin-Shirley</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Lambertian</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Kleeman</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Specular_BRDF</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Specular_BTDF</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>None</string>
+                          </property>
+                         </item>
+                        </widget>
+                       </item>
+                       <item row="5" column="2">
+                        <widget class="QComboBox" name="m2s_matPhongEDF">
+                         <property name="minimumSize">
+                          <size>
+                           <width>100</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <item>
+                          <property name="text">
+                           <string>None</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Diffuse</string>
+                          </property>
+                         </item>
+                        </widget>
+                       </item>
+                       <item row="5" column="3">
+                        <widget class="QComboBox" name="m2s_matPhongSurfaceShader">
+                         <property name="minimumSize">
+                          <size>
+                           <width>100</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <item>
+                          <property name="text">
+                           <string>Physical</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Constant</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Ambient Occlusion</string>
+                          </property>
+                         </item>
+                        </widget>
+                       </item>
+                       <item row="6" column="3">
+                        <widget class="QComboBox" name="m2s_matSurfaceShaderSurfaceShader">
+                         <property name="minimumSize">
+                          <size>
+                           <width>100</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <item>
+                          <property name="text">
+                           <string>Constant</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Physical</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Ambient Occlusion</string>
+                          </property>
+                         </item>
+                        </widget>
+                       </item>
+                       <item row="6" column="2">
+                        <widget class="QComboBox" name="m2s_matSurfaceShaderEDF">
+                         <property name="minimumSize">
+                          <size>
+                           <width>100</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <item>
+                          <property name="text">
+                           <string>Diffuse</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>None</string>
+                          </property>
+                         </item>
+                        </widget>
+                       </item>
+                       <item row="6" column="1">
+                        <widget class="QComboBox" name="m2s_matSurfaceShaderBSDF">
+                         <property name="minimumSize">
+                          <size>
+                           <width>100</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <item>
+                          <property name="text">
+                           <string>None</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Ashikhmin-Shirley</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Lambertian</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Kleeman</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Phong</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Specular_BRDF</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Specular_BTDF</string>
+                          </property>
+                         </item>
+                        </widget>
+                       </item>
+                       <item row="7" column="0">
+                        <widget class="QLabel" name="label_47">
+                         <property name="minimumSize">
+                          <size>
+                           <width>150</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <property name="maximumSize">
+                          <size>
+                           <width>99999</width>
+                           <height>16777215</height>
+                          </size>
+                         </property>
+                         <property name="text">
+                          <string>others -&gt;</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item row="7" column="1">
+                        <widget class="QComboBox" name="m2s_matOtherBSDF">
+                         <property name="minimumSize">
+                          <size>
+                           <width>100</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <item>
+                          <property name="text">
+                           <string>Lambertian</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Ashikhmin-Shirley</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Kleeman</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Phong</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Specular_BRDF</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Specular_BTDF</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>None</string>
+                          </property>
+                         </item>
+                        </widget>
+                       </item>
+                       <item row="7" column="2">
+                        <widget class="QComboBox" name="m2s_matOtherEDF">
+                         <property name="minimumSize">
+                          <size>
+                           <width>100</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <item>
+                          <property name="text">
+                           <string>None</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Diffuse</string>
+                          </property>
+                         </item>
+                        </widget>
+                       </item>
+                       <item row="7" column="3">
+                        <widget class="QComboBox" name="m2s_matOtherSurfaceShader">
+                         <property name="minimumSize">
+                          <size>
+                           <width>100</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <item>
+                          <property name="text">
+                           <string>Physical</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Constant</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Ambient Occlusion</string>
+                          </property>
+                         </item>
+                        </widget>
+                       </item>
+                       <item row="3" column="1">
+                        <widget class="QComboBox" name="m2s_matLambertBSDF">
+                         <property name="minimumSize">
+                          <size>
+                           <width>100</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <item>
+                          <property name="text">
+                           <string>Lambertian</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Ashikhmin-Shirley</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Kleeman</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Phong</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Phong</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Specular_BRDF</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Specular_BTDF</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>None</string>
+                          </property>
+                         </item>
+                        </widget>
+                       </item>
+                      </layout>
+                     </item>
+                     <item>
+                      <layout class="QHBoxLayout" name="horizontalLayout_22">
+                       <item>
+                        <widget class="QLabel" name="label_34">
+                         <property name="minimumSize">
+                          <size>
+                           <width>150</width>
+                           <height>0</height>
+                          </size>
+                         </property>
+                         <property name="maximumSize">
+                          <size>
+                           <width>99999</width>
+                           <height>16777215</height>
+                          </size>
+                         </property>
+                         <property name="text">
+                          <string>convert textures to exr</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QCheckBox" name="m2s_matConvertTexturesToEXR">
+                         <property name="text">
+                          <string/>
+                         </property>
+                         <property name="checked">
+                          <bool>true</bool>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <spacer name="horizontalSpacer_21">
+                         <property name="orientation">
+                          <enum>Qt::Horizontal</enum>
+                         </property>
+                         <property name="sizeHint" stdset="0">
+                          <size>
+                           <width>40</width>
+                           <height>20</height>
+                          </size>
+                         </property>
+                        </spacer>
+                       </item>
+                      </layout>
+                     </item>
+                    </layout>
+                   </widget>
                   </item>
                  </layout>
                 </widget>
@@ -1062,6 +1746,24 @@
     </item>
     <item>
      <widget class="QTextEdit" name="m2s_log">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>150</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>150</height>
+       </size>
+      </property>
+      <property name="baseSize">
+       <size>
+        <width>0</width>
+        <height>150</height>
+       </size>
+      </property>
       <property name="readOnly">
        <bool>true</bool>
       </property>
