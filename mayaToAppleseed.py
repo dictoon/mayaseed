@@ -13,6 +13,7 @@
 
 import maya.cmds as cmds
 import os
+import time
 import re
 
 script_name = "mayaToAppleseed.py"
@@ -57,9 +58,9 @@ def getMayaParams(log):
     params['matSurfaceShaderBSDF'] = cmds.optionMenu('m2s_matSurfaceShaderBSDF', query=True, value=True)
     params['matSurfaceShaderEDF'] = cmds.optionMenu('m2s_matSurfaceShaderEDF', query=True, value=True)
     params['matSurfaceShaderSurfaceShader'] = cmds.optionMenu('m2s_matSurfaceShaderSurfaceShader', query=True, value=True)
-    params['matOtherBSDF'] = cmds.optionMenu('m2s_matOtherBSDF', query=True, value=True)
-    params['matOtherEDF'] = cmds.optionMenu('m2s_matOtherEDF', query=True, value=True)
-    params['matOtherSurfaceShader'] = cmds.optionMenu('m2s_matOtherSurfaceShader', query=True, value=True)
+    params['matDefaultBSDF'] = cmds.optionMenu('m2s_matDefaultBSDF', query=True, value=True)
+    params['matDefaultEDF'] = cmds.optionMenu('m2s_matDefaultEDF', query=True, value=True)
+    params['matDefaultSurfaceShader'] = cmds.optionMenu('m2s_matDefaultSurfaceShader', query=True, value=True)
 
     params['matConvertTexturesToEXR'] = cmds.checkBox('m2s_matConvertTexturesToEXR', query=True, value=True)
 
@@ -101,22 +102,6 @@ def getMayaParams(log):
 
     return(params)
 
-# ui control functions    
-
-def getDir(field_name):
-    current_state = cmds.textField(field_name, query=True, text=True)
-    new_state = cmds.fileDialog2(fileMode=3, okCaption='select', caption='Select a directory', dir=current_state)
-    if new_state:
-        cmds.textField(field_name, edit=True, text=new_state[0])
-
-def hideLog():
-    if cmds.scrollField('m2s_log', query=True, vis=True):
-        cmds.button('m2s_hideLog', edit=True, label='Show log')
-        cmds.scrollField('m2s_log', edit=True, vis=False)
-    else:
-        cmds.button('m2s_hideLog', edit=True, label='Hide log')
-        cmds.scrollField('m2s_log', edit=True, vis=True)           
-
 #
 # color object ---
 #
@@ -125,7 +110,6 @@ class color():
     def __init__(self, log, name, color, multiplier):
         self.log = log
         self.name = name
-        print self.name
         self.color = [color[0][0],color[0][1],color[0][2]]
         self.multiplier = multiplier
         self.color_space = 'srgb'
@@ -201,29 +185,38 @@ class material(): #object transform name
         self.log = log
         self.name = name
         self.shader_type = cmds.nodeType(self.name)
-        self.bsdf = bsdf
+        self.bsdf = bsdf 
         self.edf = edf
         self.surface_shader = surface_shader
+        self.bsdf_color = [(0.5, 0.5, 0.5)]
+        self.bsdf_texture = None
+        self.edf_color = [(0,0,0)]
+        self.edf_texture = None
+        self.specular_color = [(0,0,0)]
+        self.specular_texture = None
         #for shaders with color & incandescence attributes interpret them as bsdf and edf
         if (self.shader_type == 'lambert') or (self.shader_type == 'blinn') or (self.shader_type == 'phong') or (self.shader_type == 'phongE'):
             self.bsdf_color = cmds.getAttr(self.name+'.color')
             self.edf_color = cmds.getAttr(self.name+'.incandescence')
-
             color_connection = cmds.connectionInfo((self.name + '.color'), sourceFromDestination=True).split('.')[0]
             incandecence_connection = cmds.connectionInfo((self.name+'.incandescence'), sourceFromDestination=True).split('.')[0]
-
             if color_connection:
                 if cmds.nodeType(color_connection) == 'file':
-                    self.bsdf_texture = cmds.getAttr(color_connection+ '.fileTextureName') #get connected texture file name
+                    self.bsdf_texture = cmds.getAttr(color_connection+ '.fileTextureName')
                     self.log.info('texture connected to {0}'.format(self.name + '.color'))
-            else:
-                self.bsdf_texture = None
             if incandecence_connection:
                 if cmds.nodeType(incandecence_connection) == 'file':
-                    self.edf_texture = cmds.getAttr(incandecence_connection + '.fileTextureName') #get connected texture file name
+                    self.edf_texture = cmds.getAttr(incandecence_connection + '.fileTextureName')
                     self.log.info('texture connected to {0}'.format(self.name + '.incandescence'))
-            else:
-                self.edf_texture = None
+
+        #get specular conponent for shaders which have one
+        elif (self.shader_type == 'blinn') or (self.shader_type == 'phong') or (self.shader_type == 'phongE'):
+            self.specular_color = cmds.getAttr(self.name+'.specularColor')
+            specular_connection = cmds.connectionInfo((self.name + '.specularColor'), sourceFromDestination=True).split('.')[0]
+            if specular_connection:
+                if cmds.nodeType(specular_connection) == 'file':
+                    self.specular_texture = cmds.getAttr(specular_connection + '.fileTextureName') 
+                    self.log.info('texture connected to {0}'.format(self.name + '.specularColor'))
 
         #for surface shaders interpret outColor as bsdf and edf
         elif self.shader_type == 'surfaceShader':
@@ -231,10 +224,11 @@ class material(): #object transform name
             self.edf_color = self.bsdf_color
 
             outColor_connection = cmds.connectionInfo((self.name+'.outColor'), sourceFromDestination=True).split('.')[0]
-            if cmds.nodeType(outColor_connection) == 'file':
-                self.bsdf_texture = cmds.getAttr(outColor_connection + '.fileTextureName') #get connected texture file name
-                self.edf_texture = bsdf_texture
-                self.log.info('texture connected to {0}'.format(self.name + '.outColor'))
+            if outColor_connection:
+                if cmds.nodeType(outColor_connection) == 'file':
+                    self.bsdf_texture = cmds.getAttr(outColor_connection + '.fileTextureName') #get connected texture file name
+                    self.edf_texture = bsdf_texture
+                    self.log.info('texture connected to {0}'.format(self.name + '.outColor'))
             else:
                 self.bsdf_texture = None
                 self.edf_texture = None
@@ -243,10 +237,7 @@ class material(): #object transform name
         else:
             self.log.err('no valid texture connected to {0} using default'.format(self.name))
             self.name = 'default_texture'
-            self.bsdf_color = [0.5, 0.5, 0.5]
-            self.bsdf_texture = None
-            self.edf_color = [0,0,0]
-            self.edf_texture = None
+
     def writeXML(self,doc):
         self.log.info('writing material {0}'.format(self.name))
         doc.startElement('material name="{0}" model="generic_material"'.format(self.name))
@@ -259,7 +250,7 @@ class material(): #object transform name
         doc.endElement('material')
 
 #
-# bsdf object --
+# bsdf class --
 #
 
 class bsdf():
@@ -276,7 +267,24 @@ class bsdf():
         doc.endElement('bsdf')
 
 #
+# edf class --
 #
+
+class edf():
+    def __init__(self, log, name, model, edf_params):
+        self.log = log
+        self.name = name
+        self.model = model
+        self.edf_params = edf_params
+    def writeXML(self, doc):
+        self.log.info('writing bsdf {0}'.format(self.name))
+        doc.startElement('edf name="{0}" model="{1}"'.format(self.name, self.model))
+        for param in self.edf_params:
+            doc.appendElement('parameter name="{0}" value="{1}"'.format(param, self.edf_params[param]))
+        doc.endElement('edf')
+
+#
+# surface shader class --
 #
 
 class surfaceShader():
@@ -295,7 +303,7 @@ class surfaceShader():
 
 
 #
-# camera object --
+# camera class --
 #
 
 class camera(): #(camera_name)
@@ -305,7 +313,7 @@ class camera(): #(camera_name)
         if self.params['sceneCameraDefaultThinLens'] or cmds.getAttr(cam+'.depthOfField'):
             self.model = 'thinlens_camera'
             self.f_stop = cmds.getAttr(cam+'.fStop')
-            self.focal_distance = cmds.getAttr(cam+'.focusDistance') /10
+            self.focal_distance = cmds.getAttr(cam+'.focusDistance')
             self.diaphram_blades = 0
             self.diaphram_tilt_angle = 0.0
         else:
@@ -341,6 +349,12 @@ class camera(): #(camera_name)
 class geometry(): # (object_transfrm_name, obj_file)
     def __init__(self, name, log, output_file, assembly='main_assembly'):
         self.name = name
+        #get name in heirarchy
+        self.heirarchy_name = name
+        current_object = name
+        while cmds.listRelatives(current_object, parent=True):
+            current_object = cmds.listRelatives(current_object, parent=True)[0]
+            self.heirarchy_name = current_object + ' ' + self.heirarchy_name
         self.log = log
         self.output_file = output_file
         self.assembly = assembly
@@ -355,7 +369,7 @@ class geometry(): # (object_transfrm_name, obj_file)
 
     def writeXMLInstance(self, doc):
         self.log.info('writing objecct instance: '+self.name)
-        doc.startElement('object_instance name="{0}_inst" object="{1}.{2}"'.format(self.name, self.assembly, self.name,))
+        doc.startElement('object_instance name="{0}_inst" object="{1}.{2}"'.format(self.name, self.assembly, self.heirarchy_name,))
         writeTransform(doc)
         doc.appendElement('assign_material slot="0" side="front" material="{0}"'.format(self.material))
         doc.appendElement('assign_material slot="0" side="back" material="{0}"'.format(self.material))
@@ -370,7 +384,7 @@ class assembly():
         self.log = log
         self.name = name
         self.light_objects = []
-        self.geo_objects = []
+        self.geo_objects = dict()
         self.material_objects = dict()
         self.color_objects = dict()
         self.texture_objects = dict()
@@ -393,16 +407,19 @@ class assembly():
         #if name is default populate list with all geometry otherwise just geometry from set with the same name as the object
         if (self.name == 'main_assembly'):
             #create a list of all geometry objects and itterate over them
-            for obj in cmds.ls(g=True):
-                #find the name of the transform connected to the shape and append a new geometry object to the list based on it
-                self.geo_objects.append(geometry(cmds.listRelatives(obj, ad=True, ap=True)[0], self.log, ('geo/'+self.name+'.obj'), self.name))
+            for geo in cmds.ls(g=True):
+                geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
+                if not geo_transform in self.geo_objects:
+                    self.geo_objects[geo_transform] = geometry(geo_transform, self.log, ('geo/'+self.name+'.obj'), self.name)
         else:
-            for obj in cmds.listConnections(self.name, sh=True):
-                self.geo_objects.append(geometry(obj, self.log, ('geo/'+self.name+'.obj'), self.name))
+            for geo in cmds.listConnections(self.name, sh=True):
+                geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
+                if not geo_transform in self.geo_objects:
+                    self.geo_objects[geo_transform] = geometry(geo_transform, self.log, ('geo/'+self.name+'.obj'), self.name)
                 
         #populate list with individual materials
         for geo in self.geo_objects:
-            self.addMaterial(geo.material)
+            self.addMaterial(self.geo_objects[geo].material)
 
     def addColor(self, name, value, multiplier=1):
         if not name in self.color_objects:
@@ -412,13 +429,22 @@ class assembly():
         if not name in self.texture_objects:
             self.texture_objects[name] = texture(self.log, name, file_name)
     
-    def addEDF():
-        print''
+    def addEDF(self, material, type):
+        edf_params = dict()
+        if type == 'Diffuse':
+            if material.edf_texture:
+                self.addTexture(material.name + '_exitance', material.edf_texture)
+                edf_params['exitance'] = (material.name + '_exitance_inst')
+            else:
+                self.addColor((material.name + '_exitance'), material.edf_color)
+                edf_params['exitance'] = material.name + '_exitance'
+            self.edf_objects[material.name + '_edf'] = edf(self.log, material.name + '_edf', 'diffuse_edf', edf_params)
 
     def addBSDF(self, material, type):
         self.log.info('translating {0} to {1} BSDF'.format(material.name, type))
+        bsdf_params = dict()
         if type == 'Lambertian':
-            bsdf_params = dict()
+            #add reflectence component
             if material.bsdf_texture:
                 self.addTexture(material.name + '_reflectance', material.bsdf_texture)
                 bsdf_params['reflectance'] = (material.name + '_reflectance_inst')
@@ -426,10 +452,54 @@ class assembly():
                 self.addColor((material.name + '_reflectance'), material.bsdf_color)
                 bsdf_params['reflectance'] = material.name + '_reflectance'
             self.bsdf_objects[material.name + '_bsdf'] = bsdf(self.log, material.name + '_bsdf', 'lambertian_brdf', bsdf_params)
-        elif type =='Blinn':
-            self.log.error('Blinn not yet supported')
 
+        elif type =='Ashikhmin-Shirley':
+            bsdf_params['shininess_u'] = 0.5
+            bsdf_params['shininess_v'] = 0.5
+            # add diffuse reflectence component
+            if material.bsdf_texture:
+                self.addTexture(material.name + '_diffuse_reflectance', material.bsdf_texture)
+                bsdf_params['diffuse_reflectance'] = (material.name + '_diffuse_reflectance_inst')
+            else:
+                self.addColor(material.name + '_diffuse_reflectance', material.bsdf_color)
+                bsdf_params['diffuse_reflectance'] = material.name + '_diffuse_reflectance'
+            #add glossy reflectence component
+            if material.specular_texture:
+                self.addTexture(material.name + '_glossy_reflectance', material.specular_texture)
+                bsdf_params['glossy_reflectance'] = material.name + '_glossy_reflectance'
+            else:
+                self.addColor(material.name + '_glossy_reflectance', material.bsdf_color)
+                bsdf_params['glossy_reflectance'] = material.name + '_glossy_reflectance'
+            self.bsdf_objects[material.name + '_bsdf'] = bsdf(self.log, material.name + '_bsdf', 'ashikhmin_brdf', bsdf_params)
 
+        elif type == 'Kelemen':
+            bsdf_params['roughness'] = 0.5
+            #add matte_reflectance component
+            if material.bsdf_texture:
+                self.addTexture(material.name + '_matte_reflectance', material.bsdf_texture)
+                bsdf_params['matte_reflectance'] = (material.name + '_matte_reflectance_inst')
+            else:
+                self.addColor(material.name + '_matte_reflectance', material.bsdf_color)
+                bsdf_params['matte_reflectance'] = material.name + '_matte_reflectance'
+            #add specular_reflectance component
+            if material.specular_texture:
+                self.addTexture(material.name + '_specular_reflectance', material.specular_texture)
+                bsdf_params['specular_reflectance'] = material.name + '_specular_reflectance'
+            else:
+                self.addColor(material.name + '_specular_reflectance', material.bsdf_color)
+                bsdf_params['specular_reflectance'] = material.name + '_specular_reflectance'
+            self.bsdf_objects[material.name + '_bsdf'] = bsdf(self.log, material.name + '_bsdf', 'kelemen_brdf', bsdf_params)
+
+        elif type == 'Specular_BRDF':
+            #add reflectence component
+            if material.bsdf_texture:
+                self.addTexture(material.name + '_reflectance', material.bsdf_texture)
+                bsdf_params['reflectance'] = (material.name + '_reflectance_inst')
+            else:
+                self.addColor((material.name + '_reflectance'), material.bsdf_color)
+                bsdf_params['reflectance'] = material.name + '_reflectance'
+            self.bsdf_objects[material.name + '_bsdf'] = bsdf(self.log, material.name + '_bsdf', 'specular_brdf', bsdf_params)
+        
 
     def addSurfaceShader(self, material, name, type): 
         if not name in self.surface_shader_objects:
@@ -457,38 +527,107 @@ class assembly():
     def addMaterial(self, name):
         if not name in self.material_objects:
             self.material_objects[name] = material(self.params, self.log, name)
-            self.material_objects[name].bsdf = (name + '_bsdf')
-            self.material_objects[name].edf = None
 
-            #create bsdf for material based on ui and set material bsdf slot
+            self.material_objects[name].bsdf = None
+            self.material_objects[name].edf = None
+            self.material_objects[name].surface_shader = None
+
+            #create surface shader
             if self.material_objects[name].shader_type == 'lambert':
-                self.addBSDF(self.material_objects[name], self.params['matLambertBSDF'])
-                if self.params['matLambertSurfaceShader'] == 'Physical':
-                    self.addSurfaceShader(self.material_objects[name], 'Physical_surface_shader', self.params['matLambertSurfaceShader'])
-                    self.material_objects[name].surface_shader = ('Physical_surface_shader')
-                else:
-                    self.addSurfaceShader(self.material_objects[name], name + '_surface_shader', self.params['matLambertSurfaceShader'])
-                    self.material_objects[name].surface_shader = (name + '_surface_shader')
-            
+                if not self.params['matLambertSurfaceShader'] == 'None':   
+                    if self.params['matLambertSurfaceShader'] == 'Physical':
+                        self.material_objects[name].surface_shader = ('Physical_surface_shader')
+                        self.addSurfaceShader(self.material_objects[name], 'Physical_surface_shader', self.params['matLambertSurfaceShader'])
+                    else:
+                        self.material_objects[name].surface_shader = (name + '_surface_shader')
+                        self.addSurfaceShader(self.material_objects[name], name + '_surface_shader', self.params['matLambertSurfaceShader'])
+
             elif self.material_objects[name].shader_type == 'blinn':
-                self.addBSDF(self.material_objects[name], self.params['matBlinnBSDF'])
-                if self.params['matBlinnSurfaceShader'] == 'Physical':
-                    self.addSurfaceShader(self.material_objects[name], 'Physical_surface_shader', self.params['matBlinnSurfaceShader'])
-                    self.material_objects[name].surface_shader = ('Physical_surface_shader')
-                else:
-                    self.addSurfaceShader(self.material_objects[name], name + '_surface_shader', self.params['matBlinnSurfaceShader'])
-                    self.material_objects[name].surface_shader = (name + '_surface_shader')
+                if not self.params['matBlinnSurfaceShader'] == 'None':   
+                    if self.params['matBlinnSurfaceShader'] == 'Physical':
+                        self.material_objects[name].surface_shader = ('Physical_surface_shader')
+                        self.addSurfaceShader(self.material_objects[name], 'Physical_surface_shader', self.params['matBlinnSurfaceShader'])
+                    else:
+                        self.material_objects[name].surface_shader = (name + '_surface_shader')
+                        self.addSurfaceShader(self.material_objects[name], name + '_surface_shader', self.params['matBlinnSurfaceShader'])
+
+            elif self.material_objects[name].shader_type == 'phong' or self.material_objects[name].shader_type == 'phongE':
+                if not self.params['matPhongSurfaceShader'] == 'None':   
+                    if self.params['matPhongSurfaceShader'] == 'Physical':
+                        self.material_objects[name].surface_shader = ('Physical_surface_shader')
+                        self.addSurfaceShader(self.material_objects[name], 'Physical_surface_shader', self.params['matPhongSurfaceShader'])
+                    else:
+                        self.material_objects[name].surface_shader = (name + '_surface_shader')
+                        self.addSurfaceShader(self.material_objects[name], name + '_surface_shader', self.params['matPhongSurfaceShader'])
 
             elif self.material_objects[name].shader_type == 'surfaceShader':
-                self.addBSDF(self.material_objects[name], self.params['matSurfaceShaderBSDF'])
-                if self.params['matSurfaceShaderSurfaceShader'] == 'Physical':
-                    self.addSurfaceShader(self.material_objects[name], 'Physical_surface_shader', self.params['matSurfaceShaderSurfaceShader'])
-                    self.material_objects[name].surface_shader = ('Physical_surface_shader')
-                else:
-                    self.addSurfaceShader(self.material_objects[name], name + '_surface_shader', self.params['matSurfaceShaderSurfaceShader'])
-                    self.material_objects[name].surface_shader = (name + '_surface_shader')
+                if not self.params['matSurfaceShaderSurfaceShader'] == 'None':   
+                    if self.params['matSurfaceShaderSurfaceShader'] == 'Physical':
+                        self.material_objects[name].surface_shader = ('Physical_surface_shader')
+                        self.addSurfaceShader(self.material_objects[name], 'Physical_surface_shader', self.params['matSurfaceShaderSurfaceShader'])
+                    else:
+                        self.material_objects[name].surface_shader = (name + '_surface_shader')
+                        self.addSurfaceShader(self.material_objects[name], name + '_surface_shader', self.params['matSurfaceShaderSurfaceShader'])
+
             else:
-                self.log.info(name + ' is either set to translate no edf or is not a supported shader type')
+                if not self.params['matDefaultSurfaceShader'] == 'None':   
+                    if self.params['matDefaultSurfaceShader'] == 'Physical':
+                        self.material_objects[name].surface_shader = ('Physical_surface_shader')
+                        self.addSurfaceShader(self.material_objects[name], 'Physical_surface_shader', self.params['matDefaultSurfaceShader'])
+                    else:
+                        self.material_objects[name].surface_shader = (name + '_surface_shader')
+                        self.addSurfaceShader(self.material_objects[name], name + '_surface_shader', self.params['matDefaultSurfaceShader'])
+
+            #create bsdf
+            if self.material_objects[name].shader_type == 'lambert':
+                if not self.params['matLambertBSDF'] == 'None':
+                    self.material_objects[name].bsdf = (name + '_bsdf')
+                    self.addBSDF(self.material_objects[name], self.params['matLambertBSDF'])  
+                      
+            elif self.material_objects[name].shader_type == 'blinn':
+                if not self.params['matBlinnBSDF'] == 'None':
+                    self.material_objects[name].bsdf = (name + '_bsdf')
+                    self.addBSDF(self.material_objects[name], self.params['matBlinnBSDF'])   
+                      
+            elif self.material_objects[name].shader_type == 'phong' or self.material_objects[name].shader_type == 'phongE':
+                if not self.params['matPhongBSDF'] == 'None':
+                    self.material_objects[name].bsdf = (name + '_bsdf')
+                    self.addBSDF(self.material_objects[name], self.params['matPhongBSDF'])  
+                      
+            elif self.material_objects[name].shader_type == 'surfaceShader':
+                if not self.params['matSurfaceShaderBSDF'] == 'None':
+                    self.material_objects[name].bsdf = (name + '_bsdf')
+                    self.addBSDF(self.material_objects[name], self.params['matSurfaceShaderBSDF'])  
+                      
+            else:
+                if not self.params['matDefaultBSDF'] == 'None':
+                    self.material_objects[name].bsdf = (name + '_bsdf')
+                    self.addBSDF(self.material_objects[name], self.params['matDefaultBSDF'])  
+
+            #create edf 
+            if self.material_objects[name].shader_type == 'lambert':
+                if not self.params['matLambertEDF'] == 'None':
+                    self.material_objects[name].edf = (name + '_edf')
+                    self.addEDF(self.material_objects[name], self.params['matLambertEDF'])
+
+            elif self.material_objects[name].shader_type == 'blinn':
+                if not self.params['matBlinnEDF'] == 'None':
+                    self.material_objects[name].edf = (name + '_edf')
+                    self.addEDF(self.material_objects[name], self.params['matBlinnEDF'])
+
+            elif self.material_objects[name].shader_type == 'phong' or self.material_objects[name].shader_type == 'phongE':
+                if not self.params['matPhongEDF'] == 'None':
+                    self.material_objects[name].edf = (name + '_edf')
+                    self.addEDF(self.material_objects[name], self.params['matPhongEDF'])
+
+            elif self.material_objects[name].shader_type == 'surfaceShader':
+                if not self.params['matSurfaceShaderEDF'] == 'None':
+                    self.material_objects[name].edf = (name + '_edf')
+                    self.addEDF(self.material_objects[name], self.params['matSurfaceShaderEDF'])
+            else:
+                if not self.params['matDefaultEDF'] == 'None':
+                    self.material_objects[name].edf = (name + '_edf')
+                    self.addEDF(self.material_objects[name], self.params['matDefaultEDF'])
         
     def writeXML(self, doc):
         self.log.info('writing assembly: {0}'.format(self.name))
@@ -509,9 +648,12 @@ class assembly():
         for bsdf in self.bsdf_objects:
             self.bsdf_objects[bsdf].writeXML(doc)
 
+        #write eddfs
+        for edf in self.edf_objects:
+            self.edf_objects[edf].writeXML(doc)
+
         #write surface shaders
         for surface_shader in self.surface_shader_objects:
-            print  self.surface_shader_objects[surface_shader]
             self.surface_shader_objects[surface_shader].writeXML(doc)
 
         #write materials
@@ -529,26 +671,41 @@ class assembly():
         
         #write geo object instances
         for geo in self.geo_objects:
-            geo.writeXMLInstance(doc)
+            self.geo_objects[geo].writeXMLInstance(doc)
         
         doc.endElement('assembly')
         doc.startElement('assembly_instance name="{0}_inst" assembly="{1}"'.format(self.name, self.name))
         writeTransform(doc, self.params['scene_scale'])
         doc.endElement('assembly_instance')
-        
-        #select and export objects
-        cmds.select(cl=True)
-        for geo in self.geo_objects:
-            cmds.select(geo.name, add=True)
+
         #create geo directory if it doesnt already exist
         self.log.info('exporting obj: ' + self.name + '.obj')
         if not os.path.exists(self.params['outputDir']+'/geo'):
             os.makedirs(self.params['outputDir']+'/geo')
-        cmds.file(('{0}/{1}'.format(self.params['outputDir']+'/geo', (self.name + '.obj'))), force=True, options='groups=1;ptgroups=0;materials=0;smoothing=0;normals=1', type='OBJexport', exportSelected=True)
+
+        #create list of all the top level objects
+        all_objects = []
+
+        for geo in self.geo_objects:
+            all_objects.append(self.geo_objects[geo].name)
+
+        top_level_objects = []
+
+        for object in all_objects:
+            current_object = object
+            while cmds.listRelatives(current_object, parent=True):
+                current_object = cmds.listRelatives(current_object, parent=True)[0]
+            if not current_object in top_level_objects:
+                top_level_objects.append(current_object)
+        cmds.select(cl=True)
+        for geo_name in top_level_objects:
+            cmds.select(geo_name, add=True)
+        cmds.file(('{0}/{1}'.format(self.params['outputDir']+'/geo', (self.name + '.obj'))), force=True, options='groups=1;ptgroups=1;materials=0;smoothing=0;normals=1', type='OBJexport', pr=True, es=True)
+
         cmds.select(cl=True)
 
 #
-# scene object --
+# scene class --
 #
 
 class scene():
@@ -559,18 +716,25 @@ class scene():
     def writeXML(self, doc):
         self.log.info('writing scene element')
         doc.startElement('scene')
-        #write cameras
-        if self.params['sceneCameraExportAllCameras']:
-            #export all cameras
-            cam_list = []
-            for c in cmds.listCameras(p=True):
-                camera_instance = camera(self.params, self.log, c)
-                camera_instance.writeXML(doc)
-        else:
-            #export only camera selected in output
-            camera_instance = camera(self.params, self.log, self.params['outputCamera'])
-            camera_instance.writeXML(doc)
+
+############################ multiple camera export not supported #############################
+#        #write cameras
+#        if self.params['sceneCameraExportAllCameras']:
+#            #export all cameras
+#            cam_list = []
+#            for c in cmds.listCameras(p=True):
+#                camera_instance = camera(self.params, self.log, c)
+#                camera_instance.writeXML(doc)
+#        else:
+#            #export only camera selected in output
+#            camera_instance = camera(self.params, self.log, self.params['outputCamera'])
+#            camera_instance.writeXML(doc)
+###############################################################################################
         
+        #temp camera export - use until multiple camera is supported
+        camera_instance = camera(self.params, self.log, self.params['outputCamera'])
+        camera_instance.writeXML(doc)   
+             
         #export assemblies
         #get maya geometry
         shape_list = cmds.ls(g=True, v=True) 
@@ -599,7 +763,7 @@ class scene():
         doc.endElement('scene')
 
 #
-# output object --
+# output class --
 #
 
 class output():
@@ -615,7 +779,7 @@ class output():
         doc.endElement('output')
 
 #
-# configurations object --
+# configurations class --
 #
 
 class configurations():
@@ -662,7 +826,7 @@ class configurations():
         doc.endElement('configurations')
 	
 #
-# writeXml Object --
+# writeXml class --
 #
 
 class writeXml(): #(file_path)
@@ -706,6 +870,7 @@ class writeOut():
         self.output = ''
         cmds.scrollField('m2s_log', edit=True, cl=True)
     def err(self, message):
+        setExportError()
         self.output = self.output + '<span style="color:#dd0000">' + message + '</span><br>'
         cmds.scrollField('m2s_log', edit=True, text=self.output)
         print('ERROR: ' + message)
@@ -756,9 +921,49 @@ def export():
         doc.endElement('project')
         doc.close()
         log.info('export finished')
+        setExportSuccess()
     else:
         log.err('error validating ui attributes ')
         raise RuntimeError('check script editor for details')
+
+#
+# ui functions --
+#
+
+def setExportSuccess():
+    for i in range(3):
+        cmds.button('m2s_export', edit=True, bgc=[0.5,1,0.5])
+        cmds.button('m2s_export', edit=True, ebg=False)
+        time.sleep(0.1)
+        cmds.refresh(f=True)
+        cmds.button('m2s_export', edit=True, bgc=[0.5,0.5,0.5])
+        cmds.button('m2s_export', edit=True, ebg=False)
+        time.sleep(0.1)
+        cmds.refresh(f=True)
+def setExportError():
+    for i in range(3):
+        cmds.button('m2s_export', edit=True, bgc=[1,0.2,0.2])
+        cmds.button('m2s_export', edit=True, ebg=False)
+        time.sleep(0.1)
+        cmds.refresh(f=True)
+        cmds.button('m2s_export', edit=True, bgc=[0.5,0.5,0.5])
+        cmds.button('m2s_export', edit=True, ebg=False)
+        time.sleep(0.1)
+        cmds.refresh(f=True)
+
+def getDir(field_name):
+    current_state = cmds.textField(field_name, query=True, text=True)
+    new_state = cmds.fileDialog2(fileMode=3, okCaption='select', caption='Select a directory', dir=current_state)
+    if new_state:
+        cmds.textField(field_name, edit=True, text=new_state[0])
+
+def hideLog():
+    if cmds.scrollField('m2s_log', query=True, vis=True):
+        cmds.button('m2s_hideLog', edit=True, label='Show log')
+        cmds.scrollField('m2s_log', edit=True, vis=False)
+    else:
+        cmds.button('m2s_hideLog', edit=True, label='Hide log')
+        cmds.scrollField('m2s_log', edit=True, vis=True)           
 
 #
 # initiallise and show ui --

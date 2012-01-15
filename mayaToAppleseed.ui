@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>804</width>
-    <height>927</height>
+    <width>687</width>
+    <height>873</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -353,8 +353,8 @@
            <property name="geometry">
             <rect>
              <x>0</x>
-             <y>-145</y>
-             <width>717</width>
+             <y>0</y>
+             <width>600</width>
              <height>952</height>
             </rect>
            </property>
@@ -397,8 +397,11 @@
                       <property name="text">
                        <string/>
                       </property>
+                      <property name="checkable">
+                       <bool>false</bool>
+                      </property>
                       <property name="checked">
-                       <bool>true</bool>
+                       <bool>false</bool>
                       </property>
                      </widget>
                     </item>
@@ -645,11 +648,6 @@
                            <string>Constant</string>
                           </property>
                          </item>
-                         <item>
-                          <property name="text">
-                           <string>Ambient Occlusion</string>
-                          </property>
-                         </item>
                         </widget>
                        </item>
                        <item row="3" column="2">
@@ -701,12 +699,12 @@
                          </property>
                          <item>
                           <property name="text">
-                           <string>Kleeman</string>
+                           <string>Ashikhmin-Shirley</string>
                           </property>
                          </item>
                          <item>
                           <property name="text">
-                           <string>Ashikhmin-Shirley</string>
+                           <string>Kelemen</string>
                           </property>
                          </item>
                          <item>
@@ -716,17 +714,7 @@
                          </item>
                          <item>
                           <property name="text">
-                           <string>Phong</string>
-                          </property>
-                         </item>
-                         <item>
-                          <property name="text">
                            <string>Specular_BRDF</string>
-                          </property>
-                         </item>
-                         <item>
-                          <property name="text">
-                           <string>Specular_BTDF</string>
                           </property>
                          </item>
                          <item>
@@ -772,11 +760,6 @@
                          <item>
                           <property name="text">
                            <string>Constant</string>
-                          </property>
-                         </item>
-                         <item>
-                          <property name="text">
-                           <string>Ambient Occlusion</string>
                           </property>
                          </item>
                         </widget>
@@ -829,11 +812,6 @@
                          </property>
                          <item>
                           <property name="text">
-                           <string>Phong</string>
-                          </property>
-                         </item>
-                         <item>
-                          <property name="text">
                            <string>Ashikhmin-Shirley</string>
                           </property>
                          </item>
@@ -844,17 +822,12 @@
                          </item>
                          <item>
                           <property name="text">
-                           <string>Kleeman</string>
+                           <string>Kelemen</string>
                           </property>
                          </item>
                          <item>
                           <property name="text">
                            <string>Specular_BRDF</string>
-                          </property>
-                         </item>
-                         <item>
-                          <property name="text">
-                           <string>Specular_BTDF</string>
                           </property>
                          </item>
                          <item>
@@ -902,11 +875,6 @@
                            <string>Constant</string>
                           </property>
                          </item>
-                         <item>
-                          <property name="text">
-                           <string>Ambient Occlusion</string>
-                          </property>
-                         </item>
                         </widget>
                        </item>
                        <item row="6" column="3">
@@ -925,11 +893,6 @@
                          <item>
                           <property name="text">
                            <string>Physical</string>
-                          </property>
-                         </item>
-                         <item>
-                          <property name="text">
-                           <string>Ambient Occlusion</string>
                           </property>
                          </item>
                         </widget>
@@ -979,22 +942,12 @@
                          </item>
                          <item>
                           <property name="text">
-                           <string>Kleeman</string>
-                          </property>
-                         </item>
-                         <item>
-                          <property name="text">
-                           <string>Phong</string>
+                           <string>Kelemen</string>
                           </property>
                          </item>
                          <item>
                           <property name="text">
                            <string>Specular_BRDF</string>
-                          </property>
-                         </item>
-                         <item>
-                          <property name="text">
-                           <string>Specular_BTDF</string>
                           </property>
                          </item>
                         </widget>
@@ -1014,12 +967,12 @@
                           </size>
                          </property>
                          <property name="text">
-                          <string>others -&gt;</string>
+                          <string>default -&gt;</string>
                          </property>
                         </widget>
                        </item>
                        <item row="7" column="1">
-                        <widget class="QComboBox" name="m2s_matOtherBSDF">
+                        <widget class="QComboBox" name="m2s_matDefaultBSDF">
                          <property name="minimumSize">
                           <size>
                            <width>100</width>
@@ -1038,22 +991,12 @@
                          </item>
                          <item>
                           <property name="text">
-                           <string>Kleeman</string>
-                          </property>
-                         </item>
-                         <item>
-                          <property name="text">
-                           <string>Phong</string>
+                           <string>Kelemen</string>
                           </property>
                          </item>
                          <item>
                           <property name="text">
                            <string>Specular_BRDF</string>
-                          </property>
-                         </item>
-                         <item>
-                          <property name="text">
-                           <string>Specular_BTDF</string>
                           </property>
                          </item>
                          <item>
@@ -1064,7 +1007,7 @@
                         </widget>
                        </item>
                        <item row="7" column="2">
-                        <widget class="QComboBox" name="m2s_matOtherEDF">
+                        <widget class="QComboBox" name="m2s_matDefaultEDF">
                          <property name="minimumSize">
                           <size>
                            <width>100</width>
@@ -1084,7 +1027,7 @@
                         </widget>
                        </item>
                        <item row="7" column="3">
-                        <widget class="QComboBox" name="m2s_matOtherSurfaceShader">
+                        <widget class="QComboBox" name="m2s_matDefaultSurfaceShader">
                          <property name="minimumSize">
                           <size>
                            <width>100</width>
@@ -1099,11 +1042,6 @@
                          <item>
                           <property name="text">
                            <string>Constant</string>
-                          </property>
-                         </item>
-                         <item>
-                          <property name="text">
-                           <string>Ambient Occlusion</string>
                           </property>
                          </item>
                         </widget>
@@ -1128,27 +1066,12 @@
                          </item>
                          <item>
                           <property name="text">
-                           <string>Kleeman</string>
-                          </property>
-                         </item>
-                         <item>
-                          <property name="text">
-                           <string>Phong</string>
-                          </property>
-                         </item>
-                         <item>
-                          <property name="text">
-                           <string>Phong</string>
+                           <string>Kelemen</string>
                           </property>
                          </item>
                          <item>
                           <property name="text">
                            <string>Specular_BRDF</string>
-                          </property>
-                         </item>
-                         <item>
-                          <property name="text">
-                           <string>Specular_BTDF</string>
                           </property>
                          </item>
                          <item>
