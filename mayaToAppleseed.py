@@ -319,9 +319,21 @@ class camera(): #(camera_name)
         else:
             self.model = 'pinhole_camera'
         self.name = cam
-        self.aspect = float(params['outputResWidth'])/float(params['outputResHeight'])
-        self.horizontal_fov = float(cmds.getAttr(self.name + '.horizontalFilmAperture')) * inch_to_meter
-        self.vertical_fov = self.horizontal_fov / self.aspect
+        
+
+
+        maya_resolution_aspect = float(params['outputResWidth'])/float(params['outputResHeight'])
+        maya_film_aspect = cmds.getAttr('camera1.horizontalFilmAperture') / cmds.getAttr('camera1.verticalFilmAperture')
+
+        if maya_resolution_aspect > maya_film_aspect:
+            self.film_width = float(cmds.getAttr(self.name + '.horizontalFilmAperture')) * inch_to_meter
+            self.film_height = self.film_width / maya_resolution_aspect  
+        else:
+            self.film_height = float(cmds.getAttr(self.name + '.verticalFilmAperture')) * inch_to_meter
+            self.film_width = self.film_height * maya_resolution_aspect 
+
+
+
         self.focal_length = float(cmds.getAttr(self.name+'.focalLength')) / 1000
         # transpose camera matrix -> XXX0, YYY0, ZZZ0, XYZ1
         m = cmds.getAttr(cam+'.matrix')
@@ -330,7 +342,7 @@ class camera(): #(camera_name)
     def writeXML(self, doc):
         self.log.info('writing camera: {0}'.format(self.name))
         doc.startElement('camera name="{0}" model="{1}"'.format(self.name, self.model))
-        doc.appendElement('parameter name="film_dimensions" value="{0} {1}"'.format(self.horizontal_fov, self.vertical_fov))
+        doc.appendElement('parameter name="film_dimensions" value="{0} {1}"'.format(self.film_width, self.film_height))
         doc.appendElement('parameter name="focal_length" value="{0}"'.format(self.focal_length))
         if self.model == 'thinlens_camera':
             self.log.info('exporting ' + self.name + ' as thinlens camera')
