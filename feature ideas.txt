@@ -1,8 +1,0 @@
-feature ideas
-
-normalise constant shader colour to avoid 'pixelated' antialiasing effect of out out of range colours 
-preferences and per scene persistent settings
-AS spectral colour node
-option to add AS shader attributes directly to a maya shader
-automatic 'pull upgrades from git' button
-create install instructions
