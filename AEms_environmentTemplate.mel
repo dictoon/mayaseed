@@ -1,5 +1,5 @@
 
-global proc AEAS_environmentTemplate(string $nodeName)
+global proc AEms_environmentTemplate(string $nodeName)
 {
    // Note that the Attribute Editor tabs (for any Node) have a scroll 
    // layout with some number of collapsible layouts inside it. At the top 

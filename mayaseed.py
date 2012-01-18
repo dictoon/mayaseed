@@ -1,14 +1,6 @@
-# mayaToAppleseed.py 
+# mayaseed.py 
 
 # WORK IN PROGRESS!!
-
-# uncomment the next few lines replace the path and run them in the maya script editor to launch the script 
-#--------------------maya command (python)--------------------
-#import sys
-#sys.path.append('/projects/mayaToAppleseed') #where '/projects/mayaToAppleseed' is the file containing the scripts
-#import mayaToAppleseed
-#reload(mayaToAppleseed)
-#mayaToAppleseed.m2s()
 
 
 import maya.cmds as cmds
@@ -16,9 +8,9 @@ import os
 import time
 import re
 
-script_name = "mayaToAppleseed.py"
-version = "0.01"
-more_info_url = "https://github.com/jonathantopf/mayaToAppleseed"
+script_name = "mayaseed.py"
+version = "0.1"
+more_info_url = "https://github.com/jonathantopf/mayaseed"
 
 inch_to_meter = 0.02539999983236
 
@@ -34,68 +26,68 @@ def getMayaParams(log):
     params = {'error':False}
     
     #main settings
-    params['outputDir'] = cmds.textField('m2s_outputDir', query=True, text=True)
-    params['fileName'] = cmds.textField('m2s_fileName', query=True, text=True)
-    params['verbose'] = cmds.checkBox('m2s_verbose', query=True, value=True)
+    params['outputDir'] = cmds.textField('ms_outputDir', query=True, text=True)
+    params['fileName'] = cmds.textField('ms_fileName', query=True, text=True)
+    params['verbose'] = cmds.checkBox('ms_verbose', query=True, value=True)
     params['scene_scale'] = 1
     
     #Advanced options
     #cameras
-    params['sceneCameraExportAllCameras'] = cmds.checkBox('m2s_sceneCameraExportAllCameras', query=True, value=True)
-    params['sceneCameraDefaultThinLens'] = cmds.checkBox('m2s_sceneCameraDefaultThinLens', query=True, value=True)
+    params['sceneCameraExportAllCameras'] = cmds.checkBox('ms_sceneCameraExportAllCameras', query=True, value=True)
+    params['sceneCameraDefaultThinLens'] = cmds.checkBox('ms_sceneCameraDefaultThinLens', query=True, value=True)
     
     #assemblies
     #materials
-    params['matLambertBSDF'] = cmds.optionMenu('m2s_matLambertBSDF', query=True, value=True)
-    params['matLambertEDF'] = cmds.optionMenu('m2s_matLambertEDF', query=True, value=True)
-    params['matLambertSurfaceShader'] = cmds.optionMenu('m2s_matLambertSurfaceShader', query=True, value=True)
-    params['matBlinnBSDF'] = cmds.optionMenu('m2s_matBlinnBSDF', query=True, value=True)
-    params['matBlinnEDF'] = cmds.optionMenu('m2s_matBlinnEDF', query=True, value=True)
-    params['matBlinnSurfaceShader'] = cmds.optionMenu('m2s_matBlinnSurfaceShader', query=True, value=True)
-    params['matPhongBSDF'] = cmds.optionMenu('m2s_matPhongBSDF', query=True, value=True)
-    params['matPhongEDF'] = cmds.optionMenu('m2s_matPhongEDF', query=True, value=True)
-    params['matPhongSurfaceShader'] = cmds.optionMenu('m2s_matPhongSurfaceShader', query=True, value=True)
-    params['matSurfaceShaderBSDF'] = cmds.optionMenu('m2s_matSurfaceShaderBSDF', query=True, value=True)
-    params['matSurfaceShaderEDF'] = cmds.optionMenu('m2s_matSurfaceShaderEDF', query=True, value=True)
-    params['matSurfaceShaderSurfaceShader'] = cmds.optionMenu('m2s_matSurfaceShaderSurfaceShader', query=True, value=True)
-    params['matDefaultBSDF'] = cmds.optionMenu('m2s_matDefaultBSDF', query=True, value=True)
-    params['matDefaultEDF'] = cmds.optionMenu('m2s_matDefaultEDF', query=True, value=True)
-    params['matDefaultSurfaceShader'] = cmds.optionMenu('m2s_matDefaultSurfaceShader', query=True, value=True)
+    params['matLambertBSDF'] = cmds.optionMenu('ms_matLambertBSDF', query=True, value=True)
+    params['matLambertEDF'] = cmds.optionMenu('ms_matLambertEDF', query=True, value=True)
+    params['matLambertSurfaceShader'] = cmds.optionMenu('ms_matLambertSurfaceShader', query=True, value=True)
+    params['matBlinnBSDF'] = cmds.optionMenu('ms_matBlinnBSDF', query=True, value=True)
+    params['matBlinnEDF'] = cmds.optionMenu('ms_matBlinnEDF', query=True, value=True)
+    params['matBlinnSurfaceShader'] = cmds.optionMenu('ms_matBlinnSurfaceShader', query=True, value=True)
+    params['matPhongBSDF'] = cmds.optionMenu('ms_matPhongBSDF', query=True, value=True)
+    params['matPhongEDF'] = cmds.optionMenu('ms_matPhongEDF', query=True, value=True)
+    params['matPhongSurfaceShader'] = cmds.optionMenu('ms_matPhongSurfaceShader', query=True, value=True)
+    params['matSurfaceShaderBSDF'] = cmds.optionMenu('ms_matSurfaceShaderBSDF', query=True, value=True)
+    params['matSurfaceShaderEDF'] = cmds.optionMenu('ms_matSurfaceShaderEDF', query=True, value=True)
+    params['matSurfaceShaderSurfaceShader'] = cmds.optionMenu('ms_matSurfaceShaderSurfaceShader', query=True, value=True)
+    params['matDefaultBSDF'] = cmds.optionMenu('ms_matDefaultBSDF', query=True, value=True)
+    params['matDefaultEDF'] = cmds.optionMenu('ms_matDefaultEDF', query=True, value=True)
+    params['matDefaultSurfaceShader'] = cmds.optionMenu('ms_matDefaultSurfaceShader', query=True, value=True)
 
-    params['matConvertTexturesToEXR'] = cmds.checkBox('m2s_matConvertTexturesToEXR', query=True, value=True)
+    params['matConvertTexturesToEXR'] = cmds.checkBox('ms_matConvertTexturesToEXR', query=True, value=True)
 
     # output 
-    params['outputCamera'] = cmds.optionMenu('m2s_outputCamera', query=True, value=True)
-    params['outputColorSpace'] = cmds.optionMenu('m2s_outputColorSpace', query=True, value=True)
-    params['outputResWidth'] = cmds.textField('m2s_outputResWidth', query=True, text=True)
+    params['outputCamera'] = cmds.optionMenu('ms_outputCamera', query=True, value=True)
+    params['outputColorSpace'] = cmds.optionMenu('ms_outputColorSpace', query=True, value=True)
+    params['outputResWidth'] = cmds.textField('ms_outputResWidth', query=True, text=True)
     if not is_numeric.match(params['outputResWidth']):
         params['error'] = True
         log.error('Output Resolution Width may only contain whole numbers')
-    params['outputResHeight'] = cmds.textField('m2s_outputResHeight', query=True, text=True)
+    params['outputResHeight'] = cmds.textField('ms_outputResHeight', query=True, text=True)
     if not is_numeric.match(params['outputResHeight']):
         params['error'] = True
         log.error('Output Resolution Height may only contain whole numbers')
         
     # configurations
     # custom intercative config
-    params['customInteractiveConfigCheck'] = cmds.checkBox('m2s_customInteractiveConfigCheck', query=True, value=True)
-    params['customInteractiveConfigEngine'] = cmds.optionMenu('m2s_customInteractiveConfigEngine', query=True, value=True)
-    params['customInteractiveConfigMinSamples'] = cmds.textField('m2s_customInteractiveConfigMinSamples', query=True, text=True)
+    params['customInteractiveConfigCheck'] = cmds.checkBox('ms_customInteractiveConfigCheck', query=True, value=True)
+    params['customInteractiveConfigEngine'] = cmds.optionMenu('ms_customInteractiveConfigEngine', query=True, value=True)
+    params['customInteractiveConfigMinSamples'] = cmds.textField('ms_customInteractiveConfigMinSamples', query=True, text=True)
     if not is_numeric.match(params['customInteractiveConfigMinSamples']):
         params['error'] = True
         log.error('Custom Interactive Config Min Samples may only contain whole numbers')
-    params['customInteractiveConfigMaxSamples'] = cmds.textField('m2s_customInteractiveConfigMaxSamples', query=True, text=True)
+    params['customInteractiveConfigMaxSamples'] = cmds.textField('ms_customInteractiveConfigMaxSamples', query=True, text=True)
     if not is_numeric.match(params['customInteractiveConfigMaxSamples']):
         params['error'] = True
         log.error('Custom Interactive Config Max Samples may only contain whole numbers')
     # custom Final config
-    params['customFinalConfigCheck'] = cmds.checkBox('m2s_customFinalConfigCheck', query=True, value=True)
-    params['customFinalConfigEngine'] = cmds.optionMenu('m2s_customFinalConfigEngine', query=True, value=True)
-    params['customFinalConfigMinSamples'] = cmds.textField('m2s_customFinalConfigMinSamples', query=True, text=True)
+    params['customFinalConfigCheck'] = cmds.checkBox('ms_customFinalConfigCheck', query=True, value=True)
+    params['customFinalConfigEngine'] = cmds.optionMenu('ms_customFinalConfigEngine', query=True, value=True)
+    params['customFinalConfigMinSamples'] = cmds.textField('ms_customFinalConfigMinSamples', query=True, text=True)
     if not is_numeric.match(params['customFinalConfigMinSamples']):
         params['error'] = True
         log.error('Custom Final Config Min Samples may only contain whole numbers')
-    params['customFinalConfigMaxSamples'] = cmds.textField('m2s_customFinalConfigMaxSamples', query=True, text=True)
+    params['customFinalConfigMaxSamples'] = cmds.textField('ms_customFinalConfigMaxSamples', query=True, text=True)
     if not is_numeric.match(params['customFinalConfigMaxSamples']):
         params['error'] = True
         log.error('Custom Final Config Max Samples may only contain whole numbers')
@@ -881,11 +873,11 @@ class configurations():
             doc.appendElement('configuration name="interactive" base="base_interactive"')
   
         #if 'customise final configuration' is set read customised values
-        if cmds.checkBox('m2s_customFinalConfigCheck', query=True, value=True) == True:
+        if cmds.checkBox('ms_customFinalConfigCheck', query=True, value=True) == True:
             self.log.info('writing custom final config')
             doc.startElement('configuration name="final" base="base_final"')
             engine = ''
-            if cmds.optionMenu('m2s_customFinalConfigEngine', query=True, value=True) == "Path Tracing":
+            if cmds.optionMenu('ms_customFinalConfigEngine', query=True, value=True) == "Path Tracing":
                 engine = 'pt'
             else:
                 engine = 'drt'
@@ -942,19 +934,19 @@ class writeXml(): #(file_path)
 class writeOut():
     def __init__(self):
         self.output = ''
-        cmds.scrollField('m2s_log', edit=True, cl=True)
+        cmds.scrollField('ms_log', edit=True, cl=True)
     def error(self, message):
         setExportError()
         self.output = self.output + '<span style="color:#dd0000">' + message + '</span><br>'
-        cmds.scrollField('m2s_log', edit=True, text=self.output)
+        cmds.scrollField('ms_log', edit=True, text=self.output)
         print('ERROR: ' + message)
     def info(self, message):
         self.output = self.output + '<span style="color:#4db34d">' + message + '</span><br>'
-        cmds.scrollField('m2s_log', edit=True, text=self.output) 
+        cmds.scrollField('ms_log', edit=True, text=self.output) 
         print('INFO: ' + message)  
     def warning(self, message):
         self.output = self.output + '<span style="color:#ead811">' + message + '</span><br>'
-        cmds.scrollField('m2s_log', edit=True, text=self.output)
+        cmds.scrollField('ms_log', edit=True, text=self.output)
         print('WARNING: ' + message)
 
 #
@@ -1014,26 +1006,26 @@ def export():
 
 def setExportSuccess():
     for i in range(3):
-        cmds.button('m2s_export', edit=True, bgc=[0.5,1,0.5])
-        cmds.button('m2s_export', edit=True, ebg=False)
+        cmds.button('ms_export', edit=True, bgc=[0.5,1,0.5])
+        cmds.button('ms_export', edit=True, ebg=False)
         time.sleep(0.1)
         cmds.refresh(f=True)
-        cmds.button('m2s_export', edit=True, bgc=[0.5,0.5,0.5])
-        cmds.button('m2s_export', edit=True, ebg=False)
+        cmds.button('ms_export', edit=True, bgc=[0.5,0.5,0.5])
+        cmds.button('ms_export', edit=True, ebg=False)
         time.sleep(0.1)
         cmds.refresh(f=True)
 def setExportError():
-    if cmds.scrollField('m2s_log', query=True, vis=True):
-        cmds.button('m2s_logButton', edit=True, label=' errors have occurred - Hide log  ')
+    if cmds.scrollField('ms_log', query=True, vis=True):
+        cmds.button('ms_logButton', edit=True, label=' errors have occurred - Hide log  ')
     else:
-        cmds.button('m2s_logButton', edit=True, label=' errors have occurred - Show log')
+        cmds.button('ms_logButton', edit=True, label=' errors have occurred - Show log')
     for i in range(3):
-        cmds.button('m2s_logButton', edit=True, bgc=[1,0.2,0.2])
-        cmds.button('m2s_logButton', edit=True, ebg=False)
+        cmds.button('ms_logButton', edit=True, bgc=[1,0.2,0.2])
+        cmds.button('ms_logButton', edit=True, ebg=False)
         time.sleep(0.1)
         cmds.refresh(f=True)
-        cmds.button('m2s_logButton', edit=True, bgc=[0.5,0.5,0.5])
-        cmds.button('m2s_logButton', edit=True, ebg=False)
+        cmds.button('ms_logButton', edit=True, bgc=[0.5,0.5,0.5])
+        cmds.button('ms_logButton', edit=True, ebg=False)
         time.sleep(0.1)
         cmds.refresh(f=True)
 
@@ -1044,28 +1036,28 @@ def getDir(field_name):
         cmds.textField(field_name, edit=True, text=new_state[0])
 
 def toggleLog():
-    if cmds.scrollField('m2s_log', query=True, vis=True):
-        cmds.button('m2s_logButton', edit=True, label='Show log')
-        cmds.scrollField('m2s_log', edit=True, vis=False)
+    if cmds.scrollField('ms_log', query=True, vis=True):
+        cmds.button('ms_logButton', edit=True, label='Show log')
+        cmds.scrollField('ms_log', edit=True, vis=False)
     else:
-        cmds.button('m2s_logButton', edit=True, label='Hide log')
-        cmds.scrollField('m2s_log', edit=True, vis=True)           
+        cmds.button('ms_logButton', edit=True, label='Hide log')
+        cmds.scrollField('ms_log', edit=True, vis=True)           
 
 def addEnvironmentNode():
-    cmds.createNode('AS_environment')
+    cmds.createNode('ms_environment')
     populateEnvironmentList()
 
 def populateEnvironmentList():
-    current_state = cmds.optionMenu('m2s_envList', query=True, sl=True)
-    if cmds.optionMenu('m2s_envList', query=True, ils=True):
-        for menu_item in cmds.optionMenu('m2s_envList', query=True, ils=True):
+    current_state = cmds.optionMenu('ms_envList', query=True, sl=True)
+    if cmds.optionMenu('ms_envList', query=True, ils=True):
+        for menu_item in cmds.optionMenu('ms_envList', query=True, ils=True):
             cmds.deleteUI(menu_item)
-    for env in cmds.ls(type='AS_environment'):
-        cmds.menuItem(parent='m2s_envList', label=env)
-    cmds.menuItem(parent='m2s_envList', label='None')
+    for env in cmds.ls(type='ms_environment'):
+        cmds.menuItem(parent='ms_envList', label=env)
+    cmds.menuItem(parent='ms_envList', label='None')
     if current_state:
         try:
-            cmds.optionMenu('m2s_envList', edit=True, sl=current_state)
+            cmds.optionMenu('ms_envList', edit=True, sl=current_state)
         except:
             print ''
 
@@ -1075,30 +1067,30 @@ def populateEnvironmentList():
 # initiallise and show ui --
 #
 
-def m2s():
-    if cmds.window('m2sDial', query=True, exists=True):
-        cmds.deleteUI('m2sDial')
-    mayaToAppleseedUi = cmds.loadUI(f="{0}/mayaToAppleseed.ui".format(os.path.dirname(__file__)))    
+def ms():
+    if cmds.window('msDial', query=True, exists=True):
+        cmds.deleteUI('msDial')
+    mayaseedUi = cmds.loadUI(f="{0}/mayaseed.ui".format(os.path.dirname(__file__)))    
     #if the file has been saved set default file name to <scene_name>.appleseed
     if cmds.file(query=True, sceneName=True, shortName=True):
-        cmds.textField('m2s_fileName', edit=True, text=(os.path.splitext(cmds.file(query=True, sceneName=True, shortName=True))[0] + '.appleseed'))
+        cmds.textField('ms_fileName', edit=True, text=(os.path.splitext(cmds.file(query=True, sceneName=True, shortName=True))[0] + '.appleseed'))
     else:
-        cmds.textField('m2s_fileName', edit=True, text='file.appleseed')
+        cmds.textField('ms_fileName', edit=True, text='file.appleseed')
     #populate output > camera dropdown menu with maya cameras
     for camera in cmds.listCameras(p=True):
-        cmds.menuItem(parent='m2s_outputCamera', label=camera)
+        cmds.menuItem(parent='ms_outputCamera', label=camera)
 
     populateEnvironmentList()
     #set default resolution to scene resolution
-    cmds.textField('m2s_outputResWidth', edit=True, text=cmds.getAttr('defaultResolution.width'))
-    cmds.textField('m2s_outputResHeight', edit=True, text=cmds.getAttr('defaultResolution.height'))
+    cmds.textField('ms_outputResWidth', edit=True, text=cmds.getAttr('defaultResolution.width'))
+    cmds.textField('ms_outputResHeight', edit=True, text=cmds.getAttr('defaultResolution.height'))
     toggleLog()
 
     #show window
-    cmds.showWindow(mayaToAppleseedUi)
+    cmds.showWindow(mayaseedUi)
     log = writeOut()
     try:
-        cmds.loadPlugin('m2s_envNode.py')
+        cmds.loadPlugin('ms_envNode.py')
     except:
         log.error('error loading plugins')
         log.info('to enable plugins choose window > setting/preferences > plugin manager')

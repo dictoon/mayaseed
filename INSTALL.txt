@@ -4,23 +4,23 @@ http://appleseedhq.net/wiki/building-appleseed
 
 NOTE: for the latest verso of this plugin visit the maya to appleseed github page:
 
-https://github.com/jonathantopf/mayaToAppleseed
+https://github.com/jonathantopf/mayaseed
 
 
 
 INSTALLATION --------
 
-To start unzip the plugin contents to a directory of your choice, but make sure to remember it for later. Any time you see <maya to appleseed root> replace it with your install directory. For example if put the exporter files in the following directory:
+To start unzip the plugin contents to a directory of your choice, but make sure to remember it for later. Any time you see <mayaseed root> replace it with your install directory. For example if put the exporter files in the following directory:
 
-/projects/mayatoappleseed
+/projects/mayaseed
 
 i would replace the following line with:
 
-putenv MAYA_SCRIPT_PATH ($env_script_path + ":<maya to appleseed root>/plugins");
+putenv MAYA_SCRIPT_PATH ($env_script_path + ":<mayaseed root>/plugins");
 
 with this:
 
-putenv MAYA_PLUG_IN_PATH ($env_plugin_path + ":/projects/mayaToAppleseed/plugins");
+putenv MAYA_PLUG_IN_PATH ($env_plugin_path + ":/projects/mayaseed/plugins");
 
 
 Next you will first need to copy the following lines to your userSetup.mel file, usually located in your maya scripts directory, if not just create it as a plain text file with the .mel extension.
@@ -31,38 +31,38 @@ Windows XP and lower: C:\Documents and Settings\username\My Documents\maya\<maya
 IRX & Linux: /usr/aw/userconfig/maya/<maya version>/scripts
 
 
-// maya to appleseed setup -----------------------------------------------
+// mayaseed setup -----------------------------------------------
 
 $env_script_path = `getenv MAYA_SCRIPT_PATH`;
 $env_plugin_path = `getenv MAYA_PLUG_IN_PATH`;
 
-putenv MAYA_SCRIPT_PATH ($env_script_path + ":<maya to appleseed root>");
+putenv MAYA_SCRIPT_PATH ($env_script_path + ":<mayaseed root>");
 getenv MAYA_SCRIPT_PATH;
 
-putenv MAYA_PLUG_IN_PATH ($env_plugin_path + ":<maya to appleseed root>/plugins");
+putenv MAYA_PLUG_IN_PATH ($env_plugin_path + ":<mayaseed root>/plugins");
 getenv MAYA_PLUG_IN_PATH;
 
-// maya to appleseed setup -----------------------------------------------
+// mayaseed setup -----------------------------------------------
 
 
 
 Next you will want to start up maya and enable the plugin, this isn't essential for the exporter to work but it will throw an error is the plugins aren't installed.
 
-To enable the plugin choose window > settings preferences > plugin manager and load 'm2s_envNode.py', you will also want to click autoload so you don't have to do this step every time maya loads.
+To enable the plugin choose window > settings preferences > plugin manager and load 'ms_envNode.py', you will also want to click autoload so you don't have to do this step every time maya loads.
 
-Last you will want to make a shelf button containing the following code to show the maya -> appleseed dialogue.
+Last you will want to make a shelf button containing the following code to show the mayaseed dialogue.
 
 #*************************************************************************
 
 import sys
 
-sys.path.append('<maya to appleseed root>')
+sys.path.append('<mayaseed root>')
 
-import mayaToAppleseed
+import mayaseed
 
-reload(mayaToAppleseed)
+reload(mayaseed)
 
-mayaToAppleseed.m2s()
+mayaseed.ms()
 
 #*************************************************************************
 

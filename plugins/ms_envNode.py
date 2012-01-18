@@ -4,7 +4,7 @@ import maya.OpenMayaMPx as OpenMayaMPx
 import maya.OpenMayaRender as OpenMayaRender
 import maya.OpenMayaUI as OpenMayaUI   
 
-nodeTypeName = "AS_environment"
+nodeTypeName = "ms_environment"
 nodeTypeId = OpenMaya.MTypeId(0x10211)
 
 glRenderer = OpenMayaRender.MHardwareRenderer.theRenderer()
