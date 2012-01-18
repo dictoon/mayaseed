@@ -23,7 +23,7 @@ with this:
 putenv MAYA_PLUG_IN_PATH ($env_plugin_path + ":/projects/mayaToAppleseed/plugins");
 
 
-Next you will first need to copy the following lines to your userSetup.mel file, usually located in your maya scripts directory.
+Next you will first need to copy the following lines to your userSetup.mel file, usually located in your maya scripts directory, if not just create it as a plain text file with the .mel extension.
 
 Mac: /Users/<username>/Library/Preferences/Autodesk/maya/<maya version>/scripts
 Windows Vista and higher: C:\Users\<username>\Documents\maya\<maya version>\scripts (you may have My Documents instead of

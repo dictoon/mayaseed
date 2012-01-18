@@ -5,3 +5,4 @@ preferences and per scene persistent settings
 AS spectral colour node
 option to add AS shader attributes directly to a maya shader
 automatic 'pull upgrades from git' button
+create install instructions

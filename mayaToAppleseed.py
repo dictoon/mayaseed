@@ -358,13 +358,48 @@ class camera(): #(camera_name)
 #
 
 class environment():
-    def __init__(self, params, log, name):
+    def __init__(self, params, log, name, shader, edf):
         self.log = log
         self.params = params
         self.log = log
         self.name = name
+        self.environment_shader = shader
+        self.environment_edf = edf
+    def writeXML(self, doc):
+        doc.startElement('environment name="{0}" model="generic_environment"'.format(self.name))
+        doc.appendElement('parameter name="environment_edf" value="{0}"'.format(self.environment_edf))
+        doc.appendElement('parameter name="environment_shader" value="{0}"'.format(self.self.environment_shader))
+        doc.endElement('environment')
 
+#
+# environment shader class --
+#
 
+class environmentShader():
+    def __init__(self, log, name, edf):
+        self.log = log
+        self.name = name
+        self.edf = edf
+    def writeXML(self, doc):
+        doc.startElement('environment_shader name="{0}" model="Environment EDF-Based Environment Shader"'.format(self.name))
+        doc.appendElement('parameter name="environment_edf" value="{0}"'.formt(self.edf))
+        doc.endElement('environment_shader')
+
+#
+# environment edf class --
+#
+
+class environmentEdf():
+    def __init__(self, log, name, model, edf_params):
+        self.log = log
+        self.name = name
+        self.model = model
+        self.edf_params = edf_params
+    def writeXML(self, doc):
+        doc.startElement('environment_edf name="{0}" model="{1}"'.format(self.name, self.model))
+        for param in self.edf_params:
+            doc.appendElement('parameter name ="{0}" value="{1}"'.format(param, self.edf_params[param]))
+        doc.endElement('environment_edf')
 
 #
 # geometry class --
@@ -745,6 +780,13 @@ class scene():
         self.params = params
         self.log = log
         self.assembly_list = []
+        self.color_objects = dict()
+        self.environment = ''
+        self.environment_edf = ''
+        self.environment_shader = ''
+
+        
+
     def writeXML(self, doc):
         self.log.info('writing scene element')
         doc.startElement('scene')
