@@ -1,4 +1,16 @@
-Unzip the plugin contents to a directory of your choice, but make sure to remember it for later. Any time you see <maya to appleseed root> replace it with your install directory. For example if put the exporter files in the following directory:
+NOTE: for some features to work you may need to build the latest version of appleseed, for instructions on how to do this please visit the following address:
+
+http://appleseedhq.net/wiki/building-appleseed
+
+NOTE: for the latest verso of this plugin visit the maya to appleseed github page:
+
+https://github.com/jonathantopf/mayaToAppleseed
+
+
+
+INSTALLATION --------
+
+To start unzip the plugin contents to a directory of your choice, but make sure to remember it for later. Any time you see <maya to appleseed root> replace it with your install directory. For example if put the exporter files in the following directory:
 
 /projects/mayatoappleseed
 
