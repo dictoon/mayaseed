@@ -1,0 +1,64 @@
+Unzip the plugin contents to a directory of your choice, but make sure to remember it for later. Any time you see <maya to appleseed root> replace it with your install directory. For example if put the exporter files in the following directory:
+
+/projects/mayatoappleseed
+
+i would replace the following line with:
+
+putenv MAYA_SCRIPT_PATH ($env_script_path + ":<maya to appleseed root>/plugins");
+
+with this:
+
+putenv MAYA_PLUG_IN_PATH ($env_plugin_path + ":/projects/mayaToAppleseed/plugins");
+
+
+Next you will first need to copy the following lines to your userSetup.mel file, usually located in your maya scripts directory.
+
+Mac: /Users/<username>/Library/Preferences/Autodesk/maya/<maya version>/scripts
+Windows Vista and higher: C:\Users\<username>\Documents\maya\<maya version>\scripts (you may have My Documents instead of
+Windows XP and lower: C:\Documents and Settings\username\My Documents\maya\<maya version>\scripts
+IRX & Linux: /usr/aw/userconfig/maya/<maya version>/scripts
+
+
+// maya to appleseed setup -----------------------------------------------
+
+$env_script_path = `getenv MAYA_SCRIPT_PATH`;
+$env_plugin_path = `getenv MAYA_PLUG_IN_PATH`;
+
+putenv MAYA_SCRIPT_PATH ($env_script_path + ":<maya to appleseed root>");
+getenv MAYA_SCRIPT_PATH;
+
+putenv MAYA_PLUG_IN_PATH ($env_plugin_path + ":<maya to appleseed root>/plugins");
+getenv MAYA_PLUG_IN_PATH;
+
+// maya to appleseed setup -----------------------------------------------
+
+
+
+Next you will want to start up maya and enable the plugin, this isn't essential for the exporter to work but it will throw an error is the plugins aren't installed.
+
+To enable the plugin choose window > settings preferences > plugin manager and load 'm2s_envNode.py', you will also want to click autoload so you don't have to do this step every time maya loads.
+
+Last you will want to make a shelf button containing the following code to show the maya -> appleseed dialogue.
+
+#*************************************************************************
+
+import sys
+
+sys.path.append('<maya to appleseed root>')
+
+import mayaToAppleseed
+
+reload(mayaToAppleseed)
+
+mayaToAppleseed.m2s()
+
+#*************************************************************************
+
+The easiest way to do this is to open up the script editor and paste the following code into a python tab, hilite the code and middle mouse drag the code into the shelf. You may be asked whether you want to save the script as python or MEL, choose python. 
+
+That should be everything, just click the shelf button to show the UI and the rest should hopefully be obvious. This exporter is very much a work in progress and many improvements/features are planned for the future. Also please submit any bugs/feature requests as this is meant to be practical and usable software and I'd love to hear how it is being used.
+
+jon
+
+
+
