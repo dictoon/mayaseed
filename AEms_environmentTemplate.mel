@@ -11,11 +11,12 @@ global proc AEms_environmentTemplate(string $nodeName)
    editorTemplate -beginScrollLayout;
       // title="DivBy2"; initial expand\collapse state is not collapsed
       editorTemplate -beginLayout "Appleseed Projection" -collapse false;
-         editorTemplate -addControl "constant_extiance";
-         editorTemplate -addControl "gradient_horizon_extiance";
-         editorTemplate -addControl "gradient_zenith_extiance";
-         editorTemplate -addControl "latitude_longitude_extiance";
-         editorTemplate -addControl "mirror_ball_extiance";
+         editorTemplate -addControl "model";
+         editorTemplate -addControl "constant_exitance";
+         editorTemplate -addControl "gradient_horizon_exitance";
+         editorTemplate -addControl "gradient_zenith_exitance";
+         editorTemplate -addControl "latitude_longitude_exitance";
+         editorTemplate -addControl "mirror_ball_exitance";
 
       editorTemplate -endLayout;
 

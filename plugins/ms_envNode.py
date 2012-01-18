@@ -10,7 +10,7 @@ nodeTypeId = OpenMaya.MTypeId(0x10211)
 glRenderer = OpenMayaRender.MHardwareRenderer.theRenderer()
 glFT = glRenderer.glFunctionTable()
 
-class AS_environment(OpenMayaMPx.MPxLocatorNode):
+class ms_environment(OpenMayaMPx.MPxLocatorNode):
     def __init__(self):
 
         OpenMayaMPx.MPxLocatorNode.__init__(self)
@@ -198,44 +198,53 @@ class AS_environment(OpenMayaMPx.MPxLocatorNode):
 
 
 def nodeCreator():
-    return OpenMayaMPx.asMPxPtr(AS_environment())
+    return OpenMayaMPx.asMPxPtr(ms_environment())
  
 def nodeInitializer():
+    #environment type
+    model_enumAttr = OpenMaya.MFnEnumAttribute()
+    ms_environment.model = model_enumAttr.create("model", "model")
+    model_enumAttr.addField("Constant Environment", 0)
+    model_enumAttr.addField("Gradient Cnvironment", 1)
+    model_enumAttr.addField("Latitude Longitude Map", 2)
+    model_enumAttr.addField("Mirrorball Map", 3)
+    #model_enumAttr.setDefault(0)
     #constant exitance
-    constant_extiance_nAttr = OpenMaya.MFnNumericAttribute()
-    AS_environment.constant_extiance = constant_extiance_nAttr.createColor( "constant_extiance", "const_extiance")
-    constant_extiance_nAttr.setDefault(0.5,0.5,0.5)
-    constant_extiance_nAttr.setKeyable(True)
+    constant_exitance_nAttr = OpenMaya.MFnNumericAttribute()
+    ms_environment.constant_exitance = constant_exitance_nAttr.createColor( "constant_exitance", "const_exitance")
+    constant_exitance_nAttr.setDefault(0.5,0.5,0.5)
+    constant_exitance_nAttr.setKeyable(True)
     #gradient horizon exitance
-    gradient_horizon_extiance_nAttr = OpenMaya.MFnNumericAttribute()
-    AS_environment.gradient_horizon_extiance = gradient_horizon_extiance_nAttr.createColor( "gradient_horizon_extiance", "grad_horizon_extiance")
-    gradient_horizon_extiance_nAttr.setDefault(0.5,0.5,0.5)
-    gradient_horizon_extiance_nAttr.setKeyable(True)
+    gradient_horizon_exitance_nAttr = OpenMaya.MFnNumericAttribute()
+    ms_environment.gradient_horizon_exitance = gradient_horizon_exitance_nAttr.createColor( "gradient_horizon_exitance", "grad_horizon_exitance")
+    gradient_horizon_exitance_nAttr.setDefault(0.5,0.5,0.5)
+    gradient_horizon_exitance_nAttr.setKeyable(True)
     #gradient zenith exitance
-    gradient_zenith_extiance_nAttr = OpenMaya.MFnNumericAttribute()
-    AS_environment.gradient_zenith_extiance = gradient_zenith_extiance_nAttr.createColor( "gradient_zenith_extiance", "grad_zenith_extiance")
-    gradient_zenith_extiance_nAttr.setDefault(0.5,0.5,0.5)
-    gradient_zenith_extiance_nAttr.setKeyable(True)
+    gradient_zenith_exitance_nAttr = OpenMaya.MFnNumericAttribute()
+    ms_environment.gradient_zenith_exitance = gradient_zenith_exitance_nAttr.createColor( "gradient_zenith_exitance", "grad_zenith_exitance")
+    gradient_zenith_exitance_nAttr.setDefault(0.5,0.5,0.5)
+    gradient_zenith_exitance_nAttr.setKeyable(True)
     #latitude longitude exitance
-    latitude_longitude_extiance_nAttr = OpenMaya.MFnNumericAttribute()
-    AS_environment.latitude_longitude_extiance = latitude_longitude_extiance_nAttr.createColor( "latitude_longitude_extiance", "lat_long_extiance")
-    latitude_longitude_extiance_nAttr.setDefault(0.5,0.5,0.5)
-    latitude_longitude_extiance_nAttr.setKeyable(True)
+    latitude_longitude_exitance_nAttr = OpenMaya.MFnNumericAttribute()
+    ms_environment.latitude_longitude_exitance = latitude_longitude_exitance_nAttr.createColor( "latitude_longitude_exitance", "lat_long_exitance")
+    latitude_longitude_exitance_nAttr.setDefault(0.5,0.5,0.5)
+    latitude_longitude_exitance_nAttr.setKeyable(True)
     #mirror ball exitance
-    mirror_ball_extiance_nAttr = OpenMaya.MFnNumericAttribute()
-    AS_environment.mirror_ball_extiance = mirror_ball_extiance_nAttr.createColor( "mirror_ball_extiance", "mball_extiance")
-    mirror_ball_extiance_nAttr.setDefault(0.5,0.5,0.5)
-    mirror_ball_extiance_nAttr.setKeyable(True)
+    mirror_ball_exitance_nAttr = OpenMaya.MFnNumericAttribute()
+    ms_environment.mirror_ball_exitance = mirror_ball_exitance_nAttr.createColor( "mirror_ball_exitance", "mball_exitance")
+    mirror_ball_exitance_nAttr.setDefault(0.5,0.5,0.5)
+    mirror_ball_exitance_nAttr.setKeyable(True)
 
     # add attribute
     try:
-        AS_environment.addAttribute( AS_environment.constant_extiance )
-        AS_environment.addAttribute( AS_environment.gradient_horizon_extiance )
-        AS_environment.addAttribute( AS_environment.gradient_zenith_extiance )
-        AS_environment.addAttribute( AS_environment.latitude_longitude_extiance )
-        AS_environment.addAttribute( AS_environment.mirror_ball_extiance )
+        ms_environment.addAttribute( ms_environment.model )
+        ms_environment.addAttribute( ms_environment.constant_exitance )
+        ms_environment.addAttribute( ms_environment.gradient_horizon_exitance )
+        ms_environment.addAttribute( ms_environment.gradient_zenith_exitance )
+        ms_environment.addAttribute( ms_environment.latitude_longitude_exitance )
+        ms_environment.addAttribute( ms_environment.mirror_ball_exitance )
     except:
-        sys.stderr.write( "Failed to create attributes of %s noden", kPluginNodeTypeName )
+        sys.stderr.write( "Failed to create attributes of %s node", kPluginNodeTypeName )
 
     return OpenMaya.MStatus.kSuccess
  

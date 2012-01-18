@@ -9,7 +9,7 @@ import time
 import re
 
 script_name = "mayaseed.py"
-version = "0.1"
+version = "0.1.1"
 more_info_url = "https://github.com/jonathantopf/mayaseed"
 
 inch_to_meter = 0.02539999983236
@@ -32,6 +32,9 @@ def getMayaParams(log):
     params['scene_scale'] = 1
     
     #Advanced options
+    #scene
+    params['environment'] = cmds.optionMenu('ms_envList', query=True, value=True)
+
     #cameras
     params['sceneCameraExportAllCameras'] = cmds.checkBox('ms_sceneCameraExportAllCameras', query=True, value=True)
     params['sceneCameraDefaultThinLens'] = cmds.checkBox('ms_sceneCameraDefaultThinLens', query=True, value=True)
@@ -358,9 +361,10 @@ class environment():
         self.environment_shader = shader
         self.environment_edf = edf
     def writeXML(self, doc):
+        self.log.info('writing environment: ' + self.name)
         doc.startElement('environment name="{0}" model="generic_environment"'.format(self.name))
         doc.appendElement('parameter name="environment_edf" value="{0}"'.format(self.environment_edf))
-        doc.appendElement('parameter name="environment_shader" value="{0}"'.format(self.self.environment_shader))
+        doc.appendElement('parameter name="environment_shader" value="{0}"'.format(self.environment_shader))
         doc.endElement('environment')
 
 #
@@ -373,8 +377,9 @@ class environmentShader():
         self.name = name
         self.edf = edf
     def writeXML(self, doc):
-        doc.startElement('environment_shader name="{0}" model="Environment EDF-Based Environment Shader"'.format(self.name))
-        doc.appendElement('parameter name="environment_edf" value="{0}"'.formt(self.edf))
+        self.log.info('writing environment shader: ' + self.name)
+        doc.startElement('environment_shader name="{0}" model="edf_environment_shader"'.format(self.name))
+        doc.appendElement('parameter name="environment_edf" value="{0}"'.format(self.edf))
         doc.endElement('environment_shader')
 
 #
@@ -388,6 +393,7 @@ class environmentEdf():
         self.model = model
         self.edf_params = edf_params
     def writeXML(self, doc):
+        self.log.info('writing environment edf: ' + self.name)
         doc.startElement('environment_edf name="{0}" model="{1}"'.format(self.name, self.model))
         for param in self.edf_params:
             doc.appendElement('parameter name ="{0}" value="{1}"'.format(param, self.edf_params[param]))
@@ -411,6 +417,7 @@ class geometry(): # (object_transfrm_name, obj_file)
         self.assembly = assembly
         # get material name
         shape = cmds.listRelatives(self.name, s=True)[0]
+
         shadingEngine = cmds.listConnections(shape, t='shadingEngine')[0]
         self.material = cmds.connectionInfo((shadingEngine + ".surfaceShader"),sourceFromDestination=True).split('.')[0] #find the attribute the surface shader is plugged into athen split off the attribute name to leave the shader name
         # transpose camera matrix -> XXX0, YYY0, ZZZ0, XYZ1
@@ -460,7 +467,7 @@ class assembly():
         #if name is default populate list with all geometry otherwise just geometry from set with the same name as the object
         if (self.name == 'main_assembly'):
             #create a list of all geometry objects and itterate over them
-            for geo in cmds.ls(g=True):
+            for geo in cmds.ls(typ='mesh'):
                 geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
                 if not geo_transform in self.geo_objects:
                     self.geo_objects[geo_transform] = geometry(geo_transform, self.log, ('geo/'+self.name+'.obj'), self.name)
@@ -773,11 +780,65 @@ class scene():
         self.log = log
         self.assembly_list = []
         self.color_objects = dict()
-        self.environment = ''
-        self.environment_edf = ''
-        self.environment_shader = ''
+        self.texture_objects = dict()
 
-        
+        #setup environment 
+        if not self.params['environment'] == 'None':
+            self.environment = environment(self.params, self.log, self.params['environment'], (self.params['environment'] + '_env_shader'), (self.params['environment'] + '_env_edf'))
+
+            #retrieve model and param values from ui
+            environment_edf_model_enum = cmds.getAttr(self.params['environment'] + '.model')
+            env_edf_params = dict()
+            if environment_edf_model_enum == 0:
+                environment_edf_model = 'constant_environment_edf'
+                self.addColor('constant_env_exitance', cmds.getAttr(self.params['environment']+'.constant_exitance'))
+                env_edf_params['exitance'] =  'constant_env_exitance'
+
+            elif environment_edf_model_enum == 1:
+                environment_edf_model = 'gradient_environment_edf'
+                self.addColor('gradient_env_horizon_exitance', cmds.getAttr(self.params['environment']+'.gradient_horizon_exitance'))
+                self.addColor('gradient_env_zenith_exitance', cmds.getAttr(self.params['environment']+'.gradient_zenith_exitance'))
+                env_edf_params['horizon_exitance'] = 'gradient_env_horizon_exitance'
+                env_edf_params['zenith_exitance'] = 'gradient_env_zenith_exitance'
+
+            elif environment_edf_model_enum == 2:
+                lat_long_connection = cmds.connectionInfo((self.params['environment'] + '.latitude_longitude_exitance'), sourceFromDestination=True).split('.')[0]
+                environment_edf_model = 'latlong_map_environment_edf'
+                if lat_long_connection:
+                    if cmds.nodeType(lat_long_connection) == 'file':
+                        self.addTexture(self.params['environment'] + '_latlong_edf_map', cmds.getAttr(lat_long_connection + '.fileTextureName'))
+                        env_edf_params['exitance'] = self.params['environment'] + '_latlong_edf_map_inst'
+                        env_edf_params['horizontal_shift'] = 0
+                        env_edf_params['vertical_shift'] = 0
+                else:
+                    log.error('no texture connected to {0}.latitude_longitude_exitance'.format(self.params['environment']))
+
+            elif environment_edf_model_enum == 3:
+                mirrorball_edf_connection = cmds.connectionInfo((self.params['environment'] + '.mirror_ball_exitance'), sourceFromDestination=True).split('.')[0]
+                environment_edf_model = 'mirrorball_map_environment_edf'
+                if mirrorball_edf_connection:
+                    if cmds.nodeType(mirrorball_edf_connection) == 'file':
+                        self.addTexture(self.params['environment'] + '_mirrorball_map_environment_edf', cmds.getAttr(mirrorball_edf_connection + '.fileTextureName'))
+                        env_edf_params['exitance'] = self.params['environment'] + '_mirrorball_map_environment_edf_inst'
+                else:
+                    log.error('no texture connected to {0}.mirrorball_exitance'.format(self.params['environment']))
+
+            else:
+                self.log.error('no environment model selected for ' + self.params['environment'])
+            
+            self.environment_edf = environmentEdf(self.log, (self.params['environment'] + '_env_edf'), environment_edf_model, env_edf_params)
+            self.environment_shader = environmentShader(self.log, (self.params['environment'] + '_env_shader'), (self.params['environment'] + '_env_edf'))
+
+        else:
+            self.environment = None
+
+    def addColor(self, name, value, multiplier=1):
+        if not name in self.color_objects:
+            self.color_objects[name] = color(self.log, name, value, multiplier)
+
+    def addTexture(self, name, file_name):
+        if not name in self.texture_objects:
+            self.texture_objects[name] = texture(self.log, name, file_name)
 
     def writeXML(self, doc):
         self.log.info('writing scene element')
@@ -801,6 +862,24 @@ class scene():
         camera_instance = camera(self.params, self.log, self.params['outputCamera'])
         camera_instance.writeXML(doc)   
              
+        #write colors
+        for col in self.color_objects:
+             self.color_objects[col].writeXML(doc)
+             
+        #write texture objects
+        for tex in self.texture_objects:
+            self.texture_objects[tex].writeXMLObject(doc)
+
+        #write texture instances
+        for tex in self.texture_objects:
+            self.texture_objects[tex].writeXMLInstance(doc)
+        
+        #if tehre is an environment write it
+        if self.environment:
+            self.environment_edf.writeXML(doc)
+            self.environment_shader.writeXML(doc)
+            self.environment.writeXML(doc)
+
         #export assemblies
         #get maya geometry
         shape_list = cmds.ls(g=True, v=True) 
@@ -974,28 +1053,25 @@ def export():
     log = writeOut()
     params = getMayaParams(log)
     if not params['error']:
-        try:
-            log.info('beginning export')
-            log.info('opening output file: ' + params['fileName'])
-            doc = writeXml('{0}/{1}'.format(params['outputDir'], params['fileName']), log)
-            doc.appendLine('<?xml version="1.0" encoding="UTF-8"?>') # XML format string
-            doc.appendLine('<!-- File generated by {0} version {1} visit {2} for more info and the latest super exciting release!-->'.format(script_name, version, more_info_url))
-            log.info('writing project element')
-            doc.startElement('project')
-            scene_element = scene(params, log)
-            scene_element.writeXML(doc)
-            output_element = output(params)
-            output_element.writeXML(doc)
-            config_element = configurations(params, log)
-            config_element.writeXML(doc)
-        
-            doc.endElement('project')
-            doc.close()
-            log.info('export finished')
-            setExportSuccess()
-        except Exception as err:
-            log.error('an error has occured, check script editor for details')
-            print(err)
+        log.info('beginning export')
+        log.info('opening output file: ' + params['fileName'])
+        doc = writeXml('{0}/{1}'.format(params['outputDir'], params['fileName']), log)
+        doc.appendLine('<?xml version="1.0" encoding="UTF-8"?>') # XML format string
+        doc.appendLine('<!-- File generated by {0} version {1} visit {2} for more info and the latest super exciting release!-->'.format(script_name, version, more_info_url))
+        log.info('writing project element')
+        doc.startElement('project')
+        scene_element = scene(params, log)
+        scene_element.writeXML(doc)
+        output_element = output(params)
+        output_element.writeXML(doc)
+        config_element = configurations(params, log)
+        config_element.writeXML(doc)
+    
+        doc.endElement('project')
+        doc.close()
+        log.info('export finished')
+        setExportSuccess()
+
     else:
         log.error('error validating ui attributes ')
         raise RuntimeError('check script editor for details')
