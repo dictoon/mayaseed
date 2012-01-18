@@ -355,7 +355,7 @@
              <x>0</x>
              <y>0</y>
              <width>600</width>
-             <height>1091</height>
+             <height>1033</height>
             </rect>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -372,7 +372,7 @@
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_11">
                   <item>
-                   <layout class="QHBoxLayout" name="horizontalLayout_19">
+                   <layout class="QHBoxLayout" name="horizontalLayout_20">
                     <item>
                      <widget class="QLabel" name="label_30">
                       <property name="minimumSize">
@@ -388,66 +388,39 @@
                        </size>
                       </property>
                       <property name="text">
-                       <string>Export all cameras</string>
+                       <string>environment node</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="m2s_sceneCameraExportAllCameras_3">
-                      <property name="text">
-                       <string/>
-                      </property>
-                      <property name="checkable">
-                       <bool>true</bool>
-                      </property>
-                      <property name="checked">
-                       <bool>false</bool>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <spacer name="horizontalSpacer_17">
-                      <property name="orientation">
-                       <enum>Qt::Horizontal</enum>
-                      </property>
-                      <property name="sizeHint" stdset="0">
-                       <size>
-                        <width>40</width>
-                        <height>20</height>
-                       </size>
-                      </property>
-                     </spacer>
-                    </item>
-                   </layout>
-                  </item>
-                  <item>
-                   <layout class="QHBoxLayout" name="horizontalLayout_12">
-                    <item>
-                     <widget class="QLabel" name="label_16">
+                     <widget class="QComboBox" name="m2s_envList">
                       <property name="minimumSize">
                        <size>
                         <width>150</width>
                         <height>0</height>
                        </size>
                       </property>
-                      <property name="maximumSize">
+                      <property name="baseSize">
                        <size>
-                        <width>9999</width>
-                        <height>16777215</height>
+                        <width>150</width>
+                        <height>0</height>
                        </size>
-                      </property>
-                      <property name="text">
-                       <string>Export all as 'thin lens'</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QCheckBox" name="m2s_sceneCameraDefaultThinLens_2">
-                      <property name="text">
-                       <string/>
+                     <widget class="QPushButton" name="m2s_envAdd">
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>0</height>
+                       </size>
                       </property>
-                      <property name="checked">
-                       <bool>false</bool>
+                      <property name="text">
+                       <string>  +  </string>
+                      </property>
+                      <property name="+command" stdset="0">
+                       <string>&quot;mayaToAppleseed.addEnvironmentNode()&quot;</string>
                       </property>
                      </widget>
                     </item>
@@ -465,13 +438,6 @@
                      </spacer>
                     </item>
                    </layout>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="label_31">
-                    <property name="text">
-                     <string>NOTE: cameras with dof switched on will always default to 'thin lens'</string>
-                    </property>
-                   </widget>
                   </item>
                  </layout>
                 </widget>
@@ -1813,7 +1779,7 @@ p, li { white-space: pre-wrap; }
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_3">
       <item>
-       <widget class="QPushButton" name="m2s_hideLog">
+       <widget class="QPushButton" name="m2s_logButton">
         <property name="minimumSize">
          <size>
           <width>100</width>
@@ -1824,7 +1790,7 @@ p, li { white-space: pre-wrap; }
          <string>Hide log</string>
         </property>
         <property name="+command" stdset="0">
-         <string>&quot;mayaToAppleseed.hideLog()&quot;</string>
+         <string>&quot;mayaToAppleseed.toggleLog()&quot;</string>
         </property>
        </widget>
       </item>

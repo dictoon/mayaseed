@@ -70,11 +70,11 @@ def getMayaParams(log):
     params['outputResWidth'] = cmds.textField('m2s_outputResWidth', query=True, text=True)
     if not is_numeric.match(params['outputResWidth']):
         params['error'] = True
-        log.err('Output Resolution Width may only contain whole numbers')
+        log.error('Output Resolution Width may only contain whole numbers')
     params['outputResHeight'] = cmds.textField('m2s_outputResHeight', query=True, text=True)
     if not is_numeric.match(params['outputResHeight']):
         params['error'] = True
-        log.err('Output Resolution Height may only contain whole numbers')
+        log.error('Output Resolution Height may only contain whole numbers')
         
     # configurations
     # custom intercative config
@@ -83,22 +83,22 @@ def getMayaParams(log):
     params['customInteractiveConfigMinSamples'] = cmds.textField('m2s_customInteractiveConfigMinSamples', query=True, text=True)
     if not is_numeric.match(params['customInteractiveConfigMinSamples']):
         params['error'] = True
-        log.err('Custom Interactive Config Min Samples may only contain whole numbers')
+        log.error('Custom Interactive Config Min Samples may only contain whole numbers')
     params['customInteractiveConfigMaxSamples'] = cmds.textField('m2s_customInteractiveConfigMaxSamples', query=True, text=True)
     if not is_numeric.match(params['customInteractiveConfigMaxSamples']):
         params['error'] = True
-        log.err('Custom Interactive Config Max Samples may only contain whole numbers')
+        log.error('Custom Interactive Config Max Samples may only contain whole numbers')
     # custom Final config
     params['customFinalConfigCheck'] = cmds.checkBox('m2s_customFinalConfigCheck', query=True, value=True)
     params['customFinalConfigEngine'] = cmds.optionMenu('m2s_customFinalConfigEngine', query=True, value=True)
     params['customFinalConfigMinSamples'] = cmds.textField('m2s_customFinalConfigMinSamples', query=True, text=True)
     if not is_numeric.match(params['customFinalConfigMinSamples']):
         params['error'] = True
-        log.err('Custom Final Config Min Samples may only contain whole numbers')
+        log.error('Custom Final Config Min Samples may only contain whole numbers')
     params['customFinalConfigMaxSamples'] = cmds.textField('m2s_customFinalConfigMaxSamples', query=True, text=True)
     if not is_numeric.match(params['customFinalConfigMaxSamples']):
         params['error'] = True
-        log.err('Custom Final Config Max Samples may only contain whole numbers')
+        log.error('Custom Final Config Max Samples may only contain whole numbers')
 
     return(params)
 
@@ -235,7 +235,7 @@ class material(): #object transform name
 
         #else use default shader
         else:
-            self.log.err('no valid texture connected to {0} using default'.format(self.name))
+            self.log.error('no valid texture connected to {0} using default'.format(self.name))
             self.name = 'default_texture'
 
     def writeXML(self,doc):
@@ -319,11 +319,9 @@ class camera(): #(camera_name)
         else:
             self.model = 'pinhole_camera'
         self.name = cam
-        
-
 
         maya_resolution_aspect = float(params['outputResWidth'])/float(params['outputResHeight'])
-        maya_film_aspect = cmds.getAttr('camera1.horizontalFilmAperture') / cmds.getAttr('camera1.verticalFilmAperture')
+        maya_film_aspect = cmds.getAttr(cam + '.horizontalFilmAperture') / cmds.getAttr(cam + '.verticalFilmAperture')
 
         if maya_resolution_aspect > maya_film_aspect:
             self.film_width = float(cmds.getAttr(self.name + '.horizontalFilmAperture')) * inch_to_meter
@@ -354,8 +352,22 @@ class camera(): #(camera_name)
         writeTransform(doc, self.params['scene_scale'], self.transform)
         doc.endElement('camera')
 
+
 #
-# geometry object --
+# environment class --
+#
+
+class environment():
+    def __init__(self, params, log, name):
+        self.log = log
+        self.params = params
+        self.log = log
+        self.name = name
+
+
+
+#
+# geometry class --
 #
 
 class geometry(): # (object_transfrm_name, obj_file)
@@ -415,6 +427,8 @@ class assembly():
         for light_object in self.light_objects:
             self.addColor(light_object.color_name, light_object.color, light_object.multiplier)
         
+        if not len(self.light_objects):
+            self.log.warning('no light present in: ' + self.name)
         
         #if name is default populate list with all geometry otherwise just geometry from set with the same name as the object
         if (self.name == 'main_assembly'):
@@ -432,6 +446,10 @@ class assembly():
         #populate list with individual materials
         for geo in self.geo_objects:
             self.addMaterial(self.geo_objects[geo].material)
+        #if there are no objects in the scene raise error
+        if not len(self.geo_objects):
+            log.error('no objects present in ' + self.name)
+            raise RuntimeError('no objects present in ' + self.name)
 
     def addColor(self, name, value, multiplier=1):
         if not name in self.color_objects:
@@ -530,8 +548,8 @@ class assembly():
                     self.addColor((material.name + '_surface_shader_color'), material.bsdf_color)
                     surface_shader_params['color'] = material.name + '_surface_shader_color'
             elif type == 'Ambient Occlusion':
-                self.log.err('atempting to set {0} surface shader to ambient occlusion'.format(name))
-                self.log.err('ambient occlusion not implimented yet')
+                self.log.error('atempting to set {0} surface shader to ambient occlusion'.format(name))
+                self.log.error('ambient occlusion not implimented yet')
             self.log.info('adding {0} surface shader to {0}'.format(type, name))
             self.surface_shader_objects[name] = surfaceShader(self.log, name, model, surface_shader_params)
 
@@ -712,8 +730,10 @@ class assembly():
         cmds.select(cl=True)
         for geo_name in top_level_objects:
             cmds.select(geo_name, add=True)
-        cmds.file(('{0}/{1}'.format(self.params['outputDir']+'/geo', (self.name + '.obj'))), force=True, options='groups=1;ptgroups=1;materials=0;smoothing=0;normals=1', type='OBJexport', pr=True, es=True)
-
+        try:
+            cmds.file(('{0}/{1}'.format(self.params['outputDir']+'/geo', (self.name + '.obj'))), force=True, options='groups=1;ptgroups=1;materials=0;smoothing=0;normals=1', type='OBJexport', pr=True, es=True)
+        except:
+            log.error('error exporting {0}.obj'.format(self.name))
         cmds.select(cl=True)
 
 #
@@ -852,7 +872,7 @@ class writeXml(): #(file_path)
             self.file_object = open(self.file_path, 'w') #open file for editing
 
         except IOError:
-            self.log.err('IO error: file not accesable')
+            self.log.error('IO error: file not accesable')
             raise RuntimeError('IO error: file not accesable')
             return
         
@@ -881,15 +901,19 @@ class writeOut():
     def __init__(self):
         self.output = ''
         cmds.scrollField('m2s_log', edit=True, cl=True)
-    def err(self, message):
+    def error(self, message):
         setExportError()
         self.output = self.output + '<span style="color:#dd0000">' + message + '</span><br>'
         cmds.scrollField('m2s_log', edit=True, text=self.output)
         print('ERROR: ' + message)
     def info(self, message):
-        self.output = self.output + '<span style="color:#00dd00">' + message + '</span><br>'
+        self.output = self.output + '<span style="color:#4db34d">' + message + '</span><br>'
         cmds.scrollField('m2s_log', edit=True, text=self.output) 
-        print('INFO: ' + message)     
+        print('INFO: ' + message)  
+    def warning(self, message):
+        self.output = self.output + '<span style="color:#ead811">' + message + '</span><br>'
+        cmds.scrollField('m2s_log', edit=True, text=self.output)
+        print('WARNING: ' + message)
 
 #
 # writeTransform function --
@@ -916,26 +940,30 @@ def export():
     log = writeOut()
     params = getMayaParams(log)
     if not params['error']:
-        log.info('beginning export')
-        log.info('opening output file: ' + params['fileName'])
-        doc = writeXml('{0}/{1}'.format(params['outputDir'], params['fileName']), log)
-        doc.appendLine('<?xml version="1.0" encoding="UTF-8"?>') # XML format string
-        doc.appendLine('<!-- File generated by {0} version {1} visit {2} for more info and the latest super exciting release!-->'.format(script_name, version, more_info_url))
-        log.info('writing project element')
-        doc.startElement('project')
-        scene_element = scene(params, log)
-        scene_element.writeXML(doc)
-        output_element = output(params)
-        output_element.writeXML(doc)
-        config_element = configurations(params, log)
-        config_element.writeXML(doc)
-    
-        doc.endElement('project')
-        doc.close()
-        log.info('export finished')
-        setExportSuccess()
+        try:
+            log.info('beginning export')
+            log.info('opening output file: ' + params['fileName'])
+            doc = writeXml('{0}/{1}'.format(params['outputDir'], params['fileName']), log)
+            doc.appendLine('<?xml version="1.0" encoding="UTF-8"?>') # XML format string
+            doc.appendLine('<!-- File generated by {0} version {1} visit {2} for more info and the latest super exciting release!-->'.format(script_name, version, more_info_url))
+            log.info('writing project element')
+            doc.startElement('project')
+            scene_element = scene(params, log)
+            scene_element.writeXML(doc)
+            output_element = output(params)
+            output_element.writeXML(doc)
+            config_element = configurations(params, log)
+            config_element.writeXML(doc)
+        
+            doc.endElement('project')
+            doc.close()
+            log.info('export finished')
+            setExportSuccess()
+        except Exception as err:
+            log.error('an error has occured, check script editor for details')
+            print(err)
     else:
-        log.err('error validating ui attributes ')
+        log.error('error validating ui attributes ')
         raise RuntimeError('check script editor for details')
 
 #
@@ -953,13 +981,17 @@ def setExportSuccess():
         time.sleep(0.1)
         cmds.refresh(f=True)
 def setExportError():
+    if cmds.scrollField('m2s_log', query=True, vis=True):
+        cmds.button('m2s_logButton', edit=True, label=' errors have occurred - Hide log  ')
+    else:
+        cmds.button('m2s_logButton', edit=True, label=' errors have occurred - Show log')
     for i in range(3):
-        cmds.button('m2s_export', edit=True, bgc=[1,0.2,0.2])
-        cmds.button('m2s_export', edit=True, ebg=False)
+        cmds.button('m2s_logButton', edit=True, bgc=[1,0.2,0.2])
+        cmds.button('m2s_logButton', edit=True, ebg=False)
         time.sleep(0.1)
         cmds.refresh(f=True)
-        cmds.button('m2s_export', edit=True, bgc=[0.5,0.5,0.5])
-        cmds.button('m2s_export', edit=True, ebg=False)
+        cmds.button('m2s_logButton', edit=True, bgc=[0.5,0.5,0.5])
+        cmds.button('m2s_logButton', edit=True, ebg=False)
         time.sleep(0.1)
         cmds.refresh(f=True)
 
@@ -969,13 +1001,33 @@ def getDir(field_name):
     if new_state:
         cmds.textField(field_name, edit=True, text=new_state[0])
 
-def hideLog():
+def toggleLog():
     if cmds.scrollField('m2s_log', query=True, vis=True):
-        cmds.button('m2s_hideLog', edit=True, label='Show log')
+        cmds.button('m2s_logButton', edit=True, label='Show log')
         cmds.scrollField('m2s_log', edit=True, vis=False)
     else:
-        cmds.button('m2s_hideLog', edit=True, label='Hide log')
+        cmds.button('m2s_logButton', edit=True, label='Hide log')
         cmds.scrollField('m2s_log', edit=True, vis=True)           
+
+def addEnvironmentNode():
+    cmds.createNode('AS_environment')
+    populateEnvironmentList()
+
+def populateEnvironmentList():
+    current_state = cmds.optionMenu('m2s_envList', query=True, sl=True)
+    if cmds.optionMenu('m2s_envList', query=True, ils=True):
+        for menu_item in cmds.optionMenu('m2s_envList', query=True, ils=True):
+            cmds.deleteUI(menu_item)
+    for env in cmds.ls(type='AS_environment'):
+        cmds.menuItem(parent='m2s_envList', label=env)
+    cmds.menuItem(parent='m2s_envList', label='None')
+    if current_state:
+        try:
+            cmds.optionMenu('m2s_envList', edit=True, sl=current_state)
+        except:
+            print ''
+
+
 
 #
 # initiallise and show ui --
@@ -993,13 +1045,21 @@ def m2s():
     #populate output > camera dropdown menu with maya cameras
     for camera in cmds.listCameras(p=True):
         cmds.menuItem(parent='m2s_outputCamera', label=camera)
+
+    populateEnvironmentList()
     #set default resolution to scene resolution
     cmds.textField('m2s_outputResWidth', edit=True, text=cmds.getAttr('defaultResolution.width'))
     cmds.textField('m2s_outputResHeight', edit=True, text=cmds.getAttr('defaultResolution.height'))
+    toggleLog()
 
-    hideLog()
     #show window
     cmds.showWindow(mayaToAppleseedUi)
+    log = writeOut()
+    try:
+        cmds.loadPlugin('m2s_envNode.py')
+    except:
+        log.error('error loading plugins')
+        log.info('to enable plugins choose window > setting/preferences > plugin manager')
 
 
 

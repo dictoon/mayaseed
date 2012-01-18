@@ -4,14 +4,15 @@ import maya.OpenMayaMPx as OpenMayaMPx
 import maya.OpenMayaRender as OpenMayaRender
 import maya.OpenMayaUI as OpenMayaUI   
 
-nodeTypeName = "myCustomLocator"
-nodeTypeId = OpenMaya.MTypeId(0x87079)
+nodeTypeName = "AS_environment"
+nodeTypeId = OpenMaya.MTypeId(0x10211)
 
 glRenderer = OpenMayaRender.MHardwareRenderer.theRenderer()
 glFT = glRenderer.glFunctionTable()
 
-class myNode(OpenMayaMPx.MPxLocatorNode):
+class AS_environment(OpenMayaMPx.MPxLocatorNode):
     def __init__(self):
+
         OpenMayaMPx.MPxLocatorNode.__init__(self)
 
     def draw(self, view, path, style, status):
@@ -197,9 +198,45 @@ class myNode(OpenMayaMPx.MPxLocatorNode):
 
 
 def nodeCreator():
-    return OpenMayaMPx.asMPxPtr(myNode())
+    return OpenMayaMPx.asMPxPtr(AS_environment())
  
 def nodeInitializer():
+    #constant exitance
+    constant_extiance_nAttr = OpenMaya.MFnNumericAttribute()
+    AS_environment.constant_extiance = constant_extiance_nAttr.createColor( "constant_extiance", "const_extiance")
+    constant_extiance_nAttr.setDefault(0.5,0.5,0.5)
+    constant_extiance_nAttr.setKeyable(True)
+    #gradient horizon exitance
+    gradient_horizon_extiance_nAttr = OpenMaya.MFnNumericAttribute()
+    AS_environment.gradient_horizon_extiance = gradient_horizon_extiance_nAttr.createColor( "gradient_horizon_extiance", "grad_horizon_extiance")
+    gradient_horizon_extiance_nAttr.setDefault(0.5,0.5,0.5)
+    gradient_horizon_extiance_nAttr.setKeyable(True)
+    #gradient zenith exitance
+    gradient_zenith_extiance_nAttr = OpenMaya.MFnNumericAttribute()
+    AS_environment.gradient_zenith_extiance = gradient_zenith_extiance_nAttr.createColor( "gradient_zenith_extiance", "grad_zenith_extiance")
+    gradient_zenith_extiance_nAttr.setDefault(0.5,0.5,0.5)
+    gradient_zenith_extiance_nAttr.setKeyable(True)
+    #latitude longitude exitance
+    latitude_longitude_extiance_nAttr = OpenMaya.MFnNumericAttribute()
+    AS_environment.latitude_longitude_extiance = latitude_longitude_extiance_nAttr.createColor( "latitude_longitude_extiance", "lat_long_extiance")
+    latitude_longitude_extiance_nAttr.setDefault(0.5,0.5,0.5)
+    latitude_longitude_extiance_nAttr.setKeyable(True)
+    #mirror ball exitance
+    mirror_ball_extiance_nAttr = OpenMaya.MFnNumericAttribute()
+    AS_environment.mirror_ball_extiance = mirror_ball_extiance_nAttr.createColor( "mirror_ball_extiance", "mball_extiance")
+    mirror_ball_extiance_nAttr.setDefault(0.5,0.5,0.5)
+    mirror_ball_extiance_nAttr.setKeyable(True)
+
+    # add attribute
+    try:
+        AS_environment.addAttribute( AS_environment.constant_extiance )
+        AS_environment.addAttribute( AS_environment.gradient_horizon_extiance )
+        AS_environment.addAttribute( AS_environment.gradient_zenith_extiance )
+        AS_environment.addAttribute( AS_environment.latitude_longitude_extiance )
+        AS_environment.addAttribute( AS_environment.mirror_ball_extiance )
+    except:
+        sys.stderr.write( "Failed to create attributes of %s noden", kPluginNodeTypeName )
+
     return OpenMaya.MStatus.kSuccess
  
 def initializePlugin(obj):
