@@ -1164,6 +1164,7 @@ def ms():
     if cmds.window('msDial', query=True, exists=True):
         cmds.deleteUI('msDial')
     mayaseedUi = cmds.loadUI(f="{0}/mayaseed.ui".format(os.path.dirname(__file__)))    
+    cmds.textField('ms_outputDir', edit=True, text=cmds.workspace(query=True, rd=True))
     #if the file has been saved set default file name to <scene_name>.appleseed
     if cmds.file(query=True, sceneName=True, shortName=True):
         cmds.textField('ms_fileName', edit=True, text=(os.path.splitext(cmds.file(query=True, sceneName=True, shortName=True))[0] + '.appleseed'))
