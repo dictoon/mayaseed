@@ -1184,7 +1184,7 @@ def ms():
     cmds.showWindow(mayaseedUi)
     log = writeOut()
     try:
-        cmds.loadPlugin('ms_envNode.py')
+        cmds.loadPlugin('ms_environment.py')
     except:
         log.error('error loading plugins')
         log.info('to enable plugins choose window > setting/preferences > plugin manager')
