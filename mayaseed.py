@@ -45,7 +45,6 @@ def getMayaParams(log):
     #main settings
     params['outputDir'] = cmds.textField('ms_outputDir', query=True, text=True)
     params['fileName'] = cmds.textField('ms_fileName', query=True, text=True)
-    params['verbose'] = cmds.checkBox('ms_verbose', query=True, value=True)
     params['scene_scale'] = 1
     
     #Advanced options
@@ -75,6 +74,7 @@ def getMayaParams(log):
     params['matDefaultSurfaceShader'] = cmds.optionMenu('ms_matDefaultSurfaceShader', query=True, value=True)
 
     params['matConvertTexturesToEXR'] = cmds.checkBox('ms_matConvertTexturesToEXR', query=True, value=True)
+    params['matDoubleShade'] = cmds.checkBox('ms_matDoubleShade', query=True, value=True)
 
     # output 
     params['outputCamera'] = cmds.optionMenu('ms_outputCamera', query=True, value=True)
@@ -100,6 +100,15 @@ def getMayaParams(log):
     if not is_numeric.match(params['customInteractiveConfigMaxSamples']):
         params['error'] = True
         log.error('Custom Interactive Config Max Samples may only contain whole numbers')
+    params['customInteractiveConfigMaxRayDepth'] = cmds.textField('ms_customInteractiveConfigMaxRayDepth', query=True, text=True)
+    if not is_numeric.match(params['customInteractiveConfigMaxRayDepth']):
+        params['error'] = True
+        log.error('Custom Interactive Config Max Ray Depth may only contain whole numbers')
+    params['customInteractiveConfigLightSamples'] = cmds.textField('ms_customInteractiveConfigLightSamples', query=True, text=True)
+    if not is_numeric.match(params['customInteractiveConfigLightSamples']):
+        params['error'] = True
+        log.error('Custom Interactive Config Light Samples may only contain whole numbers')
+
     # custom Final config
     params['customFinalConfigCheck'] = cmds.checkBox('ms_customFinalConfigCheck', query=True, value=True)
     params['customFinalConfigEngine'] = cmds.optionMenu('ms_customFinalConfigEngine', query=True, value=True)
@@ -111,6 +120,14 @@ def getMayaParams(log):
     if not is_numeric.match(params['customFinalConfigMaxSamples']):
         params['error'] = True
         log.error('Custom Final Config Max Samples may only contain whole numbers')
+    params['customFinalConfigMaxRayDepth'] = cmds.textField('ms_customFinalConfigMaxRayDepth', query=True, text=True)
+    if not is_numeric.match(params['customFinalConfigMaxRayDepth']):
+        params['error'] = True
+        log.error('Custom Final Config Max RayDepth may only contain whole numbers')
+    params['customFinalConfigLightSamples'] = cmds.textField('ms_customFinalConfigLightSamples', query=True, text=True)
+    if not is_numeric.match(params['customInteractiveConfigLightSamples']):
+        params['error'] = True
+        log.error('Custom Final Config Light Samples may only contain whole numbers')
 
     return(params)
 
@@ -122,7 +139,7 @@ class color():
     def __init__(self, log, name, color, multiplier):
         self.log = log
         self.name = name
-        self.color = [color[0][0],color[0][1],color[0][2]]
+        self.color = color
         self.multiplier = multiplier
         self.color_space = 'srgb'
         self.wavelength_range = '400.0 700.0'
@@ -175,7 +192,7 @@ class light():
         self.log = log
         self.name = name
         self.color_name = self.name + '_exitance'
-        self.color = cmds.getAttr(self.name+'.color')
+        self.color = cmds.getAttr(self.name+'.color')[0]
         self.multiplier = cmds.getAttr(self.name+'.intensity')
         self.decay = cmds.getAttr(self.name+'.decayRate')
         m = cmds.getAttr(self.name+'.matrix')
@@ -200,16 +217,16 @@ class material(): #object transform name
         self.bsdf = bsdf 
         self.edf = edf
         self.surface_shader = surface_shader
-        self.bsdf_color = [(0.5, 0.5, 0.5)]
+        self.bsdf_color = (0.5, 0.5, 0.5)
         self.bsdf_texture = None
-        self.edf_color = [(0,0,0)]
+        self.edf_color = (0,0,0)
         self.edf_texture = None
-        self.specular_color = [(0,0,0)]
+        self.specular_color = (0,0,0)
         self.specular_texture = None
         #for shaders with color & incandescence attributes interpret them as bsdf and edf
         if (self.shader_type == 'lambert') or (self.shader_type == 'blinn') or (self.shader_type == 'phong') or (self.shader_type == 'phongE'):
-            self.bsdf_color = cmds.getAttr(self.name+'.color')
-            self.edf_color = cmds.getAttr(self.name+'.incandescence')
+            self.bsdf_color = clampRGB(cmds.getAttr(self.name+'.color')[0])
+            self.edf_color = cmds.getAttr(self.name+'.incandescence')[0]
             color_connection = cmds.connectionInfo((self.name + '.color'), sourceFromDestination=True).split('.')[0]
             incandecence_connection = cmds.connectionInfo((self.name+'.incandescence'), sourceFromDestination=True).split('.')[0]
             if color_connection:
@@ -223,7 +240,7 @@ class material(): #object transform name
 
         #get specular conponent for shaders which have one
         elif (self.shader_type == 'blinn') or (self.shader_type == 'phong') or (self.shader_type == 'phongE'):
-            self.specular_color = cmds.getAttr(self.name+'.specularColor')
+            self.specular_color = cmds.getAttr(self.name+'.specularColor')[0]
             specular_connection = cmds.connectionInfo((self.name + '.specularColor'), sourceFromDestination=True).split('.')[0]
             if specular_connection:
                 if cmds.nodeType(specular_connection) == 'file':
@@ -232,8 +249,8 @@ class material(): #object transform name
 
         #for surface shaders interpret outColor as bsdf and edf
         elif self.shader_type == 'surfaceShader':
-            self.bsdf_color = cmds.getAttr(self.name+'.outColor')
-            self.edf_color = self.bsdf_color
+            self.edf_color = cmds.getAttr(self.name+'.outColor')[0]
+            self.bsdf_color = clampRGB(self.edf_color)
 
             outColor_connection = cmds.connectionInfo((self.name+'.outColor'), sourceFromDestination=True).split('.')[0]
             if outColor_connection:
@@ -244,6 +261,15 @@ class material(): #object transform name
             else:
                 self.bsdf_texture = None
                 self.edf_texture = None
+            
+            print '***** material *****'
+            print self.name
+            print 'edf----'
+            print self.edf_color
+            print 'bsdf-----'
+            print self.bsdf_color
+            print 'spec------'
+            print self.specular_color
 
         #else use default shader
         else:
@@ -421,7 +447,8 @@ class environmentEdf():
 #
 
 class geometry(): # (object_transfrm_name, obj_file)
-    def __init__(self, name, log, output_file, assembly='main_assembly'):
+    def __init__(self, params, log, name, output_file, assembly='main_assembly'):
+        self.params = params
         self.name = name
         #get name in heirarchy
         self.heirarchy_name = name
@@ -447,7 +474,8 @@ class geometry(): # (object_transfrm_name, obj_file)
         doc.startElement('object_instance name="{0}_inst" object="{1}.{2}"'.format(self.name, self.assembly, self.heirarchy_name,))
         writeTransform(doc)
         doc.appendElement('assign_material slot="0" side="front" material="{0}"'.format(self.material))
-        doc.appendElement('assign_material slot="0" side="back" material="{0}"'.format(self.material))
+        if self.params['matDoubleShade']:
+            doc.appendElement('assign_material slot="0" side="back" material="{0}"'.format(self.material))
         doc.endElement('object_instance')
 #
 # assembly object --
@@ -487,12 +515,12 @@ class assembly():
             for geo in cmds.ls(typ='mesh'):
                 geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
                 if not geo_transform in self.geo_objects:
-                    self.geo_objects[geo_transform] = geometry(geo_transform, self.log, ('geo/'+self.name+'.obj'), self.name)
+                    self.geo_objects[geo_transform] = geometry(self.params, self.log, geo_transform, ('geo/'+self.name+'.obj'), self.name)
         else:
             for geo in cmds.listConnections(self.name, sh=True):
                 geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
                 if not geo_transform in self.geo_objects:
-                    self.geo_objects[geo_transform] = geometry(geo_transform, self.log, ('geo/'+self.name+'.obj'), self.name)
+                    self.geo_objects[geo_transform] = geometry(self.params, self.log, geo_transform, ('geo/'+self.name+'.obj'), self.name)
                 
         #populate list with individual materials
         for geo in self.geo_objects:
@@ -808,13 +836,13 @@ class scene():
             env_edf_params = dict()
             if environment_edf_model_enum == 0:
                 environment_edf_model = 'constant_environment_edf'
-                self.addColor('constant_env_exitance', cmds.getAttr(self.params['environment']+'.constant_exitance'))
+                self.addColor('constant_env_exitance', cmds.getAttr(self.params['environment']+'.constant_exitance')[0])
                 env_edf_params['exitance'] =  'constant_env_exitance'
 
             elif environment_edf_model_enum == 1:
                 environment_edf_model = 'gradient_environment_edf'
-                self.addColor('gradient_env_horizon_exitance', cmds.getAttr(self.params['environment']+'.gradient_horizon_exitance'))
-                self.addColor('gradient_env_zenith_exitance', cmds.getAttr(self.params['environment']+'.gradient_zenith_exitance'))
+                self.addColor('gradient_env_horizon_exitance', cmds.getAttr(self.params['environment']+'.gradient_horizon_exitance')[0])
+                self.addColor('gradient_env_zenith_exitance', cmds.getAttr(self.params['environment']+'.gradient_zenith_exitance')[0])
                 env_edf_params['horizon_exitance'] = 'gradient_env_horizon_exitance'
                 env_edf_params['zenith_exitance'] = 'gradient_env_zenith_exitance'
 
@@ -961,13 +989,16 @@ class configurations():
             else:
                 engine = "drt"
             doc.appendElement('parameter name="lighting_engine" value="{0}"'.format(engine))
+            doc.startElement('parameters name="{0}"'.format(engine))
+            doc.appendElement('parameter name="max_path_length" value="{0}"'.format(self.params['customInteractiveConfigMaxRayDepth']))
+            doc.endElement('parameters')
             doc.appendElement('parameter name="min_samples" value="{0}"'.format(self.params['customInteractiveConfigMinSamples']))
             doc.appendElement('parameter name="max_samples" value="{0}"'.format(self.params['customInteractiveConfigMaxSamples']))
             doc.endElement('configuration')
         else:# otherwise add default configurations
             self.log.info('writing default interactive config')
             doc.appendElement('configuration name="interactive" base="base_interactive"')
-  
+
         #if 'customise final configuration' is set read customised values
         if cmds.checkBox('ms_customFinalConfigCheck', query=True, value=True) == True:
             self.log.info('writing custom final config')
@@ -978,6 +1009,9 @@ class configurations():
             else:
                 engine = 'drt'
             doc.appendElement('parameter name="lighting_engine" value="{0}"'.format(engine))
+            doc.startElement('parameters name="{0}"'.format(engine))
+            doc.appendElement('parameter name="max_path_length" value="{0}"'.format(self.params['customFinalConfigMaxRayDepth']))
+            doc.endElement('parameters')
             doc.appendElement('parameter name="min_samples" value="{0}"'.format(self.params['customFinalConfigMinSamples']))
             doc.appendElement('parameter name="max_samples" value="{0}"'.format(self.params['customFinalConfigMaxSamples']))
             doc.endElement("configuration")
@@ -1061,6 +1095,22 @@ def writeTransform(doc, scale = 1, transform = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0
 
     doc.endElement('matrix')
     doc.endElement('transform')
+
+#
+# clamp RGB values ---
+#
+
+def clampRGB(color):
+    R = color[0]
+    G = color[1]
+    B = color[2]
+    if R > 1:
+        R = 1
+    if G > 1:
+        G = 1
+    if B > 1:
+        B = 1
+    return (R,G,B)
 
 #
 # build and export
