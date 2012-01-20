@@ -72,8 +72,6 @@ def getMayaParams(log):
     params['matDefaultBSDF'] = cmds.optionMenu('ms_matDefaultBSDF', query=True, value=True)
     params['matDefaultEDF'] = cmds.optionMenu('ms_matDefaultEDF', query=True, value=True)
     params['matDefaultSurfaceShader'] = cmds.optionMenu('ms_matDefaultSurfaceShader', query=True, value=True)
-
-    params['matConvertTexturesToEXR'] = cmds.checkBox('ms_matConvertTexturesToEXR', query=True, value=True)
     params['matDoubleShade'] = cmds.checkBox('ms_matDoubleShade', query=True, value=True)
 
     # output 
