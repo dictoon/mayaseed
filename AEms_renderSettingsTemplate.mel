@@ -19,11 +19,45 @@
 // THE SOFTWARE.
 
 
+// procedures for -callCustom folderPicker 
+
+global proc AE_file_browse(string $attr){    
+ rowLayout -nc 3;  
+  text -label "Output directory";  
+  textField  -fileName `getAttr $attr` LocationText;  
+  symbolButton -image "navButtonBrowse.xpm" -c ("loadPopup(\"" + $attr + "\")");  
+  setParent ..;  
+   
+}  
+  
+global proc AE_file_browse_repeat(string $attr){  
+ textField  -e -fileName `getAttr $attr` LocationText;  
+}
+
+global proc loadPopup(string $attr){  
+ string $loc[0] = `fileDialog2 -fm 3 -okc "save"`;  
+   
+ if ($loc[0] != ""){  
+  setAttr -type "string" $attr $loc[0];  
+  textField -e -fileName `getAttr $attr` LocationText;  
+ }  
+} 
+
+// procedure for -callCustom render button
+global proc AE_export_button(string $attr){
+   button -label "Export scene" -width 200 -height 30 -bgc 0 0.6 0.8 -ebg false;
+}
+
+global proc AE_edit_export_button(string $attr){
+}
+
+// layout definition ---------------------------------------------------------
 global proc AEms_renderSettingsTemplate(string $nodeName)
 {
+   editorTemplate -callCustom "AE_export_button" "AE_edit_export_button" "export";
    editorTemplate -beginScrollLayout;
       editorTemplate -beginLayout "Export settings" -collapse false;
-         editorTemplate -addControl "output_directory";
+         editorTemplate -callCustom "AE_file_browse" "AE_file_browse_repeat" "output_directory";
          editorTemplate -addControl "output_file";
       editorTemplate -endLayout;
 
