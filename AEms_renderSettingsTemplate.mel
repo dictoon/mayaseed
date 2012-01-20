@@ -1,0 +1,72 @@
+// Copyright (c) 2012 Jonathan Topf
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
+
+global proc AEms_renderSettingsTemplate(string $nodeName)
+{
+   editorTemplate -beginScrollLayout;
+      editorTemplate -beginLayout "Export settings" -collapse false;
+         editorTemplate -addControl "output_directory";
+         editorTemplate -addControl "output_file";
+      editorTemplate -endLayout;
+
+      editorTemplate -beginLayout "Environment settings" -collapse true;
+         editorTemplate -addControl "environment";
+      editorTemplate -endLayout;
+
+      editorTemplate -beginLayout "Camera settings" -collapse true;
+         editorTemplate -addControl "export_all_cameras";
+         editorTemplate -addControl "export_all_cameras_as_thinlens";
+      editorTemplate -endLayout;
+      
+      editorTemplate -beginLayout "Assembly settings" -collapse true;
+         editorTemplate -addControl "interpret_sets_as_assemblies";
+         editorTemplate -addControl "double_sided_shading";
+      editorTemplate -endLayout;
+
+      editorTemplate -beginLayout "Output settings" -collapse true;
+         editorTemplate -addControl "camera";
+         editorTemplate -addControl "color_space";
+      editorTemplate -endLayout;
+
+      editorTemplate -beginLayout "Configuration settings" -collapse true;
+         editorTemplate -addControl "export_custom_interactive_config";
+         editorTemplate -addControl "interactive_lighting_engine";
+         editorTemplate -addControl "interactive_min_samples";
+         editorTemplate -addControl "interactive_max_samples";
+         editorTemplate -addControl "interactive_max_ray_depth";
+         editorTemplate -addControl "interactive_light_samples";
+         editorTemplate -addSeparator;
+         editorTemplate -addControl "export_custom_final_config";
+         editorTemplate -addControl "final_lighting_engine";
+         editorTemplate -addControl "final_min_samples";
+         editorTemplate -addControl "final_max_samples";
+         editorTemplate -addControl "final_max_ray_depth";
+         editorTemplate -addControl "final_light_samples";
+      editorTemplate -endLayout;
+
+
+      AEdependNodeTemplate $nodeName; // add any base class attributes
+      
+      editorTemplate -addExtraControls; // add any other attributes
+      //editorTemplate -suppress "attrbute";
+
+   editorTemplate -endScrollLayout;
+}
