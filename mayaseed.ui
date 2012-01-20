@@ -82,7 +82,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -112,7 +112,7 @@
              </size>
             </property>
             <property name="text">
-             <string>output directory</string>
+             <string>Output directory</string>
             </property>
            </widget>
           </item>
@@ -152,7 +152,7 @@
              </size>
             </property>
             <property name="text">
-             <string>file name</string>
+             <string>File name</string>
             </property>
            </widget>
           </item>
@@ -194,7 +194,7 @@
            <property name="geometry">
             <rect>
              <x>0</x>
-             <y>-368</y>
+             <y>-791</y>
              <width>607</width>
              <height>1169</height>
             </rect>
@@ -505,7 +505,7 @@
                           </size>
                          </property>
                          <property name="text">
-                          <string>lambert -&gt;</string>
+                          <string>Lambert -&gt;</string>
                          </property>
                         </widget>
                        </item>
@@ -603,7 +603,7 @@
                           </size>
                          </property>
                          <property name="text">
-                          <string>blinn -&gt;</string>
+                          <string>Blinn -&gt;</string>
                          </property>
                         </widget>
                        </item>
@@ -697,7 +697,7 @@
                           </size>
                          </property>
                          <property name="text">
-                          <string>phong -&gt;</string>
+                          <string>Phong -&gt;</string>
                          </property>
                         </widget>
                        </item>
@@ -716,7 +716,7 @@
                           </size>
                          </property>
                          <property name="text">
-                          <string>surface shader -&gt;</string>
+                          <string>Surface shader -&gt;</string>
                          </property>
                         </widget>
                        </item>
@@ -885,7 +885,7 @@
                           </size>
                          </property>
                          <property name="text">
-                          <string>default -&gt;</string>
+                          <string>Default -&gt;</string>
                          </property>
                         </widget>
                        </item>
@@ -1018,7 +1018,7 @@
                           </size>
                          </property>
                          <property name="text">
-                          <string>double sided shading</string>
+                          <string>Double sided shading</string>
                          </property>
                         </widget>
                        </item>
@@ -1856,7 +1856,7 @@ p, li { white-space: pre-wrap; }
          </size>
         </property>
         <property name="text">
-         <string>export</string>
+         <string>Export</string>
         </property>
         <property name="+command" stdset="0">
          <string>&quot;mayaseed.export()&quot;</string>
