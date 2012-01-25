@@ -51,10 +51,6 @@ def nodeInitializer():
     ms_renderSettings.output_file =  output_file_Attr.create("output_file", "out_file", OpenMaya.MFnData.kString, output_file_string)  
 
     #environent -----------------------------------------------
-    #create environment button
-    create_environment_button_string = OpenMaya.MFnStringData().create("/")
-    create_environment_button_string_Attr = OpenMaya.MFnTypedAttribute()
-    ms_renderSettings.create_environment_button =  create_environment_button_string_Attr.create("create_environment", "create_env", OpenMaya.MFnData.kString, create_environment_button_string) 
     #environment message
     environment_msgAttr = OpenMaya.MFnMessageAttribute()
     ms_renderSettings.environment = environment_msgAttr.create("environment", "env")   
@@ -152,7 +148,6 @@ def nodeInitializer():
         ms_renderSettings.addAttribute(ms_renderSettings.output_dir)
         ms_renderSettings.addAttribute(ms_renderSettings.output_file)
 
-        ms_renderSettings.addAttribute(ms_renderSettings.create_environment_button)
         ms_renderSettings.addAttribute(ms_renderSettings.environment)
 
         ms_renderSettings.addAttribute(ms_renderSettings.export_all_cameras)

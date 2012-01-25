@@ -1,4 +1,4 @@
-// Copyright (c) 2012 Jonathan Topf
+   // Copyright (c) 2012 Jonathan Topf
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -51,6 +51,63 @@ global proc AE_export_button(string $attr){
 global proc AE_edit_export_button(string $attr){
 }
 
+// procedures for message option menus
+global proc AE_custom_env_menu(string $attr){
+   rowLayout -nc 3;
+      text -label "Environment";
+      optionMenu -width 200;
+         menuItem -label "foo";
+         menuItem -label "bar";
+      button -label "  +  " -height 20;
+}
+
+global proc AE_edit_custom_env_menu(string $attr){
+}
+
+
+// procedures for camera option menu
+global proc AE_custom_camera_menu_create(string $attr){
+
+   // get actual node name
+   string $nodeNameTokens[];
+   tokenize $attr "." $nodeNameTokens;
+   int $newStringLength = size($nodeNameTokens[0]);
+   string $nodeName = `substring $nodeNameTokens[0] 1 $newStringLength`;
+   print $nodeName;
+
+   string $currentCameraConnection = `getConnectedNode($nodeName + ".camera")`;
+
+   print "\n\n\n*********\n";
+   print $currentCameraConnection;
+   print "\n*********\n\n";
+
+   string $customCameraMenuCommand = "setCameraConnection " + $nodeName;
+   optionMenuGrp -label "Cameras" -cc $customCameraMenuCommand customCameraMenuItem;
+   string $cameras[] = `ls -cameras`;
+   menuItem -label "<none>";
+   for ($item in $cameras){
+        menuItem -label $item;         
+   }
+}
+ 
+global proc AE_custom_camera_menu_edit(string $nodeName){
+    deleteUI customCameraMenuItem;       
+    AE_custom_camera_menu_create($nodeName);
+}
+
+global proc setCameraConnection(string $nodeName){
+   string $newSelection = `optionMenuGrp -q -v customCameraMenuItem`;
+   $newSelection = $newSelection + ".nodeState";
+   string $cameraConnectionName = $nodeName + ".camera";
+   string $currentCameraConnection = `getConnectedNode($nodeName + ".camera")`;
+   if ($currentCameraConnection != ""){
+      $currentCameraConnection = $currentCameraConnection + ".nodeState";
+      disconnectAttr $currentCameraConnection $cameraConnectionName;
+   }
+   connectAttr $newSelection $cameraConnectionName;
+}
+
+
 // layout definition ---------------------------------------------------------
 global proc AEms_renderSettingsTemplate(string $nodeName)
 {
@@ -62,21 +119,23 @@ global proc AEms_renderSettingsTemplate(string $nodeName)
       editorTemplate -endLayout;
 
       editorTemplate -beginLayout "Environment settings" -collapse true;
-         editorTemplate -addControl "environment";
+         editorTemplate -callCustom "AE_custom_env_menu" "AE_edit_custom_env_menu" "environment";
       editorTemplate -endLayout;
 
       editorTemplate -beginLayout "Camera settings" -collapse true;
          editorTemplate -addControl "export_all_cameras";
+         editorTemplate -addSeparator;
          editorTemplate -addControl "export_all_cameras_as_thinlens";
       editorTemplate -endLayout;
       
       editorTemplate -beginLayout "Assembly settings" -collapse true;
          editorTemplate -addControl "interpret_sets_as_assemblies";
+         editorTemplate -addSeparator;
          editorTemplate -addControl "double_sided_shading";
       editorTemplate -endLayout;
 
-      editorTemplate -beginLayout "Output settings" -collapse true;
-         editorTemplate -addControl "camera";
+      editorTemplate -beginLayout "Output settings" -collapse true (uiRes("m_AElocatorTemplate.kLocatorAttributes"));
+         editorTemplate -callCustom "AE_custom_camera_menu_create" "AE_custom_camera_menu_edit" "camera";
          editorTemplate -addControl "color_space";
       editorTemplate -endLayout;
 
