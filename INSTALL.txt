@@ -36,7 +36,7 @@ Linux: /usr/aw/userconfig/maya/<maya version>/scripts
 $env_script_path = `getenv MAYA_SCRIPT_PATH`;
 $env_plugin_path = `getenv MAYA_PLUG_IN_PATH`;
 
-putenv MAYA_SCRIPT_PATH ($env_script_path + ":<mayaseed root>");
+putenv MAYA_SCRIPT_PATH ($env_script_path + ":<mayaseed root>/scripts");
 getenv MAYA_SCRIPT_PATH;
 
 putenv MAYA_PLUG_IN_PATH ($env_plugin_path + ":<mayaseed root>/plugins");
