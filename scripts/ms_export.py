@@ -320,15 +320,6 @@ class Material(): #object transform name
             else:
                 self.bsdf_texture = None
                 self.edf_texture = None
-            
-            print '***** material *****'
-            print self.name
-            print 'edf----'
-            print self.edf_color
-            print 'bsdf-----'
-            print self.bsdf_color
-            print 'spec------'
-            print self.specular_color
 
         #else use default shader
         else:

@@ -33,41 +33,22 @@ Linux: /usr/aw/userconfig/maya/<maya version>/scripts
 
 // mayaseed setup -----------------------------------------------
 
+// maya to appleseed setup -----------------------------------------------
+
 $env_script_path = `getenv MAYA_SCRIPT_PATH`;
 $env_plugin_path = `getenv MAYA_PLUG_IN_PATH`;
 
-putenv MAYA_SCRIPT_PATH ($env_script_path + ":<mayaseed root>/scripts");
-getenv MAYA_SCRIPT_PATH;
+putenv MAYA_SCRIPT_PATH ($env_script_path + "<mayaseed_root>/graphics");
 
-putenv MAYA_PLUG_IN_PATH ($env_plugin_path + ":<mayaseed root>/plugins");
-getenv MAYA_PLUG_IN_PATH;
+putenv MAYA_PLUG_IN_PATH ($env_plugin_path + "<mayaseed root>/plugins");
 
-// mayaseed setup -----------------------------------------------
+// maya to appleseed setup -----------------------------------------------
 
 
 
-Next you will want to start up Maya and enable the plugin, this isn't essential for the exporter to work but it will throw an error if the plugins aren't installed.
+Next you will want to start up Maya and enable the plugin, to do this choose window > settings preferences > plugin manager and load 'mayaseed.py', you will also want to click autoload so you don't have to do this step every time Maya loads.
 
-To enable the plugin choose window > settings preferences > plugin manager and load 'ms_envNode.py', you will also want to click autoload so you don't have to do this step every time Maya loads.
 
-Last you will want to make a shelf button containing the following code to show the mayaseed dialogue.
-
-#*************************************************************************
-
-import sys
-
-sys.path.append('<mayaseed root>')
-
-import mayaseed
-
-reload(mayaseed)
-
-mayaseed.ms()
-
-#*************************************************************************
-
-The easiest way to do this is to open up the script editor and paste the following code into a python tab, highlight the code and middle mouse drag the code into the shelf. You may be asked whether you want to save the script as python or MEL, choose python. 
-
-That should be everything, just click the shelf button to show the UI and the rest should hopefully be obvious. This exporter is very much a work in progress and many improvements/features are planned for the future. Also please submit any bugs/feature requests as this is meant to be practical and usable software and I'd love to hear how it is being used.
+That should be everything, if everythign has gone to plan you shuld have a new menu called mayaseed where you can create new ms_renderSettings nodes. This exporter is very much a work in progress and many improvements/features are planned for the future. Also please submit any bugs/feature requests as this is meant to be practical and usable software and I'd love to hear how it is being used.
 
 jon
