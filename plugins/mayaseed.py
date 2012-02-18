@@ -67,6 +67,14 @@ def ms_renderSettings_nodeInitializer():
     output_file_Attr = OpenMaya.MFnTypedAttribute()
     ms_renderSettings.output_file =  output_file_Attr.create("output_file", "out_file", OpenMaya.MFnData.kString, output_file_string)  
 
+    #convert textures to exr
+    convert_textures_to_exr_nAttr = OpenMaya.MFnNumericAttribute()
+    ms_renderSettings.convert_textures_to_exr = convert_textures_to_exr_nAttr.create("convert_textures_to_exr", "convert_tex_to_exr", OpenMaya.MFnNumericData.kBoolean, True)
+
+    #overwrite existing exrs
+    overwrite_existing_exrs_nAttr = OpenMaya.MFnNumericAttribute()
+    ms_renderSettings.overwrite_existing_exrs = overwrite_existing_exrs_nAttr.create("overwrite_existing_exrs", "overwrite_exrs", OpenMaya.MFnNumericData.kBoolean, True)
+
     #environent -----------------------------------------------
     #environment message
     environment_msgAttr = OpenMaya.MFnMessageAttribute()
@@ -176,9 +184,10 @@ def ms_renderSettings_nodeInitializer():
 
         ms_renderSettings.addAttribute(ms_renderSettings.output_dir)
         ms_renderSettings.addAttribute(ms_renderSettings.output_file)
+        ms_renderSettings.addAttribute(ms_renderSettings.convert_textures_to_exr)
+        ms_renderSettings.addAttribute(ms_renderSettings.overwrite_existing_exrs)
 
         ms_renderSettings.addAttribute(ms_renderSettings.environment)
-
         ms_renderSettings.addAttribute(ms_renderSettings.export_all_cameras)
         ms_renderSettings.addAttribute(ms_renderSettings.export_all_cameras_as_thin_lens)
 

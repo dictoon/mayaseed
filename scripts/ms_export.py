@@ -26,6 +26,8 @@ import maya.utils as mu
 import os
 import time
 import re
+import subprocess
+import sys
 
 
 script_name = "mayaseed.py"
@@ -53,6 +55,25 @@ def clampRGB(color):
     if B > 1:
         B = 1
     return (R,G,B)
+
+#
+# convert texture to exr --
+#
+
+def convertTexToExr(file_path, dest_dir, overwrite=True):
+    if os.path.exists(file_path):
+        dest_file = os.path.join(dest_dir, os.path.splitext(os.path.split('/Users/jonathan/Desktop/reflections.png')[1])[0] + '.exr')
+        if (overwrite == False) and (os.path.exists(dest_file)):
+            print '# {0} exists, skipping conversion'.format(dest_file)
+        else:
+            imf_copy_path = os.path.join(os.path.split(sys.path[0])[0], 'bin', 'imf_copy')
+            if not os.path.exists(dest_dir):
+                os.mkdir(dest_dir)
+            p = subprocess.Popen([imf_copy_path, file_path, dest_file])
+            return dest_file
+    else:
+        print '# error: {0} does not exist'.format(file_path)
+        
 
 #
 # writeXml class --
@@ -120,6 +141,9 @@ def getMayaParams(render_settings_node):
     
     #main settings
     params['outputDir'] = cmds.getAttr(render_settings_node + '.output_directory')
+    params['fileName'] = cmds.getAttr(render_settings_node + '.output_file')
+    params['convertTexturesToExr'] = cmds.getAttr(render_settings_node + '.convert_textures_to_exr')
+    params['overwriteExistingExrs'] = cmds.getAttr(render_settings_node + '.overwrite_existing_exrs')
     params['fileName'] = cmds.getAttr(render_settings_node + '.output_file')
     params['scene_scale'] = 1
     
@@ -290,12 +314,21 @@ class Material(): #object transform name
             incandecence_connection = cmds.connectionInfo((self.name+'.incandescence'), sourceFromDestination=True).split('.')[0]
             if color_connection:
                 if cmds.nodeType(color_connection) == 'file':
-                    self.bsdf_texture = cmds.getAttr(color_connection+ '.fileTextureName')
-                    print('texture connected to {0}'.format(self.name + '.color'))
+                    print('# texture connected to {0}'.format(self.name + '.color'))
+                    if params['convertTexturesToExr']:
+                        self.bsdf_texture = convertTexToExr(cmds.getAttr(color_connection+ '.fileTextureName'), os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
+                    else:
+                        self.bsdf_texture = cmds.getAttr(color_connection+ '.fileTextureName')
+
+
             if incandecence_connection:
                 if cmds.nodeType(incandecence_connection) == 'file':
-                    self.edf_texture = cmds.getAttr(incandecence_connection + '.fileTextureName')
                     print('texture connected to {0}'.format(self.name + '.incandescence'))
+                    if params['convertTexturesToExr']:
+                        self.edf_texture = convertTexToExr(cmds.getAttr(incandecence_connection+ '.fileTextureName'), os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
+                    else:
+                        self.edf_texture = cmds.getAttr(incandecence_connection+ '.fileTextureName')
+
 
         #get specular conponent for shaders which have one
         elif (self.shader_type == 'blinn') or (self.shader_type == 'phong') or (self.shader_type == 'phongE'):
@@ -303,8 +336,12 @@ class Material(): #object transform name
             specular_connection = cmds.connectionInfo((self.name + '.specularColor'), sourceFromDestination=True).split('.')[0]
             if specular_connection:
                 if cmds.nodeType(specular_connection) == 'file':
-                    self.specular_texture = cmds.getAttr(specular_connection + '.fileTextureName') 
                     print('texture connected to {0}'.format(self.name + '.specularColor'))
+                    if params['convertTexturesToExr']:
+                        self.specular_texture = convertTexToExr(cmds.getAttr(specular_connection+ '.fileTextureName'), os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
+                    else:
+                        self.specular_texture = cmds.getAttr(specular_connection+ '.fileTextureName')
+                    
 
         #for surface shaders interpret outColor as bsdf and edf
         elif self.shader_type == 'surfaceShader':
@@ -314,9 +351,14 @@ class Material(): #object transform name
             outColor_connection = cmds.connectionInfo((self.name+'.outColor'), sourceFromDestination=True).split('.')[0]
             if outColor_connection:
                 if cmds.nodeType(outColor_connection) == 'file':
-                    self.bsdf_texture = cmds.getAttr(outColor_connection + '.fileTextureName') #get connected texture file name
-                    self.edf_texture = bsdf_texture
                     print('texture connected to {0}'.format(self.name + '.outColor'))
+                    if params['convertTexturesToExr']:
+                        self.bsdf_texture = convertTexToExr(cmds.getAttr(outColor_connection+ '.fileTextureName'), os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
+                    else:
+                        self.bsdf_texture = cmds.getAttr(outColor_connection+ '.fileTextureName')
+
+                    self.edf_texture = bsdf_texture
+                    
             else:
                 self.bsdf_texture = None
                 self.edf_texture = None
@@ -502,9 +544,9 @@ class Geometry(): # (object_transfrm_name, obj_file)
         self.assembly = assembly
         # get material name
         shape = cmds.listRelatives(self.name, s=True)[0]
-
         shadingEngine = cmds.listConnections(shape, t='shadingEngine')[0]
         self.material = cmds.connectionInfo((shadingEngine + ".surfaceShader"),sourceFromDestination=True).split('.')[0] #find the attribute the surface shader is plugged into athen split off the attribute name to leave the shader name
+       
         # transpose camera matrix -> XXX0, YYY0, ZZZ0, XYZ1
         m = cmds.getAttr(name+'.matrix')
         self.transform = [m[0],m[1],m[2],m[3]], [m[4],m[5],m[6],m[7]], [m[8],m[9],m[10],m[11]], [m[12],m[13],m[14],m[15]]
@@ -850,7 +892,7 @@ class Assembly():
         for geo_name in top_level_objects:
             cmds.select(geo_name, add=True)
         try:
-            cmds.file(('{0}/{1}'.format(self.params['outputDir']+'/geo', (self.name + '.obj'))), force=True, options='groups=1;ptgroups=1;materials=0;smoothing=0;normals=1', type='OBJexport', pr=True, es=True)
+            cmds.file(('{0}/{1}'.format(os.path.join(self.params['outputDir'], 'geo'), (self.name + '.obj'))), force=True, options='groups=1;ptgroups=1;materials=0;smoothing=0;normals=1', type='OBJexport', pr=True, es=True)
         except:
             cmds.error('error exporting {0}.obj'.format(self.name))
         cmds.select(cl=True)
