@@ -1,0 +1,17 @@
+-- ROADMAP --
+
+Version 0.1
+
+	Node based render settings
+	Node based environment node
+
+Version - 0.2
+
+	Automatic Texture conversion
+	Render to maya renderview
+	Area Lights
+	Per shader translation attributes
+	refraction translation
+		say you want to render a refractive sphere of glass, say IOR = 1.4
+		on the front side of the sphere, you'll need to assign a material with a specular_btdf with "from_ior" set to 1.0 (the "outside" ior) and "to_ior" set to 1.4 (the sphere ior)
+		on the back side of the sphere, you'll need to do the opposite: assign a material with a specular_btdf with "from_ior" set to 1.4 and "to_ior" set to 1.0 (again, the outside)
