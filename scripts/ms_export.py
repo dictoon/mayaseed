@@ -357,7 +357,7 @@ class Material(): #object transform name
                     else:
                         self.bsdf_texture = cmds.getAttr(outColor_connection+ '.fileTextureName')
 
-                    self.edf_texture = bsdf_texture
+                    self.edf_texture = self.bsdf_texture
                     
             else:
                 self.bsdf_texture = None
@@ -723,102 +723,118 @@ class Assembly():
             self.material_objects[name].edf = None
             self.material_objects[name].surface_shader = None
 
-            #create surface shader
-            if self.material_objects[name].shader_type == 'lambert':
-                if not self.params['matLambertSurfaceShader'] == 'None':   
-                    if self.params['matLambertSurfaceShader'] == 'Physical':
-                        self.material_objects[name].surface_shader = ('Physical_surface_shader')
-                        self.addSurfaceShader(self.material_objects[name], 'Physical_surface_shader', self.params['matLambertSurfaceShader'])
-                    else:
-                        self.material_objects[name].surface_shader = (name + '_surface_shader')
-                        self.addSurfaceShader(self.material_objects[name], name + '_surface_shader', self.params['matLambertSurfaceShader'])
-
-            elif self.material_objects[name].shader_type == 'blinn':
-                if not self.params['matBlinnSurfaceShader'] == 'None':   
-                    if self.params['matBlinnSurfaceShader'] == 'Physical':
-                        self.material_objects[name].surface_shader = ('Physical_surface_shader')
-                        self.addSurfaceShader(self.material_objects[name], 'Physical_surface_shader', self.params['matBlinnSurfaceShader'])
-                    else:
-                        self.material_objects[name].surface_shader = (name + '_surface_shader')
-                        self.addSurfaceShader(self.material_objects[name], name + '_surface_shader', self.params['matBlinnSurfaceShader'])
-
-            elif self.material_objects[name].shader_type == 'phong' or self.material_objects[name].shader_type == 'phongE':
-                if not self.params['matPhongSurfaceShader'] == 'None':   
-                    if self.params['matPhongSurfaceShader'] == 'Physical':
-                        self.material_objects[name].surface_shader = ('Physical_surface_shader')
-                        self.addSurfaceShader(self.material_objects[name], 'Physical_surface_shader', self.params['matPhongSurfaceShader'])
-                    else:
-                        self.material_objects[name].surface_shader = (name + '_surface_shader')
-                        self.addSurfaceShader(self.material_objects[name], name + '_surface_shader', self.params['matPhongSurfaceShader'])
-
-            elif self.material_objects[name].shader_type == 'surfaceShader':
-                if not self.params['matSurfaceShaderSurfaceShader'] == 'None':   
-                    if self.params['matSurfaceShaderSurfaceShader'] == 'Physical':
-                        self.material_objects[name].surface_shader = ('Physical_surface_shader')
-                        self.addSurfaceShader(self.material_objects[name], 'Physical_surface_shader', self.params['matSurfaceShaderSurfaceShader'])
-                    else:
-                        self.material_objects[name].surface_shader = (name + '_surface_shader')
-                        self.addSurfaceShader(self.material_objects[name], name + '_surface_shader', self.params['matSurfaceShaderSurfaceShader'])
-
-            else:
-                if not self.params['matDefaultSurfaceShader'] == 'None':   
-                    if self.params['matDefaultSurfaceShader'] == 'Physical':
-                        self.material_objects[name].surface_shader = ('Physical_surface_shader')
-                        self.addSurfaceShader(self.material_objects[name], 'Physical_surface_shader', self.params['matDefaultSurfaceShader'])
-                    else:
-                        self.material_objects[name].surface_shader = (name + '_surface_shader')
-                        self.addSurfaceShader(self.material_objects[name], name + '_surface_shader', self.params['matDefaultSurfaceShader'])
-
-            #create bsdf
-            if self.material_objects[name].shader_type == 'lambert':
-                if not self.params['matLambertBSDF'] == 'None':
+            #if custom shader translation attribs exists use them
+            if cmds.objExists(name + '.mayaseed_bsdf'):
+                if not (cmds.getAttr(name+'.mayaseed_bsdf', asString=True) == '<None>'):
                     self.material_objects[name].bsdf = (name + '_bsdf')
-                    self.addBSDF(self.material_objects[name], self.params['matLambertBSDF'])  
-                      
-            elif self.material_objects[name].shader_type == 'blinn':
-                if not self.params['matBlinnBSDF'] == 'None':
-                    self.material_objects[name].bsdf = (name + '_bsdf')
-                    self.addBSDF(self.material_objects[name], self.params['matBlinnBSDF'])   
-                      
-            elif self.material_objects[name].shader_type == 'phong' or self.material_objects[name].shader_type == 'phongE':
-                if not self.params['matPhongBSDF'] == 'None':
-                    self.material_objects[name].bsdf = (name + '_bsdf')
-                    self.addBSDF(self.material_objects[name], self.params['matPhongBSDF'])  
-                      
-            elif self.material_objects[name].shader_type == 'surfaceShader':
-                if not self.params['matSurfaceShaderBSDF'] == 'None':
-                    self.material_objects[name].bsdf = (name + '_bsdf')
-                    self.addBSDF(self.material_objects[name], self.params['matSurfaceShaderBSDF'])  
-                      
-            else:
-                if not self.params['matDefaultBSDF'] == 'None':
-                    self.material_objects[name].bsdf = (name + '_bsdf')
-                    self.addBSDF(self.material_objects[name], self.params['matDefaultBSDF'])  
+                    self.addBSDF(self.material_objects[name], cmds.getAttr(name+'.mayaseed_bsdf', asString=True)) 
+                if not (cmds.getAttr(name+'.mayaseed_edf', asString=True) == '<None>'):
+                    self.material_objects[name].edf = (name + '_edf')
+                    self.addEDF(self.material_objects[name], cmds.getAttr(name+'.mayaseed_edf', asString=True))  
+                if not (cmds.getAttr(name+'.mayaseed_surface_shader', asString=True) == '<None>'):
+                    self.material_objects[name].surface_shader = (name + '_surface_shader')
+                    self.addSurfaceShader(self.material_objects[name], name + '_surface_shader', cmds.getAttr(name+'.mayaseed_surface_shader', asString=True))  
 
-            #create edf 
-            if self.material_objects[name].shader_type == 'lambert':
-                if not self.params['matLambertEDF'] == 'None':
-                    self.material_objects[name].edf = (name + '_edf')
-                    self.addEDF(self.material_objects[name], self.params['matLambertEDF'])
 
-            elif self.material_objects[name].shader_type == 'blinn':
-                if not self.params['matBlinnEDF'] == 'None':
-                    self.material_objects[name].edf = (name + '_edf')
-                    self.addEDF(self.material_objects[name], self.params['matBlinnEDF'])
+            else: #create bsdf,edf & surface shader based on defaults
+                #create bsdf
+                if self.material_objects[name].shader_type == 'lambert':
+                    if not self.params['matLambertBSDF'] == 'None':
+                        self.material_objects[name].bsdf = (name + '_bsdf')
+                        self.addBSDF(self.material_objects[name], self.params['matLambertBSDF'])  
+                          
+                elif self.material_objects[name].shader_type == 'blinn':
+                    if not self.params['matBlinnBSDF'] == 'None':
+                        self.material_objects[name].bsdf = (name + '_bsdf')
+                        self.addBSDF(self.material_objects[name], self.params['matBlinnBSDF'])   
+                          
+                elif self.material_objects[name].shader_type == 'phong' or self.material_objects[name].shader_type == 'phongE':
+                    if not self.params['matPhongBSDF'] == 'None':
+                        self.material_objects[name].bsdf = (name + '_bsdf')
+                        self.addBSDF(self.material_objects[name], self.params['matPhongBSDF'])  
+                          
+                elif self.material_objects[name].shader_type == 'surfaceShader':
+                    if not self.params['matSurfaceShaderBSDF'] == 'None':
+                        self.material_objects[name].bsdf = (name + '_bsdf')
+                        self.addBSDF(self.material_objects[name], self.params['matSurfaceShaderBSDF'])  
+                          
+                else:
+                    if not self.params['matDefaultBSDF'] == 'None':
+                        self.material_objects[name].bsdf = (name + '_bsdf')
+                        self.addBSDF(self.material_objects[name], self.params['matDefaultBSDF'])  
 
-            elif self.material_objects[name].shader_type == 'phong' or self.material_objects[name].shader_type == 'phongE':
-                if not self.params['matPhongEDF'] == 'None':
-                    self.material_objects[name].edf = (name + '_edf')
-                    self.addEDF(self.material_objects[name], self.params['matPhongEDF'])
+                #create edf 
+                if self.material_objects[name].shader_type == 'lambert':
+                    if not self.params['matLambertEDF'] == 'None':
+                        self.material_objects[name].edf = (name + '_edf')
+                        self.addEDF(self.material_objects[name], self.params['matLambertEDF'])
 
-            elif self.material_objects[name].shader_type == 'surfaceShader':
-                if not self.params['matSurfaceShaderEDF'] == 'None':
-                    self.material_objects[name].edf = (name + '_edf')
-                    self.addEDF(self.material_objects[name], self.params['matSurfaceShaderEDF'])
-            else:
-                if not self.params['matDefaultEDF'] == 'None':
-                    self.material_objects[name].edf = (name + '_edf')
-                    self.addEDF(self.material_objects[name], self.params['matDefaultEDF'])
+                elif self.material_objects[name].shader_type == 'blinn':
+                    if not self.params['matBlinnEDF'] == 'None':
+                        self.material_objects[name].edf = (name + '_edf')
+                        self.addEDF(self.material_objects[name], self.params['matBlinnEDF'])
+
+                elif self.material_objects[name].shader_type == 'phong' or self.material_objects[name].shader_type == 'phongE':
+                    if not self.params['matPhongEDF'] == 'None':
+                        self.material_objects[name].edf = (name + '_edf')
+                        self.addEDF(self.material_objects[name], self.params['matPhongEDF'])
+
+                elif self.material_objects[name].shader_type == 'surfaceShader':
+                    if not self.params['matSurfaceShaderEDF'] == 'None':
+                        self.material_objects[name].edf = (name + '_edf')
+                        self.addEDF(self.material_objects[name], self.params['matSurfaceShaderEDF'])
+                else:
+                    if not self.params['matDefaultEDF'] == 'None':
+                        self.material_objects[name].edf = (name + '_edf')
+                        self.addEDF(self.material_objects[name], self.params['matDefaultEDF'])
+
+                #create surface
+                if self.material_objects[name].shader_type == 'lambert':
+                    if not self.params['matLambertSurfaceShader'] == 'None':   
+                        if self.params['matLambertSurfaceShader'] == 'Physical':
+                            self.material_objects[name].surface_shader = ('Physical_surface_shader')
+                            self.addSurfaceShader(self.material_objects[name], 'Physical_surface_shader', self.params['matLambertSurfaceShader'])
+                        else:
+                            self.material_objects[name].surface_shader = (name + '_surface_shader')
+                            self.addSurfaceShader(self.material_objects[name], name + '_surface_shader', self.params['matLambertSurfaceShader'])
+
+                elif self.material_objects[name].shader_type == 'blinn':
+                    if not self.params['matBlinnSurfaceShader'] == 'None':   
+                        if self.params['matBlinnSurfaceShader'] == 'Physical':
+                            self.material_objects[name].surface_shader = ('Physical_surface_shader')
+                            self.addSurfaceShader(self.material_objects[name], 'Physical_surface_shader', self.params['matBlinnSurfaceShader'])
+                        else:
+                            self.material_objects[name].surface_shader = (name + '_surface_shader')
+                            self.addSurfaceShader(self.material_objects[name], name + '_surface_shader', self.params['matBlinnSurfaceShader'])
+
+                elif self.material_objects[name].shader_type == 'phong' or self.material_objects[name].shader_type == 'phongE':
+                    if not self.params['matPhongSurfaceShader'] == 'None':   
+                        if self.params['matPhongSurfaceShader'] == 'Physical':
+                            self.material_objects[name].surface_shader = ('Physical_surface_shader')
+                            self.addSurfaceShader(self.material_objects[name], 'Physical_surface_shader', self.params['matPhongSurfaceShader'])
+                        else:
+                            self.material_objects[name].surface_shader = (name + '_surface_shader')
+                            self.addSurfaceShader(self.material_objects[name], name + '_surface_shader', self.params['matPhongSurfaceShader'])
+
+                elif self.material_objects[name].shader_type == 'surfaceShader':
+                    if not self.params['matSurfaceShaderSurfaceShader'] == 'None':   
+                        if self.params['matSurfaceShaderSurfaceShader'] == 'Physical':
+                            self.material_objects[name].surface_shader = ('Physical_surface_shader')
+                            self.addSurfaceShader(self.material_objects[name], 'Physical_surface_shader', self.params['matSurfaceShaderSurfaceShader'])
+                        else:
+                            self.material_objects[name].surface_shader = (name + '_surface_shader')
+                            self.addSurfaceShader(self.material_objects[name], name + '_surface_shader', self.params['matSurfaceShaderSurfaceShader'])
+
+                else:
+                    if not self.params['matDefaultSurfaceShader'] == 'None':   
+                        if self.params['matDefaultSurfaceShader'] == 'Physical':
+                            self.material_objects[name].surface_shader = ('Physical_surface_shader')
+                            self.addSurfaceShader(self.material_objects[name], 'Physical_surface_shader', self.params['matDefaultSurfaceShader'])
+                        else:
+                            self.material_objects[name].surface_shader = (name + '_surface_shader')
+                            self.addSurfaceShader(self.material_objects[name], name + '_surface_shader', self.params['matDefaultSurfaceShader'])
+
+
         
     def writeXML(self, doc):
         print('writing assembly: {0}'.format(self.name))
