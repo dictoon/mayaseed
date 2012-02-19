@@ -29,11 +29,6 @@ import re
 import subprocess
 import sys
 
-
-script_name = "mayaseed.py"
-version = "0.1.1"
-more_info_url = "https://github.com/jonathantopf/mayaseed"
-
 inch_to_meter = 0.02539999983236
 
 #****************************************************************************************************************************************************************************************************

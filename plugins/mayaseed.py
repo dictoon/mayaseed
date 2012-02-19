@@ -27,12 +27,11 @@ import inspect
 import os
 import os.path
 
-root_directory = os.path.split((os.path.dirname(inspect.getfile(inspect.currentframe()))))[0]
-sys.path.append(os.path.join(root_directory, 'scripts'))
-sys.path.append(os.path.join(root_directory, 'graphics'))
+ROOT_DIRECTORY = os.path.split((os.path.dirname(inspect.getfile(inspect.currentframe()))))[0]
+sys.path.append(os.path.join(ROOT_DIRECTORY, 'scripts'))
+sys.path.append(os.path.join(ROOT_DIRECTORY, 'graphics'))
 
 import ms_menu
-
 
 #****************************************************************************************************************************************************************************************************
 # ms_renderSettings node ****************************************************************************************************************************************************************************

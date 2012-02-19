@@ -23,52 +23,6 @@ import maya.mel
 import maya.utils as mu
 import __main__ 
 
-
-#****************************************************************************************************************************************************************************************************
-# utility functions *********************************************************************************************************************************************************************************
-#****************************************************************************************************************************************************************************************************
-
-#
-# addMsShadingAttribs function --
-#    
-
-def addMsShadingAttribs():
-    shaderName = False
-    try:
-        shape = cmds.listRelatives(cmds.ls(sl=True)[0], s=True)[0]
-        shadingEngine = cmds.listConnections(shape, t='shadingEngine')[0]
-        shaderName = cmds.connectionInfo((shadingEngine + ".surfaceShader"),sourceFromDestination=True).split('.')[0] 
-    except:
-        print '# No objects with shader connectoins selectd'
-    if shaderName:
-        if not cmds.objExists(shaderName + '.mayaseed_bsdf'):
-            cmds.addAttr(shaderName, ln='mayaseed_bsdf',  at='enum', en='Lambertian:Ashikhmin-Shirley:Kelemen:Specular_BRDF:<none>')
-            cmds.addAttr(shaderName, ln='mayaseed_edf',  at='enum', en='<None>:Diffuse')
-            cmds.addAttr(shaderName, ln='mayaseed_surface_shader', at='enum', en='Physical:Constant:<None>')
-        else:
-            print '# {0} already has Mayaseed shader attributes'.format(shaderName)
-
-#
-# removeMsShadingAttribs function --
-#  
-
-def removeMsShadingAttribs():
-    shaderName = ''
-    try:
-        shape = cmds.listRelatives(cmds.ls(sl=True)[0], s=True)[0]
-        shadingEngine = cmds.listConnections(shape, t='shadingEngine')[0]
-        shaderName = cmds.connectionInfo((shadingEngine + ".surfaceShader"),sourceFromDestination=True).split('.')[0] 
-    except:
-        print '# No objects with shader connectoins selectd'
-    if shaderName:
-        if cmds.objExists(shaderName + '.mayaseed_bsdf'):
-            cmds.deleteAttr(shaderName, at='mayaseed_bsdf')
-            cmds.deleteAttr(shaderName, at='mayaseed_edf')
-            cmds.deleteAttr(shaderName, at='mayaseed_surface_shader')
-        else:
-            print '# {0} has no Mayaseed shader attributes to remove'.format(shaderName)
-
-
 #****************************************************************************************************************************************************************************************************
 # create ms_menu ************************************************************************************************************************************************************************************
 #****************************************************************************************************************************************************************************************************
@@ -107,12 +61,12 @@ def buildMenu():
         cmds.menuItem(label=environment, parent='menu_select_environment', command=('import maya.cmds as cmds\ncmds.select("{0}")'.format(environment)))
 
     cmds.menuItem(divider=True, parent='ms_menu')
-    cmds.menuItem(label='Add custom shader translation', parent='ms_menu', command='ms_menu.addMsShadingAttribs()') 
-    cmds.menuItem(label='Remove custom shader translation', parent='ms_menu', command='ms_menu.removeMsShadingAttribs()')    
+    cmds.menuItem(label='Add custom shader translation', parent='ms_menu', command='import ms_commands\nms_commands.addShadingAttribs()') 
+    cmds.menuItem(label='Remove custom shader translation', parent='ms_menu', command='import ms_commands\nms_commands.removeShadingAttribs()')    
     
     cmds.menuItem(divider=True, parent='ms_menu')
-    cmds.menuItem(label='Applesed Website', parent='ms_menu')
-    cmds.menuItem(label='Mayaseed Website', parent='ms_menu')
+    cmds.menuItem(label='About', parent='ms_menu', command='import ms_commands\nms_commands.MsInfoDial()')
+
 
 def deleteMenu():
     cmds.deleteUI('ms_menu')
