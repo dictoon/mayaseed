@@ -42,7 +42,7 @@ def addMsShadingAttribs():
         print '# No objects with shader connectoins selectd'
     if shaderName:
         if not cmds.objExists(shaderName + '.mayaseed_bsdf'):
-            cmds.addAttr(shaderName, ln='mayaseed_bsdf',  at='enum', en='Lambert:Ashikhmin-Shirley:Kelemen:Specular_BRDF:<none>')
+            cmds.addAttr(shaderName, ln='mayaseed_bsdf',  at='enum', en='Lambertian:Ashikhmin-Shirley:Kelemen:Specular_BRDF:<none>')
             cmds.addAttr(shaderName, ln='mayaseed_edf',  at='enum', en='<None>:Diffuse')
             cmds.addAttr(shaderName, ln='mayaseed_surface_shader', at='enum', en='Physical:Constant:<None>')
         else:
