@@ -29,7 +29,7 @@ import inspect
 # constant vars *************************************************************************************************************************************************************************************
 #****************************************************************************************************************************************************************************************************
 
-MAYASEED_VERSION = '0.1.2'
+MAYASEED_VERSION = '0.1.3'
 MAYASEED_URL = 'https://github.com/jonathantopf/mayaseed'
 APPLESEED_URL = 'http://appleseedhq.net/'
 ROOT_DIRECTORY = os.path.split((os.path.dirname(inspect.getfile(inspect.currentframe()))))[0]
@@ -98,7 +98,7 @@ class MsInfoDial():
         cmds.button( label='Mayaseed website', command=('import webbrowser\nwebbrowser.open_new_tab("http://www.jonathantopf.com/mayaseed/")'))
         cmds.button( label='appleseed website', command=('import webbrowser\nwebbrowser.open_new_tab("http://appleseedhq.net/")'))
         cmds.text('', width=166)
-        cmds.button( label='Close', command=('import maya.cmds\ncmds.deleteUI(\"' + window + '\", window=True)'), width=100)
+        cmds.button( label='Close', command=('import maya.cmds as cmds\ncmds.deleteUI(\"' + window + '\", window=True)'), width=100)
         cmds.setParent('..')
         cmds.rowLayout(numberOfColumns=2)
         cmds.text('', width=478)
