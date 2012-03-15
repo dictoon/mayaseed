@@ -540,7 +540,11 @@ class Geometry(): # (object_transfrm_name, obj_file)
         self.assembly = assembly
         # get material name
         shape = cmds.listRelatives(self.name, s=True)[0]
-        shadingEngine = cmds.listConnections(shape, t='shadingEngine')[0]
+        shadingEngine = None
+        if not (cmds.listConnections(shape, t='shadingEngine')):
+            cmds.error('no shader connected to ' + shape)
+        else:
+            shadingEngine = cmds.listConnections(shape, t='shadingEngine')[0]
         self.material = cmds.connectionInfo((shadingEngine + ".surfaceShader"),sourceFromDestination=True).split('.')[0] #find the attribute the surface shader is plugged into athen split off the attribute name to leave the shader name
        
         # transpose camera matrix -> XXX0, YYY0, ZZZ0, XYZ1
