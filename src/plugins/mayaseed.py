@@ -70,6 +70,10 @@ def ms_renderSettings_nodeInitializer():
     convert_textures_to_exr_nAttr = OpenMaya.MFnNumericAttribute()
     ms_renderSettings.convert_textures_to_exr = convert_textures_to_exr_nAttr.create("convert_textures_to_exr", "convert_tex_to_exr", OpenMaya.MFnNumericData.kBoolean, True)
 
+    #convert shading nodes to textures
+    convert_shading_nodes_to_textures_nAttr = OpenMaya.MFnNumericAttribute()
+    ms_renderSettings.convert_shading_nodes_to_textures = convert_shading_nodes_to_textures_nAttr.create("convert_shading_nodes_to_textures", "convert_shading_nodes", OpenMaya.MFnNumericData.kBoolean, True)
+
     #overwrite existing exrs
     overwrite_existing_exrs_nAttr = OpenMaya.MFnNumericAttribute()
     ms_renderSettings.overwrite_existing_exrs = overwrite_existing_exrs_nAttr.create("overwrite_existing_exrs", "overwrite_exrs", OpenMaya.MFnNumericData.kBoolean, True)
@@ -183,6 +187,7 @@ def ms_renderSettings_nodeInitializer():
 
         ms_renderSettings.addAttribute(ms_renderSettings.output_dir)
         ms_renderSettings.addAttribute(ms_renderSettings.output_file)
+        ms_renderSettings.addAttribute(ms_renderSettings.convert_shading_nodes_to_textures)
         ms_renderSettings.addAttribute(ms_renderSettings.convert_textures_to_exr)
         ms_renderSettings.addAttribute(ms_renderSettings.overwrite_existing_exrs)
 

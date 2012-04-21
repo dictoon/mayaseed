@@ -53,6 +53,25 @@ def clampRGB(color):
     return (R,G,B)
 
 #
+# convert shader connection to image --
+#
+
+def convertConnectionToImage(shader, attribute, dest_file, resolution=1024):
+    if not cmds.objExists(shader+'.'+attribute):
+        print 'error converting texture, no object named {0} exists'.format(shader+'.'+attribute)
+    else:
+        connection = cmds.listConnections(shader+'.'+attribute)
+        if not connection:
+            print 'nothing connected to {0}'.format(plug_name)
+        else:
+            cmds.hyperShade(objects=shader)
+            connected_object = cmds.ls(sl=True)[0]
+            print connected_object
+            cmds.convertSolidTx(connection[0] ,connected_object ,fileImageName=dest_file, antiAlias=True, bm=3, fts=True, sp=True, alpha=True, doubleSided=True, resolutionX=resolution, resolutionY=resolution)
+            return dest_file
+        
+
+#
 # convert texture to exr --
 #
 

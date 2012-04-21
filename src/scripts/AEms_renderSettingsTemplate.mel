@@ -19,6 +19,14 @@
 // THE SOFTWARE.
 
 
+// procedure to get connected node of an attribute
+
+global proc string getConnectedNode(string $nodeName){
+    string $nodes[] = `listConnections($nodeName)`;
+    return $nodes[0];
+}
+
+
 // procedures for -callCustom folderPicker  ----------------------------------------
 
 global proc AEfileBrowse(string $attr){    
@@ -162,6 +170,8 @@ global proc AEms_renderSettingsTemplate(string $nodeName)
       editorTemplate -beginLayout "Export settings" -collapse false;
          editorTemplate -callCustom "AEfileBrowse" "AEfileBrowseRepeat" "output_directory";
          editorTemplate -addControl "output_file";
+         editorTemplate -addControl "convert_shading_nodes_to_textures";
+         editorTemplate -addSeparator;
          editorTemplate -addControl "convert_textures_to_exr";
          editorTemplate -addSeparator;
          editorTemplate -addControl "overwrite_existing_exrs";
