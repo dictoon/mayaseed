@@ -77,7 +77,7 @@ def convertConnectionToImage(shader, attribute, dest_file, resolution=1024):
 
 def convertTexToExr(file_path, dest_dir, overwrite=True):
     if os.path.exists(file_path):
-        dest_file = os.path.join(dest_dir, os.path.splitext(os.path.split('/Users/jonathan/Desktop/reflections.png')[1])[0] + '.exr')
+        dest_file = os.path.join(dest_dir, os.path.splitext(os.path.split(file_path)[1])[0] + '.exr')
         if (overwrite == False) and (os.path.exists(dest_file)):
             print '# {0} exists, skipping conversion'.format(dest_file)
         else:
@@ -324,7 +324,7 @@ class Material(): #object transform name
         #for shaders with color & incandescence attributes interpret them as bsdf and edf
         if (self.shader_type == 'lambert') or (self.shader_type == 'blinn') or (self.shader_type == 'phong') or (self.shader_type == 'phongE'):
             self.bsdf_color = clampRGB(cmds.getAttr(self.name+'.color')[0])
-            self.edf_color = cmds.getAttr(self.name+'.incandescence')[0]
+            self.edf_color = clampRGB(cmds.getAttr(self.name+'.incandescence')[0])
             color_connection = cmds.connectionInfo((self.name + '.color'), sourceFromDestination=True).split('.')[0]
             incandecence_connection = cmds.connectionInfo((self.name+'.incandescence'), sourceFromDestination=True).split('.')[0]
             if color_connection:
@@ -334,6 +334,14 @@ class Material(): #object transform name
                         self.bsdf_texture = convertTexToExr(cmds.getAttr(color_connection+ '.fileTextureName'), os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
                     else:
                         self.bsdf_texture = cmds.getAttr(color_connection+ '.fileTextureName')
+                else:
+                    #convert connection to exr
+                    temp_file = os.path.join(params['outputDir'], 'temp_files', (color_connection + '.iff'))
+                    convertConnectionToImage(self.name, 'color', temp_file, 1024)
+                    self.bsdf_texture =  convertTexToExr(temp_file, os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
+
+
+
 
 
             if incandecence_connection:
