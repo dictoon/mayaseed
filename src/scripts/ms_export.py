@@ -40,17 +40,26 @@ inch_to_meter = 0.02539999983236
 # clamp RGB values ---
 #
 
-def clampRGB(color):
+def normalizeRGB(color):
     R = color[0]
     G = color[1]
     B = color[2]
-    if R > 1:
-        R = 1
-    if G > 1:
-        G = 1
-    if B > 1:
-        B = 1
-    return (R,G,B)
+    M = 1
+
+    if R > M:
+        M = R
+    if G > M:
+        M = G
+    if B > M:
+        M = B
+
+    R = R / M
+    G = G / M
+    B = B / M
+
+    return (R,G,B,M)
+
+
 
 #
 # convert shader connection to image --
@@ -245,6 +254,14 @@ class Color():
         self.color_space = 'srgb'
         self.wavelength_range = '400.0 700.0'
         self.alpha = 1.0
+
+        print '****creating color'
+        print self.name
+        print self.color
+        print self.multiplier
+        print '***'
+
+
     def writeXML(self, doc):
         print('writing color {0}'.format(self.name))
         doc.startElement('color name="{0}"'.format(self.name))
@@ -315,16 +332,16 @@ class Material(): #object transform name
         self.bsdf = bsdf 
         self.edf = edf
         self.surface_shader = surface_shader
-        self.bsdf_color = (0.5, 0.5, 0.5)
+        self.bsdf_color = (0.5, 0.5, 0.5, 1)
         self.bsdf_texture = None
-        self.edf_color = (0,0,0)
+        self.edf_color = (0,0,0,1)
         self.edf_texture = None
-        self.specular_color = (0,0,0)
+        self.specular_color = (0,0,0,1)
         self.specular_texture = None
         #for shaders with color & incandescence attributes interpret them as bsdf and edf
         if (self.shader_type == 'lambert') or (self.shader_type == 'blinn') or (self.shader_type == 'phong') or (self.shader_type == 'phongE'):
-            self.bsdf_color = clampRGB(cmds.getAttr(self.name+'.color')[0])
-            self.edf_color = clampRGB(cmds.getAttr(self.name+'.incandescence')[0])
+            self.bsdf_color = normalizeRGB(cmds.getAttr(self.name+'.color')[0])
+            self.edf_color = normalizeRGB(cmds.getAttr(self.name+'.incandescence')[0])
             color_connection = cmds.connectionInfo((self.name + '.color'), sourceFromDestination=True).split('.')[0]
             incandecence_connection = cmds.connectionInfo((self.name+'.incandescence'), sourceFromDestination=True).split('.')[0]
             if color_connection:
@@ -351,11 +368,15 @@ class Material(): #object transform name
                         self.edf_texture = convertTexToExr(cmds.getAttr(incandecence_connection+ '.fileTextureName'), os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
                     else:
                         self.edf_texture = cmds.getAttr(incandecence_connection+ '.fileTextureName')
-
+                else:
+                    #convert connection to exr
+                    temp_file = os.path.join(params['outputDir'], 'temp_files', (incandecence_connection + '.iff'))
+                    convertConnectionToImage(self.name, 'incandescence', temp_file, 1024)
+                    self.edf_texture =  convertTexToExr(temp_file, os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
 
         #get specular conponent for shaders which have one
         elif (self.shader_type == 'blinn') or (self.shader_type == 'phong') or (self.shader_type == 'phongE'):
-            self.specular_color = cmds.getAttr(self.name+'.specularColor')[0]
+            self.specular_color = normalizeRGB(cmds.getAttr(self.name+'.specularColor')[0])
             specular_connection = cmds.connectionInfo((self.name + '.specularColor'), sourceFromDestination=True).split('.')[0]
             if specular_connection:
                 if cmds.nodeType(specular_connection) == 'file':
@@ -364,12 +385,17 @@ class Material(): #object transform name
                         self.specular_texture = convertTexToExr(cmds.getAttr(specular_connection+ '.fileTextureName'), os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
                     else:
                         self.specular_texture = cmds.getAttr(specular_connection+ '.fileTextureName')
-                    
+                else:
+                    #convert connection to exr
+                    temp_file = os.path.join(params['outputDir'], 'temp_files', (specular_connection + '.iff'))
+                    convertConnectionToImage(self.name, 'specularColor', temp_file, 1024)
+                    self.specular_texture =  convertTexToExr(temp_file, os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
 
         #for surface shaders interpret outColor as bsdf and edf
         elif self.shader_type == 'surfaceShader':
-            self.edf_color = cmds.getAttr(self.name+'.outColor')[0]
-            self.bsdf_color = clampRGB(self.edf_color)
+            self.edf_color = normalizeRGB(cmds.getAttr(self.name+'.outColor')[0])
+            self.bsdf_color = self.edf_color
+            print '************ {0}'.format(self.edf_color)
 
             outColor_connection = cmds.connectionInfo((self.name+'.outColor'), sourceFromDestination=True).split('.')[0]
             if outColor_connection:
@@ -381,7 +407,12 @@ class Material(): #object transform name
                         self.bsdf_texture = cmds.getAttr(outColor_connection+ '.fileTextureName')
 
                     self.edf_texture = self.bsdf_texture
-                    
+                else:
+                    #convert connection to exr
+                    temp_file = os.path.join(params['outputDir'], 'temp_files', (outColor_connection + '.iff'))
+                    convertConnectionToImage(self.name, 'outColor', temp_file, 1024)
+                    self.edf_texture =  convertTexToExr(temp_file, os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
+
             else:
                 self.bsdf_texture = None
                 self.edf_texture = None
@@ -654,7 +685,7 @@ class Assembly():
                 self.addTexture(material.name + '_exitance', material.edf_texture)
                 edf_params['exitance'] = (material.name + '_exitance_inst')
             else:
-                self.addColor((material.name + '_exitance'), material.edf_color)
+                self.addColor((material.name + '_exitance'), material.edf_color[0:3], material.edf_color[3])
                 edf_params['exitance'] = material.name + '_exitance'
             self.edf_objects[material.name + '_edf'] = Edf(material.name + '_edf', 'diffuse_edf', edf_params)
 
@@ -667,7 +698,7 @@ class Assembly():
                 self.addTexture(material.name + '_reflectance', material.bsdf_texture)
                 bsdf_params['reflectance'] = (material.name + '_reflectance_inst')
             else:
-                self.addColor((material.name + '_reflectance'), material.bsdf_color)
+                self.addColor((material.name + '_reflectance'), material.bsdf_color[0:3], material.bsdf_color[3])
                 bsdf_params['reflectance'] = material.name + '_reflectance'
             self.bsdf_objects[material.name + '_bsdf'] = Bsdf(material.name + '_bsdf', 'lambertian_brdf', bsdf_params)
 
@@ -679,14 +710,14 @@ class Assembly():
                 self.addTexture(material.name + '_diffuse_reflectance', material.bsdf_texture)
                 bsdf_params['diffuse_reflectance'] = (material.name + '_diffuse_reflectance_inst')
             else:
-                self.addColor(material.name + '_diffuse_reflectance', material.bsdf_color)
+                self.addColor(material.name + '_diffuse_reflectance', material.bsdf_color[0:3], material.bsdf_color[3])
                 bsdf_params['diffuse_reflectance'] = material.name + '_diffuse_reflectance'
             #add glossy reflectence component
             if material.specular_texture:
                 self.addTexture(material.name + '_glossy_reflectance', material.specular_texture)
                 bsdf_params['glossy_reflectance'] = material.name + '_glossy_reflectance'
             else:
-                self.addColor(material.name + '_glossy_reflectance', material.bsdf_color)
+                self.addColor(material.name + '_glossy_reflectance', material.specular_color[0:3], material.bsdf_color[3])
                 bsdf_params['glossy_reflectance'] = material.name + '_glossy_reflectance'
             self.bsdf_objects[material.name + '_bsdf'] = Bsdf(material.name + '_bsdf', 'ashikhmin_brdf', bsdf_params)
 
@@ -697,14 +728,14 @@ class Assembly():
                 self.addTexture(material.name + '_matte_reflectance', material.bsdf_texture)
                 bsdf_params['matte_reflectance'] = (material.name + '_matte_reflectance_inst')
             else:
-                self.addColor(material.name + '_matte_reflectance', material.bsdf_color)
+                self.addColor(material.name + '_matte_reflectance', material.bsdf_color[0:3], material.bsdf_color[3])
                 bsdf_params['matte_reflectance'] = material.name + '_matte_reflectance'
             #add specular_reflectance component
             if material.specular_texture:
                 self.addTexture(material.name + '_specular_reflectance', material.specular_texture)
                 bsdf_params['specular_reflectance'] = material.name + '_specular_reflectance'
             else:
-                self.addColor(material.name + '_specular_reflectance', material.bsdf_color)
+                self.addColor(material.name + '_specular_reflectance', material.bsdf_color[0:3], material.bsdf_color[3])
                 bsdf_params['specular_reflectance'] = material.name + '_specular_reflectance'
             self.bsdf_objects[material.name + '_bsdf'] = Bsdf(material.name + '_bsdf', 'kelemen_brdf', bsdf_params)
 
@@ -714,7 +745,7 @@ class Assembly():
                 self.addTexture(material.name + '_reflectance', material.bsdf_texture)
                 bsdf_params['reflectance'] = (material.name + '_reflectance_inst')
             else:
-                self.addColor((material.name + '_reflectance'), material.bsdf_color)
+                self.addColor((material.name + '_reflectance'), material.bsdf_color[0:3], material.bsdf_color[3])
                 bsdf_params['reflectance'] = material.name + '_reflectance'
             self.bsdf_objects[material.name + '_bsdf'] = Bsdf(material.name + '_bsdf', 'specular_brdf', bsdf_params)
         
@@ -733,7 +764,7 @@ class Assembly():
                     self.addTexture(material.name + '_surface_shader_color', material.bsdf_texture)
                     surface_shader_params['color'] = (material.name + '_surface_shader_color_inst ')
                 else:
-                    self.addColor((material.name + '_surface_shader_color'), material.bsdf_color)
+                    self.addColor((material.name + '_surface_shader_color'), material.bsdf_color[0:3], material.bsdf_color[3])
                     surface_shader_params['color'] = material.name + '_surface_shader_color'
             elif type == 'Ambient Occlusion':
                 cmds.error('atempting to set {0} surface shader to ambient occlusion'.format(name))
@@ -960,13 +991,19 @@ class Scene():
             env_edf_params = dict()
             if environment_edf_model_enum == 0:
                 environment_edf_model = 'constant_environment_edf'
-                self.addColor('constant_env_exitance', cmds.getAttr(self.params['environment']+'.constant_exitance')[0])
+                environment_color = normalizeRGB(cmds.getAttr(self.params['environment']+'.constant_exitance')[0])
+                self.addColor('constant_env_exitance', environment_color[0:3], environment_color[3])
                 env_edf_params['exitance'] =  'constant_env_exitance'
 
             elif environment_edf_model_enum == 1:
                 environment_edf_model = 'gradient_environment_edf'
-                self.addColor('gradient_env_horizon_exitance', cmds.getAttr(self.params['environment']+'.gradient_horizon_exitance')[0])
-                self.addColor('gradient_env_zenith_exitance', cmds.getAttr(self.params['environment']+'.gradient_zenith_exitance')[0])
+
+                horizon_exitance = normalizeRGB(cmds.getAttr(self.params['environment']+'.gradient_horizon_exitance')[0])
+                self.addColor('gradient_env_horizon_exitance', horizon_exitance[0:3], horizon_exitance[3])
+
+                zenith_exitance = normalizeRGB(cmds.getAttr(self.params['environment']+'.gradient_zenith_exitance')[0])
+                self.addColor('gradient_env_zenith_exitance', zenith_exitance[0:3], zenith_exitance[3])
+
                 env_edf_params['horizon_exitance'] = 'gradient_env_horizon_exitance'
                 env_edf_params['zenith_exitance'] = 'gradient_env_zenith_exitance'
 

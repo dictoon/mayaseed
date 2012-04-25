@@ -2,15 +2,19 @@
 
 Version 0.1
 
-	Node based render settings
-	Node based environment node
+	Node based render settings  X
+	Node based environment node  X
 
 Version - 0.2
 
-	Automatic Texture conversion
+	Automatic Texture conversion  X
 	Render to maya renderview
+	Per shader translation attributes  X
+	Texture network baking
+
+Version - 0.3
+	
 	Area Lights
-	Per shader translation attributes
 	refraction translation
 		say you want to render a refractive sphere of glass, say IOR = 1.4
 		on the front side of the sphere, you'll need to assign a material with a specular_btdf with "from_ior" set to 1.0 (the "outside" ior) and "to_ior" set to 1.4 (the sphere ior)
