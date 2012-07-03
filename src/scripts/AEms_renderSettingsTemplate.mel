@@ -72,7 +72,13 @@ global proc AEcustomEnvironmentMenuCreate(string $attr){
    tokenize $attr "." $nodeNameTokens;
    int $newStringLength = size($nodeNameTokens[0]);
    string $nodeName = `substring $nodeNameTokens[0] 1 $newStringLength`;
-   string $currentEnvironmentConnection = `getConnectedNode($nodeName + ".environment")`;
+   string $currentEnvironmentConnectionTransform = `getConnectedNode($nodeName + ".environment")`;
+   string $currentEnvironmentConnectionTransformRelatives[] = {""};
+   if ($currentEnvironmentConnectionTransform != ""){
+      $currentEnvironmentConnectionTransformRelatives = `listRelatives $currentEnvironmentConnectionTransform`;
+   }
+   string $currentEnvironmentConnection = $currentEnvironmentConnectionTransformRelatives[0];
+
    optionMenuGrp -label "Environmnets" -cc ("setEnvironmentConnection " + $nodeName) customEnvironmentMenu;
    string $environments[] = `ls -type "ms_environment"`;
    menuItem -label "<none>";
@@ -105,18 +111,18 @@ global proc setEnvironmentConnection(string $nodeName){
    string $currentEnvironmentConnection = `getConnectedNode($nodeName + ".environment")`;
    if ($currentEnvironmentConnection != ""){
       $currentEnvironmentConnection = $currentEnvironmentConnection + ".nodeState";
-      disconnectAttr $currentEnvironmentConnection $environmentConnectionName;
+      //disconnectAttr $currentEnvironmentConnection $environmentConnectionName;
       select $nodeName;
    }
    if ($newSelection != "<none>"){
-      print "its not none\n";
-      connectAttr $newSelectionAttr $environmentConnectionName;      
+      print ("connecting "+$newSelectionAttr+" and "+$environmentConnectionName+"\n");
+      connectAttr -f $newSelectionAttr $environmentConnectionName;      
    }
 }
 
 global proc createMsEnvironmentNode(string $nodeName){
    string $node = `createNode "ms_environment"`;
-   connectAttr ($node + ".nodeState") ($nodeName + ".environment");
+   connectAttr -f ($node + ".nodeState") ($nodeName + ".environment");
 }
 
 // procedures for camera option menu ----------------------------------------
@@ -129,7 +135,7 @@ global proc AEcustomCameraMenuCreate(string $attr){
    string $nodeName = `substring $nodeNameTokens[0] 1 $newStringLength`;
    print $nodeName;
 
-   string $currentCameraConnection = `getConnectedNode($nodeName + ".camera")`;
+   //string $currentCameraConnection = `getConnectedNode($nodeName + ".camera")`;
    string $customCameraMenuCommand = "setCameraConnection " + $nodeName;
    optionMenuGrp -label "Cameras" -cc $customCameraMenuCommand customCameraMenu;
    string $cameras[] = `ls -cameras`;
@@ -137,6 +143,16 @@ global proc AEcustomCameraMenuCreate(string $attr){
    for ($item in $cameras){
         menuItem -label $item;         
    }
+
+
+   string $currentCameraConnectionTransform = `getConnectedNode($nodeName + ".camera")`;
+   string $currentCameraConnectionTransformRelatives[] = {""};
+   if ($currentCameraConnectionTransform != ""){
+      $currentCameraConnectionTransformRelatives = `listRelatives $currentCameraConnectionTransform`;
+   }
+   string $currentCameraConnection = $currentCameraConnectionTransformRelatives[0];
+
+
    if ($currentCameraConnection != ""){
       optionMenuGrp -e -v $currentCameraConnection customCameraMenu;  
    }
@@ -154,10 +170,10 @@ global proc setCameraConnection(string $nodeName){
    string $currentCameraConnection = `getConnectedNode($nodeName + ".camera")`;
    if ($currentCameraConnection != ""){
       $currentCameraConnection = $currentCameraConnection + ".nodeState";
-      disconnectAttr $currentCameraConnection $cameraConnectionName;
+      //disconnectAttr $currentCameraConnection $cameraConnectionName;
    }
    if ($newSelection != "<none>"){
-      connectAttr $newSelectionAttr $cameraConnectionName;      
+      connectAttr -f $newSelectionAttr $cameraConnectionName;      
    }
 }
 

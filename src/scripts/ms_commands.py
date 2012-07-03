@@ -29,7 +29,7 @@ import inspect
 # constant vars *************************************************************************************************************************************************************************************
 #****************************************************************************************************************************************************************************************************
 
-MAYASEED_VERSION = '0.1.5'
+MAYASEED_VERSION = '0.1.6'
 MAYASEED_URL = 'https://github.com/jonathantopf/mayaseed'
 APPLESEED_URL = 'http://appleseedhq.net/'
 ROOT_DIRECTORY = os.path.split((os.path.dirname(inspect.getfile(inspect.currentframe()))))[0]
