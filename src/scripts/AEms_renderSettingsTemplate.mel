@@ -191,6 +191,14 @@ global proc AEms_renderSettingsTemplate(string $nodeName)
          editorTemplate -addControl "convert_textures_to_exr";
          editorTemplate -addSeparator;
          editorTemplate -addControl "overwrite_existing_exrs";
+         editorTemplate -addSeparator;
+         editorTemplate -addControl "export_motion_blur";
+         editorTemplate -addControl "shutter_open";
+         editorTemplate -addControl "shutter_close";
+         editorTemplate -addSeparator;
+         editorTemplate -addControl "export_animation";
+         editorTemplate -addControl "animation_start_frame";
+         editorTemplate -addControl "animation_end_frame";
       editorTemplate -endLayout;
 
       editorTemplate -beginLayout "Environment settings" -collapse true;

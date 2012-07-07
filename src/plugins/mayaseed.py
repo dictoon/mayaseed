@@ -62,7 +62,7 @@ def ms_renderSettings_nodeInitializer():
     output_dir_Attr = OpenMaya.MFnTypedAttribute()
     ms_renderSettings.output_dir =  output_dir_Attr.create("output_directory", "out_dir", OpenMaya.MFnData.kString, output_dir_string)   
     #output file attribute
-    output_file_string = OpenMaya.MFnStringData().create("output_file.appleseed")
+    output_file_string = OpenMaya.MFnStringData().create("file_name.#.appleseed")
     output_file_Attr = OpenMaya.MFnTypedAttribute()
     ms_renderSettings.output_file =  output_file_Attr.create("output_file", "out_file", OpenMaya.MFnData.kString, output_file_string)  
 
@@ -77,6 +77,38 @@ def ms_renderSettings_nodeInitializer():
     #overwrite existing exrs
     overwrite_existing_exrs_nAttr = OpenMaya.MFnNumericAttribute()
     ms_renderSettings.overwrite_existing_exrs = overwrite_existing_exrs_nAttr.create("overwrite_existing_exrs", "overwrite_exrs", OpenMaya.MFnNumericData.kBoolean, True)
+
+    #export motion blur
+    export_motion_blur_nAttr = OpenMaya.MFnNumericAttribute()
+    ms_renderSettings.export_motion_blur = export_motion_blur_nAttr.create("export_motion_blur", "motion_blur", OpenMaya.MFnNumericData.kBoolean, True)
+
+    #shutter open time
+    shutter_open_AttrFloat = OpenMaya.MFnNumericAttribute()
+    ms_renderSettings.shutter_open = shutter_open_AttrFloat.create("shutter_open_time", "shutter_open", OpenMaya.MFnNumericData.kFloat, 0)
+    shutter_open_AttrFloat.setHidden(False)
+    shutter_open_AttrFloat.setKeyable(True)
+
+    #shutter close time
+    shutter_close_AttrFloat = OpenMaya.MFnNumericAttribute()
+    ms_renderSettings.shutter_close = shutter_close_AttrFloat.create("shutter_close_time", "shutter_close", OpenMaya.MFnNumericData.kFloat, 1)
+    shutter_close_AttrFloat.setHidden(False)
+    shutter_close_AttrFloat.setKeyable(True)
+
+    #export animation
+    export_animation_nAttr = OpenMaya.MFnNumericAttribute()
+    ms_renderSettings.export_animation = export_animation_nAttr.create("export_animation", "export_animation", OpenMaya.MFnNumericData.kBoolean, False)
+
+    #start_frame
+    start_frame_AttrInt = OpenMaya.MFnNumericAttribute()
+    ms_renderSettings.start_frame = start_frame_AttrInt.create("animation_start_frame", "start_frame", OpenMaya.MFnNumericData.kInt, 1)
+    start_frame_AttrInt.setHidden(False)
+    start_frame_AttrInt.setKeyable(False)
+    
+    #end frame
+    end_frame_AttrInt = OpenMaya.MFnNumericAttribute()
+    ms_renderSettings.end_frame = end_frame_AttrInt.create("animation_end_frame", "end_frame", OpenMaya.MFnNumericData.kInt, 100)
+    end_frame_AttrInt.setHidden(False)
+    end_frame_AttrInt.setKeyable(False)
 
     #environent -----------------------------------------------
     #environment message
@@ -190,6 +222,12 @@ def ms_renderSettings_nodeInitializer():
         ms_renderSettings.addAttribute(ms_renderSettings.convert_shading_nodes_to_textures)
         ms_renderSettings.addAttribute(ms_renderSettings.convert_textures_to_exr)
         ms_renderSettings.addAttribute(ms_renderSettings.overwrite_existing_exrs)
+        ms_renderSettings.addAttribute(ms_renderSettings.export_motion_blur)
+        ms_renderSettings.addAttribute(ms_renderSettings.shutter_open)
+        ms_renderSettings.addAttribute(ms_renderSettings.shutter_close)
+        ms_renderSettings.addAttribute(ms_renderSettings.export_animation)
+        ms_renderSettings.addAttribute(ms_renderSettings.start_frame)
+        ms_renderSettings.addAttribute(ms_renderSettings.end_frame)
 
         ms_renderSettings.addAttribute(ms_renderSettings.environment)
         ms_renderSettings.addAttribute(ms_renderSettings.export_all_cameras)
@@ -217,6 +255,8 @@ def ms_renderSettings_nodeInitializer():
         ms_renderSettings.addAttribute(ms_renderSettings.custom_final_config_light_samples)
     except:
         sys.stderr.write( "Failed to create attributes of %s node\n" % ms_renderSettings_nodeTypeName )
+
+
 
 #****************************************************************************************************************************************************************************************************
 # ms_environment node *******************************************************************************************************************************************************************************
