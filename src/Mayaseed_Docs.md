@@ -1,4 +1,3 @@
-
 Mayaseed docs
 =============
 
@@ -10,7 +9,7 @@ About Mayaseed
 
 Mayaseed is a plugin for Maya that exports geometry, light and materials to the Applsessed renderer. Mayaseed has been tested and runs on Maya 2010 or newer, it should also run on older versions but has not been tested. 
 
-###What is Applseseed?###
+###What is Appleseed?###
 
 Applseseed is an open source physically based raytracing renderer that does a whole bunch of cool things that a lot of other open source renderers don't. Take a look here.
 
@@ -21,7 +20,7 @@ http://appleseedhq.net/
 Mayaseed is released under the MIT licence
 Like Appleseed Mayaseed is released under the MIT licence which means its free to use and modify to your hearts content. 
 
-###How its made###
+###How it's made###
 
 Mayaseed is Written mainly in Python with a little bit of MEL so its cross platform and easy to modify. You can find more about the structure of the plugin in the **Plugin structure** section. New releases will be announced on the Appleseed website here:
 
