@@ -9,9 +9,9 @@ About Mayaseed
 
 Mayaseed is a plugin for Maya that exports geometry, light and materials to the Applsessed renderer. Mayaseed has been tested and runs on Maya 2010 or newer, it should also run on older versions but has not been tested. 
 
-###What is Appleseed?###
+###What is appleseed?###
 
-Applseseed is an open source physically based raytracing renderer that does a whole bunch of cool things that a lot of other open source renderers don't. Take a look here.
+appleseed is an open source physically based raytracing renderer that does a whole bunch of cool things that a lot of other open source renderers don't. Take a look here.
 
 http://appleseedhq.net/
 
@@ -81,9 +81,9 @@ That should be everything, if everything has gone to plan you should have a new 
 Getting started
 ---------------
 
-###The mayaseed menu###
+###The Mayaseed menu###
 
-The Mayaseed menu will appear when the plugin is correctly installed, if you cant see it make sure the plugin installed correctly and is enabled.
+The Mayaseed menu will appear when the plugin is correctly installed, if you can't see it make sure the plugin installed correctly and is enabled.
 
 
 ###The Render Settings node###
@@ -121,7 +121,7 @@ The ms\_renderSettings (render settings) node is the biggest node in the Mayasee
 
 It is also one of the places where you can start your export from, at the top of the render settings node's attribute editor there is a blue button marked **Export** use this button to start your export.
 
-The Following section is a list of attributes in the render settings node and a description of their functions.
+The following section is a list of attributes in the render settings node and a description of their functions.
 
 >Note: The ms_renderSettings node's attributes are organised in a way that mirrors the internal file structure, so if an attribute seems like its in a strange place there is a good reason. By using Mayaseed you are also learning about appleseed at the same time.
 
@@ -142,7 +142,7 @@ Use this checkbox to convert maya shading networks to textures on export. If a c
 
 #####Overwrite Existing EXRs#####
 
-If this checkbox is checked then maya will convert and overwrite texture files with every export.
+If this checkbox is checked then Maya will convert and overwrite texture files with every export.
 
 #####Export Motion Blur#####
 
@@ -184,7 +184,7 @@ Although appleseed can only use one camera at a time it is possible to have more
 
 #####Export All Cameras As Thinlens#####
 
-Applesedd has 2 types of cameras **Pinhole** and **Thinlens**, the main difference being that a Thinlens camera can simulate depth of field and the Pinhole cannot. By default Mayaseed will export cameras with depth of field turned off as Pinhole and with depth of field turned on as Thinlens. Use this option to force Mayaseed to export all cameras as Thinlens.
+Appleseed has two types of cameras: **Pinhole** and **Thinlens**, the main difference being that a Thinlens camera can simulate depth of field and the Pinhole cannot. By default Mayaseed will export cameras with depth of field turned off as Pinhole and with depth of field turned on as Thinlens. Use this option to force Mayaseed to export all cameras as Thinlens.
 
 
 ####Assembly Settings Section####
@@ -229,7 +229,7 @@ Both Interactive Config and Final COnfig have the following attributes.
 
 #####Lighting Engine#####
 
-This drop-down menu currently has 2 options **Path Tracing** and **Distributed Ray Tracing**. Path tracing is more physically accurate and will compute color bleeding and caustics whereas distributed ray tracing is slower but less accurate.
+This drop-down menu currently has two options: **Path Tracing** and **Distributed Ray Tracing**. Path tracing is more physically accurate and will compute color bleeding and caustics whereas distributed ray tracing is slower but less accurate.
 
 #####Min Samples#####
 
@@ -239,7 +239,7 @@ Use this attribute to set the minimum render samples.
 
 Use this attribute to set the maximum render samples.
 
-#####MAx Ray Depth#####
+#####Max Ray Depth#####
 
 Max Ray depth controls the maximum number of bounces that a ray can go through. Higher numbers are more accurate but slower to render.
 
@@ -511,7 +511,7 @@ This file contains instructions on how to install Mayaseed, the instructions are
 
 ###Mayaseed\_Docs.md & Mayaseed_Docs.html###
 
-**Mayaseed\_Docs.html** is genarated from the **Mayaseed\_Docs.md** file. The .md file is a plain text file formatted using the markdown language.
+**Mayaseed\_Docs.html** is generated from the **Mayaseed\_Docs.md** file. The .md file is a plain text file formatted using the markdown language.
 
 
 ###open\_me\_to\_install.ma###
@@ -567,8 +567,3 @@ This file describes how the ms_renderSettings node is displayed in the attribute
 ###ms\_menu###
 
 This python script sets up the Mayaseed menu and is called by **mayaseed.py** in the **initializePlugin()** function. The **uninitializePlugin()** function also calls this module to delete the Mayaseed menu when the plugin is unloaded.
-
-
-
-
-
