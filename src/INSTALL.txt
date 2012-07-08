@@ -28,7 +28,7 @@ So copy the following lines to your useSetup.mel file
 
 $env_script_path = `getenv MAYA_SCRIPT_PATH`;
 $env_plugin_path = `getenv MAYA_PLUG_IN_PATH`;
-putenv MAYA_SCRIPT_PATH ($env_script_path + "<mayaseed_root>/graphics");
+putenv MAYA_SCRIPT_PATH ($env_script_path + "<mayaseed_root>/scripts");
 putenv MAYA_PLUG_IN_PATH ($env_plugin_path + "<mayaseed root>/plugins");
 
 

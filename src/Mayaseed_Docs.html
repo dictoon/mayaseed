@@ -199,7 +199,7 @@ body pre code, pre tt{background-color:transparent;border:none;}
 
 <p>Mayaseed is a plugin for Maya that exports geometry, light and materials to the Applsessed renderer. Mayaseed has been tested and runs on Maya 2010 or newer, it should also run on older versions but has not been tested. </p>
 
-<h3>What is Applseseed?</h3>
+<h3>What is Appleseed?</h3>
 
 <p>Applseseed is an open source physically based raytracing renderer that does a whole bunch of cool things that a lot of other open source renderers don&#39;t. Take a look here.</p>
 
@@ -210,7 +210,7 @@ body pre code, pre tt{background-color:transparent;border:none;}
 <p>Mayaseed is released under the MIT licence
 Like Appleseed Mayaseed is released under the MIT licence which means its free to use and modify to your hearts content. </p>
 
-<h3>How its made</h3>
+<h3>How it&#39;s made</h3>
 
 <p>Mayaseed is Written mainly in Python with a little bit of MEL so its cross platform and easy to modify. You can find more about the structure of the plugin in the <strong>Plugin structure</strong> section. New releases will be announced on the Appleseed website here:</p>
 
@@ -245,7 +245,7 @@ Linux: /usr/aw/userconfig/maya/&lt;maya version&gt;/scripts
 
 $env_script_path = `getenv MAYA_SCRIPT_PATH`;
 $env_plugin_path = `getenv MAYA_PLUG_IN_PATH`;
-putenv MAYA_SCRIPT_PATH ($env_script_path + &quot;&lt;mayaseed_root&gt;/graphics&quot;);
+putenv MAYA_SCRIPT_PATH ($env_script_path + &quot;&lt;mayaseed_root&gt;/scripts&quot;);
 putenv MAYA_PLUG_IN_PATH ($env_plugin_path + &quot;&lt;mayaseed root&gt;/plugins&quot;);
 
 
@@ -340,7 +340,7 @@ putenv MAYA_PLUG_IN_PATH ($env_plugin_path + &quot;&lt;mayaseed root&gt;/plugins
 
 <p>This attribute is only a placeholder at this point.</p>
 
-<h5>Shutter Close Time#####</h5>
+<h5>Shutter Close Time</h5>
 
 <p>This attribute is only a placeholder at this point.</p>
 
@@ -436,11 +436,78 @@ putenv MAYA_PLUG_IN_PATH ($env_plugin_path + &quot;&lt;mayaseed root&gt;/plugins
 
 <h3>ms_environment node</h3>
 
-<p>Coming Soon</p>
+<p>The ms_environment (environment) node is used to control the environment settings for your export. Right now it could easily be implemented in the render settings node but when environment transformations are implemented in appleseed it will be useful to have the environment node as a separate entity with its own transform node.</p>
+
+<p>Below is a list of the node&#39;s attributes and their functions.</p>
+
+<h5>Model</h5>
+
+<p>This drop down menu contains the different types of environment models that appleseed provides(below).</p>
+
+<ul>
+<li>Constant Environment</li>
+<li>Gradient Environment</li>
+<li>Latitude Longitude Map</li>
+<li>Mirrorball Map</li>
+</ul>
+
+<h5>Constant Exitance</h5>
+
+<p>Use this attribute if you have selected <strong>Constant Environment</strong> as your model. </p>
+
+<blockquote>
+<p>Note: only modify the color of this attribute, connecting a shading network will have no effect.</p>
+</blockquote>
+
+<h5>Gradient Horizon Exitance</h5>
+
+<p>Use this attribute to set the horizon color of the evironment if you have selected <strong>Gradient Environment</strong> as your model. </p>
+
+<blockquote>
+<p>Note: only modify the color of this attribute, connecting a shading network will have no effect.</p>
+</blockquote>
+
+<h5>Gradient Zenith Exitance</h5>
+
+<p>Use this attribute to set the zenith (highest point) color of the environment if you have selected <strong>Gradient Environment</strong> as your model. </p>
+
+<blockquote>
+<p>Note: only modify the color of this attribute, connecting a shading network will have no effect</p>
+</blockquote>
+
+<h5>Latitude Longitude Exitance</h5>
+
+<p>Attach a texture node to this attribute if you have selected <strong>Latitude Longitude Map</strong> as your environment model. The image should be in latitude longitude format for correct results.</p>
+
+<h5>Mirror Ball Exitance</h5>
+
+<p>Attach a texture node to this attribute if you have selected <strong>Mirror Ball Map</strong> as your environment model.</p>
 
 <h3>Maya shaders</h3>
 
-<p>Coming soon</p>
+<p>Mayaseed will automatically translate maya shaders as best as possible to appleseed shaders but this often isn&#39;t perfect, when automatic shader translation isn&#39;t enough you can add a <strong>Custom Shader Translation</strong>. With an object or shader selected you can Choose <strong>Mayaseed -&gt; Add Custom Shader Translation</strong>to add some Mayaseed specific attributes to your shader.</p>
+
+<blockquote>
+<p>Note: Custom shader translation is an experimental feature and is still limited in functionality.</p>
+</blockquote>
+
+<p>Once you have added a custom shader translation to your shader you will now find three new attributes in the <strong>Extra Attributes</strong> section of the Shaders attribute editor, the following is a list of the attributes and their functions.</p>
+
+<h5>Mayaseed BSDF</h5>
+
+<p>The <strong>Mayaseed BSDF</strong> drop-down menu lets you choose the BSDF model that Mayaseed will translate your shader to on export. BSDF stands for Bidirectional scattering distribution function and controls how light is reflected off the surface of an object. Although appleseed contains more BSDF options Mayaseed only supports the following BSDF&#39;s.</p>
+
+<ul>
+<li>Labertian</li>
+<li>Ashikhmin-Shirley</li>
+<li>Kleeman</li>
+<li>Specular_BSDF</li>
+<li>None</li>
+</ul>
+
+<h5>Mayaseed EDF</h5>
+
+<p>The <strong>Mayaseed EDF</strong> drop-down menu lets you choose the EDF model that Mayaseed will translate your shader to on export. EDF stands for <strong>emittance distribution function</strong> and controls how light is emitted from a surface. Mayaseed has the following 2 options available</p>
 
 <h2>Menu reference</h2>
 

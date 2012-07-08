@@ -57,7 +57,7 @@ So copy the following lines to your useSetup.mel file
     
     $env_script_path = `getenv MAYA_SCRIPT_PATH`;
     $env_plugin_path = `getenv MAYA_PLUG_IN_PATH`;
-    putenv MAYA_SCRIPT_PATH ($env_script_path + "<mayaseed_root>/graphics");
+    putenv MAYA_SCRIPT_PATH ($env_script_path + "<mayaseed_root>/scripts");
     putenv MAYA_PLUG_IN_PATH ($env_plugin_path + "<mayaseed root>/plugins");
 
 
@@ -152,7 +152,7 @@ This attribute is only a placeholder at this point.
 
 This attribute is only a placeholder at this point.
 
-#####Shutter Close Time##### 
+#####Shutter Close Time#####
 
 This attribute is only a placeholder at this point.
 
@@ -251,11 +251,67 @@ This attribute controls the number of samples per light.
 
 ###ms_environment node###
 
-Coming Soon
+The ms\_environment (environment) node is used to control the environment settings for your export. Right now it could easily be implemented in the render settings node but when environment transformations are implemented in appleseed it will be useful to have the environment node as a separate entity with its own transform node.
+
+Below is a list of the node's attributes and their functions.
+
+#####Model#####
+
+This drop down menu contains the different types of environment models that appleseed provides(below).
+
++ Constant Environment
++ Gradient Environment
++ Latitude Longitude Map
++ Mirrorball Map
+
+#####Constant Exitance#####
+
+Use this attribute if you have selected **Constant Environment** as your model. 
+
+> Note: only modify the color of this attribute, connecting a shading network will have no effect.
+
+#####Gradient Horizon Exitance#####
+
+Use this attribute to set the horizon color of the evironment if you have selected **Gradient Environment** as your model. 
+
+> Note: only modify the color of this attribute, connecting a shading network will have no effect.
+
+#####Gradient Zenith Exitance#####
+
+Use this attribute to set the zenith (highest point) color of the environment if you have selected **Gradient Environment** as your model. 
+
+> Note: only modify the color of this attribute, connecting a shading network will have no effect
+
+#####Latitude Longitude Exitance#####
+
+Attach a texture node to this attribute if you have selected **Latitude Longitude Map** as your environment model. The image should be in latitude longitude format for correct results.
+
+#####Mirror Ball Exitance#####
+
+Attach a texture node to this attribute if you have selected **Mirror Ball Map** as your environment model.
+
 
 ###Maya shaders###
 
-Coming soon
+Mayaseed will automatically translate maya shaders as best as possible to appleseed shaders but this often isn't perfect, when automatic shader translation isn't enough you can add a **Custom Shader Translation**. With an object or shader selected you can Choose **Mayaseed -> Add Custom Shader Translation**to add some Mayaseed specific attributes to your shader.
+
+> Note: Custom shader translation is an experimental feature and is still limited in functionality.
+
+Once you have added a custom shader translation to your shader you will now find three new attributes in the **Extra Attributes** section of the Shaders attribute editor, the following is a list of the attributes and their functions.
+
+#####Mayaseed BSDF#####
+
+The **Mayaseed BSDF** drop-down menu lets you choose the BSDF model that Mayaseed will translate your shader to on export. BSDF stands for Bidirectional scattering distribution function and controls how light is reflected off the surface of an object. Although appleseed contains more BSDF options Mayaseed only supports the following BSDF's.
+
++ Labertian
++ Ashikhmin-Shirley
++ Kleeman
++ Specular_BSDF
++ None
+
+#####Mayaseed EDF####
+
+The **Mayaseed EDF** drop-down menu lets you choose the EDF model that Mayaseed will translate your shader to on export. EDF stands for **emittance distribution function** and controls how light is emitted from a surface. Mayaseed has the following 2 options available
 
 
 Menu reference
