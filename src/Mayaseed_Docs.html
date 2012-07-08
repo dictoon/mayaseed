@@ -657,7 +657,92 @@ putenv MAYA_PLUG_IN_PATH ($env_plugin_path + &quot;&lt;mayaseed root&gt;/plugins
 
 <h2>Plugin structure</h2>
 
-<p>Coming soon</p>
+<p>You will find the following files and folders inside the Mayaseed <strong>src</strong> directory that make up the Mayaseed plugin.</p>
+
+<ul>
+<li>graphics (directory)
+
+<ul>
+<li>mayaseed_graphic.png</li>
+</ul></li>
+<li>INSTALL.txt</li>
+<li>Mayaseed_Docs.html</li>
+<li>Mayaseed_Docs.md</li>
+<li>open<em>me</em>to_install.ma</li>
+<li>plugins (directory)
+
+<ul>
+<li>mayaseed.py</li>
+</ul></li>
+<li>README.txt</li>
+<li>scripts
+
+<ul>
+<li>about.txt</li>
+<li>AEms_environmentTemplate.mel</li>
+<li>AEms_renderSettingsTemplate.mel</li>
+<li>mayaseed.ui</li>
+<li>ms_commands.py</li>
+<li>ms_export.py</li>
+<li>ms_menu.py</li>
+</ul></li>
+</ul>
+
+<h3>graphics (directory)</h3>
+
+<p>The <strong>graphics</strong> directory contains any graphics used in the ui. </p>
+
+<h3>INSTALL.txt</h3>
+
+<p>This file contains instructions on how to install Mayaseed, the instructions are mirrored in the Mayaseed docs but are included here just in case.</p>
+
+<h3>Mayaseed_Docs.md &amp; Mayaseed_Docs.html</h3>
+
+<p><strong>Mayaseed_Docs.html</strong> is genarated from the <strong>Mayaseed_Docs.md</strong> file. The .md file is a plain text file formatted using the markdown language.</p>
+
+<h3>open_me_to_install.ma</h3>
+
+<p><strong>open_me_to_install.ma</strong> is a regular maya file that contains a python script node that executes on opening. The python script adds the Mayaseed plugins and scripts directory to the maya PATH so that maya can find the source files.</p>
+
+<h3>plugins (directory)</h3>
+
+<p>This directory contains the main plugin python file meaning it contains a single file that defines the Mayaseed nodes.</p>
+
+<h3>mayaseed.py</h3>
+
+<p>This file contains the code that defines the ms<em>renderSettings node and the ms</em>environment node.</p>
+
+<h3>README.txt</h3>
+
+<p>Simple text file containing information about Mayaseed.</p>
+
+<h3>scripts (directory)</h3>
+
+<p>The scripts directory contain all the functions, classes and attribute editor templates plus a few other things. </p>
+
+<h3>about.txt</h3>
+
+<p><strong>about.txt</strong> contains the text that the <strong>About Mayaseed</strong> dialogue displays.</p>
+
+<h3>AEms_environmentTemplate.mel</h3>
+
+<p>This file describes how the ms_environment node is displayed in the attribute editor.</p>
+
+<h3>AEms_renderSettingsTemplate.mel</h3>
+
+<p>This file describes how the ms_renderSettings node is displayed in the attribute editor.</p>
+
+<h3>ms_commands.py</h3>
+
+<p><strong>ms_commands.py</strong> contains commands used in the Mayaseed menu and utility variables,functions and classes for the <strong>ms_export</strong> module. </p>
+
+<h3>ms_export.py</h3>
+
+<p><strong>ms_export.py</strong> contains the <strong>export()</strong> function that does most of the hard work in translating the maya scene to the .appleseed format. Broadly speaking a <strong>writeXML</strong> object is handed down through each XML entity in the appleseed scene description writing to the file as it goes.</p>
+
+<h3>ms_menu</h3>
+
+<p>This python script sets up the Mayaseed menu and is called by <strong>mayaseed.py</strong> in the <strong>initializePlugin()</strong> function. The <strong>uninitializePlugin()</strong> function also calls this module to delete the Mayaseed menu when the plugin is unloaded.</p>
 
 </body>
 </html>
