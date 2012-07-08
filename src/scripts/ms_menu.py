@@ -65,7 +65,7 @@ def buildMenu():
     cmds.menuItem(label='Remove custom shader translation', parent='ms_menu', command='import ms_commands\nms_commands.removeShadingAttribs()')    
     
     cmds.menuItem(divider=True, parent='ms_menu')
-    cmds.menuItem(label='About', parent='ms_menu', command='import ms_commands\nms_commands.MsInfoDial()')
+    cmds.menuItem(label='About', parent='ms_menu', command='import ms_commands\nms_commands.msInfoDial()')
 
 
 def deleteMenu():

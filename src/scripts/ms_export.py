@@ -35,68 +35,6 @@ inch_to_meter = 0.02539999983236
 #****************************************************************************************************************************************************************************************************
 # utilitiy functions & classes **********************************************************************************************************************************************************************
 #****************************************************************************************************************************************************************************************************
-
-#
-# clamp RGB values ---
-#
-
-def normalizeRGB(color):
-    R = color[0]
-    G = color[1]
-    B = color[2]
-    M = 1
-
-    if R > M:
-        M = R
-    if G > M:
-        M = G
-    if B > M:
-        M = B
-
-    R = R / M
-    G = G / M
-    B = B / M
-
-    return (R,G,B,M)
-
-
-
-#
-# convert shader connection to image --
-#
-
-def convertConnectionToImage(shader, attribute, dest_file, resolution=1024):
-    if not cmds.objExists(shader+'.'+attribute):
-        print 'error converting texture, no object named {0} exists'.format(shader+'.'+attribute)
-    else:
-        connection = cmds.listConnections(shader+'.'+attribute)
-        if not connection:
-            print 'nothing connected to {0}'.format(plug_name)
-        else:
-            cmds.hyperShade(objects=shader)
-            connected_object = cmds.ls(sl=True)[0]
-            print connected_object
-            cmds.convertSolidTx(connection[0] ,connected_object ,fileImageName=dest_file, antiAlias=True, bm=3, fts=True, sp=True, alpha=True, doubleSided=True, resolutionX=resolution, resolutionY=resolution)
-            return dest_file
-        
-
-#
-# convert texture to exr --
-#
-
-def convertTexToExr(file_path, dest_dir, overwrite=True):
-    if os.path.exists(file_path):
-        dest_file = os.path.join(dest_dir, os.path.splitext(os.path.split(file_path)[1])[0] + '.exr')
-        if (overwrite == False) and (os.path.exists(dest_file)):
-            print '# {0} exists, skipping conversion'.format(dest_file)
-        else:
-            imf_copy_path = os.path.join(os.path.split(sys.path[0])[0], 'bin', 'imf_copy')
-            if not os.path.exists(dest_dir):
-                os.mkdir(dest_dir)
-            p = subprocess.Popen([imf_copy_path, file_path, dest_file])
-            return dest_file
-    else:
-        print '# error: {0} does not exist'.format(file_path)
         
 
 #
@@ -342,22 +280,22 @@ class Material(): #object transform name
         self.specular_texture = None
         #for shaders with color & incandescence attributes interpret them as bsdf and edf
         if (self.shader_type == 'lambert') or (self.shader_type == 'blinn') or (self.shader_type == 'phong') or (self.shader_type == 'phongE'):
-            self.bsdf_color = normalizeRGB(cmds.getAttr(self.name+'.color')[0])
-            self.edf_color = normalizeRGB(cmds.getAttr(self.name+'.incandescence')[0])
+            self.bsdf_color = ms_commands.normalizeRGB(cmds.getAttr(self.name+'.color')[0])
+            self.edf_color = ms_commands.normalizeRGB(cmds.getAttr(self.name+'.incandescence')[0])
             color_connection = cmds.connectionInfo((self.name + '.color'), sourceFromDestination=True).split('.')[0]
             incandecence_connection = cmds.connectionInfo((self.name+'.incandescence'), sourceFromDestination=True).split('.')[0]
             if color_connection:
                 if cmds.nodeType(color_connection) == 'file':
                     print('# texture connected to {0}'.format(self.name + '.color'))
                     if params['convertTexturesToExr']:
-                        self.bsdf_texture = convertTexToExr(cmds.getAttr(color_connection+ '.fileTextureName'), os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
+                        self.bsdf_texture = ms_commands.convertTexToExr(cmds.getAttr(color_connection+ '.fileTextureName'), os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
                     else:
                         self.bsdf_texture = cmds.getAttr(color_connection+ '.fileTextureName')
                 else:
                     #convert connection to exr
                     temp_file = os.path.join(params['outputDir'], 'temp_files', (color_connection + '.iff'))
-                    convertConnectionToImage(self.name, 'color', temp_file, 1024)
-                    self.bsdf_texture =  convertTexToExr(temp_file, os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
+                    ms_commands.convertConnectionToImage(self.name, 'color', temp_file, 1024)
+                    self.bsdf_texture =  ms_commands.convertTexToExr(temp_file, os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
 
 
 
@@ -367,35 +305,35 @@ class Material(): #object transform name
                 if cmds.nodeType(incandecence_connection) == 'file':
                     print('texture connected to {0}'.format(self.name + '.incandescence'))
                     if params['convertTexturesToExr']:
-                        self.edf_texture = convertTexToExr(cmds.getAttr(incandecence_connection+ '.fileTextureName'), os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
+                        self.edf_texture = ms_commands.convertTexToExr(cmds.getAttr(incandecence_connection+ '.fileTextureName'), os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
                     else:
                         self.edf_texture = cmds.getAttr(incandecence_connection+ '.fileTextureName')
                 else:
                     #convert connection to exr
                     temp_file = os.path.join(params['outputDir'], 'temp_files', (incandecence_connection + '.iff'))
-                    convertConnectionToImage(self.name, 'incandescence', temp_file, 1024)
-                    self.edf_texture =  convertTexToExr(temp_file, os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
+                    ms_commands.convertConnectionToImage(self.name, 'incandescence', temp_file, 1024)
+                    self.edf_texture =  ms_commands.convertTexToExr(temp_file, os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
 
         #get specular conponent for shaders which have one
         elif (self.shader_type == 'blinn') or (self.shader_type == 'phong') or (self.shader_type == 'phongE'):
-            self.specular_color = normalizeRGB(cmds.getAttr(self.name+'.specularColor')[0])
+            self.specular_color = ms_commands.normalizeRGB(cmds.getAttr(self.name+'.specularColor')[0])
             specular_connection = cmds.connectionInfo((self.name + '.specularColor'), sourceFromDestination=True).split('.')[0]
             if specular_connection:
                 if cmds.nodeType(specular_connection) == 'file':
                     print('texture connected to {0}'.format(self.name + '.specularColor'))
                     if params['convertTexturesToExr']:
-                        self.specular_texture = convertTexToExr(cmds.getAttr(specular_connection+ '.fileTextureName'), os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
+                        self.specular_texture = ms_commands.convertTexToExr(cmds.getAttr(specular_connection+ '.fileTextureName'), os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
                     else:
                         self.specular_texture = cmds.getAttr(specular_connection+ '.fileTextureName')
                 else:
                     #convert connection to exr
                     temp_file = os.path.join(params['outputDir'], 'temp_files', (specular_connection + '.iff'))
-                    convertConnectionToImage(self.name, 'specularColor', temp_file, 1024)
-                    self.specular_texture =  convertTexToExr(temp_file, os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
+                    ms_commands.convertConnectionToImage(self.name, 'specularColor', temp_file, 1024)
+                    self.specular_texture =  ms_commands.convertTexToExr(temp_file, os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
 
         #for surface shaders interpret outColor as bsdf and edf
         elif self.shader_type == 'surfaceShader':
-            self.edf_color = normalizeRGB(cmds.getAttr(self.name+'.outColor')[0])
+            self.edf_color = ms_commands.normalizeRGB(cmds.getAttr(self.name+'.outColor')[0])
             self.bsdf_color = self.edf_color
             print '************ {0}'.format(self.edf_color)
 
@@ -404,7 +342,7 @@ class Material(): #object transform name
                 if cmds.nodeType(outColor_connection) == 'file':
                     print('texture connected to {0}'.format(self.name + '.outColor'))
                     if params['convertTexturesToExr']:
-                        self.bsdf_texture = convertTexToExr(cmds.getAttr(outColor_connection+ '.fileTextureName'), os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
+                        self.bsdf_texture = ms_commands.convertTexToExr(cmds.getAttr(outColor_connection+ '.fileTextureName'), os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
                     else:
                         self.bsdf_texture = cmds.getAttr(outColor_connection+ '.fileTextureName')
 
@@ -412,8 +350,8 @@ class Material(): #object transform name
                 else:
                     #convert connection to exr
                     temp_file = os.path.join(params['outputDir'], 'temp_files', (outColor_connection + '.iff'))
-                    convertConnectionToImage(self.name, 'outColor', temp_file, 1024)
-                    self.edf_texture =  convertTexToExr(temp_file, os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
+                    ms_commands.convertConnectionToImage(self.name, 'outColor', temp_file, 1024)
+                    self.edf_texture =  ms_commands.convertTexToExr(temp_file, os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
 
             else:
                 self.bsdf_texture = None
@@ -993,17 +931,17 @@ class Scene():
             env_edf_params = dict()
             if environment_edf_model_enum == 0:
                 environment_edf_model = 'constant_environment_edf'
-                environment_color = normalizeRGB(cmds.getAttr(self.params['environment']+'.constant_exitance')[0])
+                environment_color = ms_commands.normalizeRGB(cmds.getAttr(self.params['environment']+'.constant_exitance')[0])
                 self.addColor('constant_env_exitance', environment_color[0:3], environment_color[3])
                 env_edf_params['exitance'] =  'constant_env_exitance'
 
             elif environment_edf_model_enum == 1:
                 environment_edf_model = 'gradient_environment_edf'
 
-                horizon_exitance = normalizeRGB(cmds.getAttr(self.params['environment']+'.gradient_horizon_exitance')[0])
+                horizon_exitance = ms_commands.normalizeRGB(cmds.getAttr(self.params['environment']+'.gradient_horizon_exitance')[0])
                 self.addColor('gradient_env_horizon_exitance', horizon_exitance[0:3], horizon_exitance[3])
 
-                zenith_exitance = normalizeRGB(cmds.getAttr(self.params['environment']+'.gradient_zenith_exitance')[0])
+                zenith_exitance = ms_commands.normalizeRGB(cmds.getAttr(self.params['environment']+'.gradient_zenith_exitance')[0])
                 self.addColor('gradient_env_zenith_exitance', zenith_exitance[0:3], zenith_exitance[3])
 
                 env_edf_params['horizon_exitance'] = 'gradient_env_horizon_exitance'

@@ -82,7 +82,7 @@ def removeShadingAttribs():
 # show info dialogue -------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # 
 
-class MsInfoDial():
+class msInfoDial():
     def __init__(self):
         if cmds.window('ms_info_window', query=True, exists=True):
             cmds.deleteUI('ms_info_window')
@@ -108,7 +108,68 @@ class MsInfoDial():
         cmds.showWindow(window)
         
 
+#****************************************************************************************************************************************************************************************************
+# utilitiy functions & classes **********************************************************************************************************************************************************************
+#****************************************************************************************************************************************************************************************************
 
+#
+# clamp RGB values ---
+#
 
+def normalizeRGB(color):
+    R = color[0]
+    G = color[1]
+    B = color[2]
+    M = 1
+
+    if R > M:
+        M = R
+    if G > M:
+        M = G
+    if B > M:
+        M = B
+
+    R = R / M
+    G = G / M
+    B = B / M
+
+    return (R,G,B,M)
+
+#
+# convert shader connection to image --
+#
+
+def convertConnectionToImage(shader, attribute, dest_file, resolution=1024):
+    if not cmds.objExists(shader+'.'+attribute):
+        print 'error converting texture, no object named {0} exists'.format(shader+'.'+attribute)
+    else:
+        connection = cmds.listConnections(shader+'.'+attribute)
+        if not connection:
+            print 'nothing connected to {0}'.format(plug_name)
+        else:
+            cmds.hyperShade(objects=shader)
+            connected_object = cmds.ls(sl=True)[0]
+            print connected_object
+            cmds.convertSolidTx(connection[0] ,connected_object ,fileImageName=dest_file, antiAlias=True, bm=3, fts=True, sp=True, alpha=True, doubleSided=True, resolutionX=resolution, resolutionY=resolution)
+            return dest_file
+  
+
+#
+# convert texture to exr --
+#
+
+def convertTexToExr(file_path, dest_dir, overwrite=True):
+    if os.path.exists(file_path):
+        dest_file = os.path.join(dest_dir, os.path.splitext(os.path.split(file_path)[1])[0] + '.exr')
+        if (overwrite == False) and (os.path.exists(dest_file)):
+            print '# {0} exists, skipping conversion'.format(dest_file)
+        else:
+            imf_copy_path = os.path.join(os.path.split(sys.path[0])[0], 'bin', 'imf_copy')
+            if not os.path.exists(dest_dir):
+                os.mkdir(dest_dir)
+            p = subprocess.Popen([imf_copy_path, file_path, dest_file])
+            return dest_file
+    else:
+        print '# error: {0} does not exist'.format(file_path)
 
 
