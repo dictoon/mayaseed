@@ -493,7 +493,7 @@ putenv MAYA_PLUG_IN_PATH ($env_plugin_path + &quot;&lt;mayaseed root&gt;/plugins
 
 <p>Once you have added a custom shader translation to your shader you will now find three new attributes in the <strong>Extra Attributes</strong> section of the Shaders attribute editor, the following is a list of the attributes and their functions.</p>
 
-<h5>Mayaseed BSDF</h5>
+<h4>Mayaseed BSDF</h4>
 
 <p>The <strong>Mayaseed BSDF</strong> drop-down menu lets you choose the BSDF model that Mayaseed will translate your shader to on export. BSDF stands for Bidirectional scattering distribution function and controls how light is reflected off the surface of an object. Although appleseed contains more BSDF options Mayaseed only supports the following BSDF&#39;s.</p>
 
@@ -502,12 +502,27 @@ putenv MAYA_PLUG_IN_PATH ($env_plugin_path + &quot;&lt;mayaseed root&gt;/plugins
 <li>Ashikhmin-Shirley</li>
 <li>Kleeman</li>
 <li>Specular_BSDF</li>
-<li>None</li>
+<li>&lt;None&gt;</li>
 </ul>
 
-<h5>Mayaseed EDF</h5>
+<h4>Mayaseed EDF</h4>
 
-<p>The <strong>Mayaseed EDF</strong> drop-down menu lets you choose the EDF model that Mayaseed will translate your shader to on export. EDF stands for <strong>emittance distribution function</strong> and controls how light is emitted from a surface. Mayaseed has the following 2 options available</p>
+<p>The <strong>Mayaseed EDF</strong> drop-down menu lets you choose the EDF model that Mayaseed will translate your shader to on export. EDF stands for <strong>emittance distribution function</strong> and controls how light is emitted from a surface. Mayaseed has the following 2 options available:</p>
+
+<ul>
+<li>&lt;None&gt;</li>
+<li>Diffuse</li>
+</ul>
+
+<h4>Mayaseed Surface Shader</h4>
+
+<p>The <strong>Mayaseed Surface Shader</strong> controls how an object is rendered when it is directly visible to the camera. By default this is set to <strong>Physical</strong> which means that the object will be rendered according to the BSDF, this is usually the most physically accurate setting. Mayaseed has the following options available:</p>
+
+<ul>
+<li>Physical</li>
+<li>Constant</li>
+<li>&lt;None&gt;</li>
+</ul>
 
 <h2>Menu reference</h2>
 
@@ -543,9 +558,102 @@ putenv MAYA_PLUG_IN_PATH ($env_plugin_path + &quot;&lt;mayaseed root&gt;/plugins
 
 <p>Show information about Mayaseed.</p>
 
-<h2>Command reference</h2>
+<h2>Module reference</h2>
 
-<p>Coming Soon</p>
+<p>With mayaseed correctly installed you also have the following new python modules available to you.</p>
+
+<ul>
+<li>ms_commands </li>
+<li>ms_export</li>
+</ul>
+
+<h3>ms_commands module</h3>
+
+<p><strong>ms_commands</strong> is where all the common functions, classes and variables reside, this section describes them. </p>
+
+<h4>Variable: ms_commands.MAYASEED_VERSION</h4>
+
+<p>This variable will return the current Mayaseed version.</p>
+
+<h4>Variable: ms_commands.MAYASEED_URL</h4>
+
+<p>This variable will return the URL of the Mayaseed website.</p>
+
+<h4>Variable: ms_commands.APPLESEED_URL</h4>
+
+<p>This variable will return the URL of the appleseed website.</p>
+
+<h4>Variable: ms_commands.ROOT_DIRECTORY</h4>
+
+<p>This variable will return the URL of the Mayaseed install&#39;s root directory.</p>
+
+<h4>Function: ms_commands.addShadingAttribs()</h4>
+
+<p>With an object or shader selected use this function to add custom shader translation attributes to a shader.</p>
+
+<h4>Function: ms_commands.removeShadingAttribs()</h4>
+
+<p>With an object or shader selected use this function to remove custom shader translation attributes to a shader</p>
+
+<h4>Class: ms_commands.MsInfoDial()</h4>
+
+<p>This function shows the Mayaseed info dialogue.</p>
+
+<h4>Function: ms_commands.normalizeRGB(Tuple[Float:R,Float:G,Float:B]: Color) Returns Tuple[Float:R,Float:G,Float:B,Float:M]</h4>
+
+<p>Use this function normalises a 3 value [R,G,B] tuple and returns a normalised tuple with the RGB values normalised to a 0-1 range with a 4th multiplier value.</p>
+
+<h4>Function: ms_commands.convertConnectionToImage(String:shader, String:attribute, String:dest_file, Int:resolution=1024) Returns String:dest_file</h4>
+
+<p>This function will bake a given shading connection to an image file. </p>
+
+<h5>Argument: String:shader</h5>
+
+<p>Name of the shader. e.g. &quot;Lambert1&quot;</p>
+
+<h5>Argument: String:attribute</h5>
+
+<p>The name of the attribute you want to bake. e.g. &quot;Color&quot;</p>
+
+<h5>Argument: String:dest_file</h5>
+
+<p>The destination of the file you&#39;d like to export</p>
+
+<h5>Argument: Int:resolution</h5>
+
+<p>The resolution of the image you would like to bake, images are always square.</p>
+
+<h4>Function: convertTexToExr(String:file_path, String:dest_dir, Boolean: overwrite=True) Returns String:dest_file</h4>
+
+<p>Use this function to convert an image to an .exr file using the <strong>imf_copy</strong> utility that ships with maya. The function returns a string containing the path to the destination file.</p>
+
+<h5>Argument: String:file_path</h5>
+
+<p>File path of the image to be converted.</p>
+
+<h5>Argument: String:dest_dir</h5>
+
+<p>The directory that you would like to save the converted image to. </p>
+
+<blockquote>
+<p>Note: The converted image will have the same name as the source file but with the .exr extension.</p>
+</blockquote>
+
+<h5>Argument: Boolean:overwrite = True</h5>
+
+<p>By default Mayaseed will overwrite any images that have the same name as the output file, set this argument to false if you want to cancel image conversion for existing images</p>
+
+<h3>ms_export module</h3>
+
+<p>This module contains the main bulk of the code that handles the export and essentially only has one useful function.</p>
+
+<h4>Function: ms<em>export.export(String:render</em>settings_node)</h4>
+
+<p>This function is the workhorse of Mayaseed and does all the work in translating, exporting and writing your scene to disk based on the settings from your render settings node.</p>
+
+<h5>Argument: String:String:render<em>settings</em>node</h5>
+
+<p>This string is the name of the render settings node that contains the settings of your export.</p>
 
 <h2>Plugin structure</h2>
 
