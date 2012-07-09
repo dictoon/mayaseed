@@ -460,9 +460,9 @@ The directory that you would like to save the converted image to.
 By default Mayaseed will overwrite any images that have the same name as the output file, set this argument to false if you want to cancel image conversion for existing images
 
 
-####Function: ms\_commands.nodeIsExportable(String:node\_name) Returns Boolean
+####Function: ms\_commands.shapeIsExportable(String:node\_name) Returns Boolean
 
-This function will check to see if a maya node is exportable based on whether it is visible and is a valid shape node.
+This function will check to see if a maya shape node is exportable based on whether it is visible and is a valid shape node.
 
 
 #####Argument: String:node_name#####

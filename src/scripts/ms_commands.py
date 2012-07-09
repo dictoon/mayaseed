@@ -175,7 +175,7 @@ def convertTexToExr(file_path, dest_dir, overwrite=True):
 # check if an object is exportable ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 
-def nodeIsExportable(node_name):
+def shapeIsExportable(node_name):
     
     #check the node exists
     if not cmds.objExists(node_name):
@@ -206,6 +206,16 @@ def nodeIsExportable(node_name):
         if not ms_nodeIsExportable(cmds.listRelatives(node_name, parent=True)[0]):
             return False
     
+    #check that the shape has a shader connected
+    if not cmds.listConnections(node_name, t='shadingEngine'):
+        return False
+    else:
+        shadingEngine = cmds.listConnections(node_name, t='shadingEngine')[0]
+        if not cmds.connectionInfo((shadingEngine + '.surfaceShader'),sourceFromDestination=True).split('.')[0]:
+            return False
+        
+
+
         
     return True
     
