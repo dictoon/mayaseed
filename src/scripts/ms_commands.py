@@ -21,9 +21,13 @@
 
 
 import maya.cmds as cmds
+import maya.mel
+import maya.utils as mu
 import os
 import sys
 import inspect
+import subprocess
+
 
 #****************************************************************************************************************************************************************************************************
 # constant vars *************************************************************************************************************************************************************************************
@@ -35,7 +39,7 @@ APPLESEED_URL = 'http://appleseedhq.net/'
 ROOT_DIRECTORY = os.path.split((os.path.dirname(inspect.getfile(inspect.currentframe()))))[0]
 
 #****************************************************************************************************************************************************************************************************
-# utility functions *********************************************************************************************************************************************************************************
+# utilitiy functions & classes **********************************************************************************************************************************************************************
 #****************************************************************************************************************************************************************************************************
 
 #
@@ -107,13 +111,8 @@ class msInfoDial():
         cmds.text('')
         cmds.showWindow(window)
         
-
-#****************************************************************************************************************************************************************************************************
-# utilitiy functions & classes **********************************************************************************************************************************************************************
-#****************************************************************************************************************************************************************************************************
-
 #
-# clamp RGB values ---
+# clamp RGB values ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 
 def normalizeRGB(color):
@@ -136,7 +135,7 @@ def normalizeRGB(color):
     return (R,G,B,M)
 
 #
-# convert shader connection to image --
+# convert shader connection to image ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 
 def convertConnectionToImage(shader, attribute, dest_file, resolution=1024):
@@ -155,7 +154,7 @@ def convertConnectionToImage(shader, attribute, dest_file, resolution=1024):
   
 
 #
-# convert texture to exr --
+# convert texture to exr ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 
 def convertTexToExr(file_path, dest_dir, overwrite=True):
@@ -171,5 +170,48 @@ def convertTexToExr(file_path, dest_dir, overwrite=True):
             return dest_file
     else:
         print '# error: {0} does not exist'.format(file_path)
+
+#
+# check if an object is exportable ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#
+
+def nodeIsExportable(node_name):
+    
+    #check the node exists
+    if not cmds.objExists(node_name):
+        return False
+    
+    #check if the node has a visibility attribute meaning ita a dag node
+    if not cmds.attributeQuery('visibility', node=node_name, exists=True):
+        return False
+    
+    #check visibility flag
+    if not cmds.getAttr(node_name+'.visibility'):
+        return False
+
+        
+    #check to see if its an intermediate mesh
+
+    if cmds.attributeQuery('intermediateObject', node=node_name, exists=True):
+        if cmds.getAttr(node_name+'.intermediateObject'):
+            return False
+        
+    #is it in a hidden display layer
+    if (cmds.attributeQuery('overrideEnabled', node=node_name, exists=True) and cmds.getAttr(node_name+'.overrideEnabled')):
+        if not cmds.getAttr(node_name+'.overrideVisibility'):
+            return False
+    
+    #has it got a parent and is it visible
+    if cmds.listRelatives(node_name, parent=True):
+        if not ms_nodeIsExportable(cmds.listRelatives(node_name, parent=True)[0]):
+            return False
+    
+        
+    return True
+    
+
+
+
+
 
 

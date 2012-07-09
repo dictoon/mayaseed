@@ -199,9 +199,9 @@ body pre code, pre tt{background-color:transparent;border:none;}
 
 <p>Mayaseed is a plugin for Maya that exports geometry, light and materials to the Applsessed renderer. Mayaseed has been tested and runs on Maya 2010 or newer, it should also run on older versions but has not been tested. </p>
 
-<h3>What is Appleseed?</h3>
+<h3>What is appleseed?</h3>
 
-<p>Applseseed is an open source physically based raytracing renderer that does a whole bunch of cool things that a lot of other open source renderers don&#39;t. Take a look here.</p>
+<p>appleseed is an open source physically based raytracing renderer that does a whole bunch of cool things that a lot of other open source renderers don&#39;t. Take a look here.</p>
 
 <p><a href="http://appleseedhq.net/">http://appleseedhq.net/</a></p>
 
@@ -268,9 +268,9 @@ putenv MAYA_PLUG_IN_PATH ($env_plugin_path + &quot;&lt;mayaseed root&gt;/plugins
 
 <h2>Getting started</h2>
 
-<h3>The mayaseed menu</h3>
+<h3>The Mayaseed menu</h3>
 
-<p>The Mayaseed menu will appear when the plugin is correctly installed, if you cant see it make sure the plugin installed correctly and is enabled.</p>
+<p>The Mayaseed menu will appear when the plugin is correctly installed, if you can&#39;t see it make sure the plugin installed correctly and is enabled.</p>
 
 <h3>The Render Settings node</h3>
 
@@ -308,7 +308,7 @@ putenv MAYA_PLUG_IN_PATH ($env_plugin_path + &quot;&lt;mayaseed root&gt;/plugins
 
 <p>It is also one of the places where you can start your export from, at the top of the render settings node&#39;s attribute editor there is a blue button marked <strong>Export</strong> use this button to start your export.</p>
 
-<p>The Following section is a list of attributes in the render settings node and a description of their functions.</p>
+<p>The following section is a list of attributes in the render settings node and a description of their functions.</p>
 
 <blockquote>
 <p>Note: The ms_renderSettings node&#39;s attributes are organised in a way that mirrors the internal file structure, so if an attribute seems like its in a strange place there is a good reason. By using Mayaseed you are also learning about appleseed at the same time.</p>
@@ -330,7 +330,7 @@ putenv MAYA_PLUG_IN_PATH ($env_plugin_path + &quot;&lt;mayaseed root&gt;/plugins
 
 <h5>Overwrite Existing EXRs</h5>
 
-<p>If this checkbox is checked then maya will convert and overwrite texture files with every export.</p>
+<p>If this checkbox is checked then Maya will convert and overwrite texture files with every export.</p>
 
 <h5>Export Motion Blur</h5>
 
@@ -370,7 +370,7 @@ putenv MAYA_PLUG_IN_PATH ($env_plugin_path + &quot;&lt;mayaseed root&gt;/plugins
 
 <h5>Export All Cameras As Thinlens</h5>
 
-<p>Applesedd has 2 types of cameras <strong>Pinhole</strong> and <strong>Thinlens</strong>, the main difference being that a Thinlens camera can simulate depth of field and the Pinhole cannot. By default Mayaseed will export cameras with depth of field turned off as Pinhole and with depth of field turned on as Thinlens. Use this option to force Mayaseed to export all cameras as Thinlens.</p>
+<p>Appleseed has two types of cameras: <strong>Pinhole</strong> and <strong>Thinlens</strong>, the main difference being that a Thinlens camera can simulate depth of field and the Pinhole cannot. By default Mayaseed will export cameras with depth of field turned off as Pinhole and with depth of field turned on as Thinlens. Use this option to force Mayaseed to export all cameras as Thinlens.</p>
 
 <h4>Assembly Settings Section</h4>
 
@@ -416,7 +416,7 @@ putenv MAYA_PLUG_IN_PATH ($env_plugin_path + &quot;&lt;mayaseed root&gt;/plugins
 
 <h5>Lighting Engine</h5>
 
-<p>This drop-down menu currently has 2 options <strong>Path Tracing</strong> and <strong>Distributed Ray Tracing</strong>. Path tracing is more physically accurate and will compute color bleeding and caustics whereas distributed ray tracing is slower but less accurate.</p>
+<p>This drop-down menu currently has two options: <strong>Path Tracing</strong> and <strong>Distributed Ray Tracing</strong>. Path tracing is more physically accurate and will compute color bleeding and caustics whereas distributed ray tracing is slower but less accurate.</p>
 
 <h5>Min Samples</h5>
 
@@ -426,7 +426,7 @@ putenv MAYA_PLUG_IN_PATH ($env_plugin_path + &quot;&lt;mayaseed root&gt;/plugins
 
 <p>Use this attribute to set the maximum render samples.</p>
 
-<h5>MAx Ray Depth</h5>
+<h5>Max Ray Depth</h5>
 
 <p>Max Ray depth controls the maximum number of bounces that a ray can go through. Higher numbers are more accurate but slower to render.</p>
 
@@ -643,6 +643,14 @@ putenv MAYA_PLUG_IN_PATH ($env_plugin_path + &quot;&lt;mayaseed root&gt;/plugins
 
 <p>By default Mayaseed will overwrite any images that have the same name as the output file, set this argument to false if you want to cancel image conversion for existing images</p>
 
+<h4>Function: ms_commands.nodeIsExportable(String:node_name) Returns Boolean</h4>
+
+<p>This function will check to see if a maya node is exportable based on whether it is visible and is a valid shape node.</p>
+
+<h5>Argument: String:node_name</h5>
+
+<p>This string is the name of the node you wish to check</p>
+
 <h3>ms_export module</h3>
 
 <p>This module contains the main bulk of the code that handles the export and essentially only has one useful function.</p>
@@ -698,7 +706,7 @@ putenv MAYA_PLUG_IN_PATH ($env_plugin_path + &quot;&lt;mayaseed root&gt;/plugins
 
 <h3>Mayaseed_Docs.md &amp; Mayaseed_Docs.html</h3>
 
-<p><strong>Mayaseed_Docs.html</strong> is genarated from the <strong>Mayaseed_Docs.md</strong> file. The .md file is a plain text file formatted using the markdown language.</p>
+<p><strong>Mayaseed_Docs.html</strong> is generated from the <strong>Mayaseed_Docs.md</strong> file. The .md file is a plain text file formatted using the markdown language.</p>
 
 <h3>open_me_to_install.ma</h3>
 
