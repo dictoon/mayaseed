@@ -134,7 +134,7 @@ This is where you tell Mayaseed where to export the appleseed scene file and oth
 
 #####Output File#####
 
-This is where you choose the name of your output file, the `#` character will be replaced with the frame number padded to 6 characters. So `my_scene.#.appleseed` will export as my_scene.00001.appleseed`.
+This is where you choose the name of your output file, the `#` character will be replaced with the frame number padded to 5 characters. So `my_scene.#.appleseed` will export as my_scene.00001.appleseed`.
 
 #####Convert Shading Nodes To Textures#####
 
@@ -470,6 +470,16 @@ This function will check to see if a maya shape node is exportable based on whet
 This string is the name of the node you wish to check
 
 
+####Function: ms\_commands.hasShaderConnected(String:node\_name) Returns Boolean####
+
+This function checks whether a shape node has a shader connected.
+
+
+#####Argument: String:node\_name#####
+
+This string is the name of the shape node you want to check.
+
+
 ###ms_export module###
 
 This module contains the main bulk of the code that handles the export and essentially only has one useful function.
@@ -577,3 +587,5 @@ This file describes how the ms_renderSettings node is displayed in the attribute
 ###ms\_menu###
 
 This python script sets up the Mayaseed menu and is called by **mayaseed.py** in the **initializePlugin()** function. The **uninitializePlugin()** function also calls this module to delete the Mayaseed menu when the plugin is unloaded.
+
+

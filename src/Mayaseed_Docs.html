@@ -322,7 +322,7 @@ putenv MAYA_PLUG_IN_PATH ($env_plugin_path + &quot;&lt;mayaseed root&gt;/plugins
 
 <h5>Output File</h5>
 
-<p>This is where you choose the name of your output file, the <code>#</code> character will be replaced with the frame number padded to 6 characters. So <code>my_scene.#.appleseed</code> will export as my_scene.00001.appleseed`.</p>
+<p>This is where you choose the name of your output file, the <code>#</code> character will be replaced with the frame number padded to 5 characters. So <code>my_scene.#.appleseed</code> will export as my_scene.00001.appleseed`.</p>
 
 <h5>Convert Shading Nodes To Textures</h5>
 
@@ -643,13 +643,21 @@ putenv MAYA_PLUG_IN_PATH ($env_plugin_path + &quot;&lt;mayaseed root&gt;/plugins
 
 <p>By default Mayaseed will overwrite any images that have the same name as the output file, set this argument to false if you want to cancel image conversion for existing images</p>
 
-<h4>Function: ms_commands.nodeIsExportable(String:node_name) Returns Boolean</h4>
+<h4>Function: ms_commands.shapeIsExportable(String:node_name) Returns Boolean</h4>
 
-<p>This function will check to see if a maya node is exportable based on whether it is visible and is a valid shape node.</p>
+<p>This function will check to see if a maya shape node is exportable based on whether it is visible and is a valid shape node.</p>
 
 <h5>Argument: String:node_name</h5>
 
 <p>This string is the name of the node you wish to check</p>
+
+<h4>Function: ms_commands.hasShaderConnected(String:node_name) Returns Boolean</h4>
+
+<p>This function checks whether a shape node has a shader connected.</p>
+
+<h5>Argument: String:node_name</h5>
+
+<p>This string is the name of the shape node you want to check.</p>
 
 <h3>ms_export module</h3>
 

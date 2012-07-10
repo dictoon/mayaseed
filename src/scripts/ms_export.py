@@ -32,10 +32,13 @@ import ms_commands
 
 inch_to_meter = 0.02539999983236
 
+
+
+
 #****************************************************************************************************************************************************************************************************
 # utilitiy functions & classes **********************************************************************************************************************************************************************
 #****************************************************************************************************************************************************************************************************
-        
+
 
 #
 # writeXml class --
@@ -104,6 +107,7 @@ def getMayaParams(render_settings_node):
     #main settings
     params['outputDir'] = cmds.getAttr(render_settings_node + '.output_directory')
     params['fileName'] = cmds.getAttr(render_settings_node + '.output_file')
+    params['convertShadingNodes'] = cmds.getAttr(render_settings_node + '.convert_shading_nodes_to_textures')
     params['convertTexturesToExr'] = cmds.getAttr(render_settings_node + '.convert_textures_to_exr')
     params['overwriteExistingExrs'] = cmds.getAttr(render_settings_node + '.overwrite_existing_exrs')
     params['fileName'] = cmds.getAttr(render_settings_node + '.output_file')
@@ -195,11 +199,10 @@ class Color():
         self.wavelength_range = '400.0 700.0'
         self.alpha = 1.0
 
-        print '****creating color'
         print self.name
         print self.color
         print self.multiplier
-        print '***'
+
 
 
     def writeXML(self, doc):
@@ -278,6 +281,7 @@ class Material(): #object transform name
         self.edf_texture = None
         self.specular_color = (0,0,0,1)
         self.specular_texture = None
+
         #for shaders with color & incandescence attributes interpret them as bsdf and edf
         if (self.shader_type == 'lambert') or (self.shader_type == 'blinn') or (self.shader_type == 'phong') or (self.shader_type == 'phongE'):
             self.bsdf_color = ms_commands.normalizeRGB(cmds.getAttr(self.name+'.color')[0])
@@ -288,31 +292,31 @@ class Material(): #object transform name
                 if cmds.nodeType(color_connection) == 'file':
                     print('# texture connected to {0}'.format(self.name + '.color'))
                     if params['convertTexturesToExr']:
-                        self.bsdf_texture = ms_commands.convertTexToExr(cmds.getAttr(color_connection+ '.fileTextureName'), os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
+                        self.bsdf_texture = ('textures/' + os.path.split(ms_commands.convertTexToExr(cmds.getAttr(color_connection+ '.fileTextureName'), os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs']))[1])
                     else:
                         self.bsdf_texture = cmds.getAttr(color_connection+ '.fileTextureName')
-                else:
+                elif params['convertShadingNodes']:
                     #convert connection to exr
-                    temp_file = os.path.join(params['outputDir'], 'temp_files', (color_connection + '.iff'))
+                    temp_dir = os.path.join(self.params['outputDir'],'temp')
+                    temp_file = os.path.join(temp_dir, (color_connection + '.iff'))
                     ms_commands.convertConnectionToImage(self.name, 'color', temp_file, 1024)
-                    self.bsdf_texture =  ms_commands.convertTexToExr(temp_file, os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
-
-
-
+                    self.bsdf_texture =  ('textures/' + os.path.split(ms_commands.convertTexToExr(temp_file, os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs']))[1])
 
 
             if incandecence_connection:
                 if cmds.nodeType(incandecence_connection) == 'file':
                     print('texture connected to {0}'.format(self.name + '.incandescence'))
                     if params['convertTexturesToExr']:
-                        self.edf_texture = ms_commands.convertTexToExr(cmds.getAttr(incandecence_connection+ '.fileTextureName'), os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
+                        self.edf_texture = ('textures/' + os.path.split(ms_commands.convertTexToExr(cmds.getAttr(incandecence_connection+ '.fileTextureName'), os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs']))[1])
                     else:
                         self.edf_texture = cmds.getAttr(incandecence_connection+ '.fileTextureName')
                 else:
                     #convert connection to exr
                     temp_file = os.path.join(params['outputDir'], 'temp_files', (incandecence_connection + '.iff'))
                     ms_commands.convertConnectionToImage(self.name, 'incandescence', temp_file, 1024)
-                    self.edf_texture =  ms_commands.convertTexToExr(temp_file, os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
+                    self.edf_texture =  ('textures/' + os.path.split(ms_commands.convertTexToExr(temp_file, os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs']))[1])
+
+
 
         #get specular conponent for shaders which have one
         elif (self.shader_type == 'blinn') or (self.shader_type == 'phong') or (self.shader_type == 'phongE'):
@@ -322,27 +326,27 @@ class Material(): #object transform name
                 if cmds.nodeType(specular_connection) == 'file':
                     print('texture connected to {0}'.format(self.name + '.specularColor'))
                     if params['convertTexturesToExr']:
-                        self.specular_texture = ms_commands.convertTexToExr(cmds.getAttr(specular_connection+ '.fileTextureName'), os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
+                        self.specular_texture = ('textures/' + os.path.split(ms_commands.convertTexToExr(cmds.getAttr(specular_connection+ '.fileTextureName'), os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs']))[1])
                     else:
                         self.specular_texture = cmds.getAttr(specular_connection+ '.fileTextureName')
                 else:
                     #convert connection to exr
                     temp_file = os.path.join(params['outputDir'], 'temp_files', (specular_connection + '.iff'))
                     ms_commands.convertConnectionToImage(self.name, 'specularColor', temp_file, 1024)
-                    self.specular_texture =  ms_commands.convertTexToExr(temp_file, os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
+                    self.specular_texture =  ('textures/' + os.path.split(ms_commands.convertTexToExr(temp_file, os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs']))[1])
 
         #for surface shaders interpret outColor as bsdf and edf
         elif self.shader_type == 'surfaceShader':
             self.edf_color = ms_commands.normalizeRGB(cmds.getAttr(self.name+'.outColor')[0])
             self.bsdf_color = self.edf_color
-            print '************ {0}'.format(self.edf_color)
+
 
             outColor_connection = cmds.connectionInfo((self.name+'.outColor'), sourceFromDestination=True).split('.')[0]
             if outColor_connection:
                 if cmds.nodeType(outColor_connection) == 'file':
                     print('texture connected to {0}'.format(self.name + '.outColor'))
                     if params['convertTexturesToExr']:
-                        self.bsdf_texture = ms_commands.convertTexToExr(cmds.getAttr(outColor_connection+ '.fileTextureName'), os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
+                        self.bsdf_texture = ('textures/' + os.path.split(ms_commands.convertTexToExr(cmds.getAttr(outColor_connection+ '.fileTextureName'), os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs']))[1])
                     else:
                         self.bsdf_texture = cmds.getAttr(outColor_connection+ '.fileTextureName')
 
@@ -351,7 +355,7 @@ class Material(): #object transform name
                     #convert connection to exr
                     temp_file = os.path.join(params['outputDir'], 'temp_files', (outColor_connection + '.iff'))
                     ms_commands.convertConnectionToImage(self.name, 'outColor', temp_file, 1024)
-                    self.edf_texture =  ms_commands.convertTexToExr(temp_file, os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs'])
+                    self.edf_texture =  ('textures/' + os.path.split(ms_commands.convertTexToExr(temp_file, os.path.join(params['outputDir'], 'textures'), params['overwriteExistingExrs']))[1])
 
             else:
                 self.bsdf_texture = None
@@ -363,6 +367,7 @@ class Material(): #object transform name
             self.name = 'default_texture'
 
     def writeXML(self,doc):
+
         print('writing material {0}'.format(self.name))
         doc.startElement('material name="{0}" model="generic_material"'.format(self.name))
         if self.bsdf:
@@ -524,12 +529,13 @@ class EnvironmentEdf():
 # geometry class --
 #
 
-class Geometry(): # (object_transfrm_name, obj_file)
+class Geometry():
     def __init__(self, params, name, output_file, assembly='main_assembly'):
         self.params = params
         self.name = name
         #get name in heirarchy
         self.heirarchy_name = name
+
         current_object = name
         while cmds.listRelatives(current_object, parent=True):
             current_object = cmds.listRelatives(current_object, parent=True)[0]
@@ -552,7 +558,7 @@ class Geometry(): # (object_transfrm_name, obj_file)
 
     def writeXMLInstance(self, doc):
         print('writing objecct instance: '+self.name)
-        doc.startElement('object_instance name="{0}_inst" object="{1}.{2}"'.format(self.name, self.assembly, self.heirarchy_name,))
+        doc.startElement('object_instance name="{0}.0_inst" object="{1}.0"'.format(self.name, self.name))
         writeTransform(doc)
         doc.appendElement('assign_material slot="0" side="front" material="{0}"'.format(self.material))
         if self.params['matDoubleShade']:
@@ -593,14 +599,16 @@ class Assembly():
         if (self.name == 'main_assembly'):
             #create a list of all geometry objects and itterate over them
             for geo in cmds.ls(typ='mesh'):
-                geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
-                if not geo_transform in self.geo_objects:
-                    self.geo_objects[geo_transform] = Geometry(self.params, geo_transform, ('geo/'+self.name+'.obj'), self.name)
+                if (ms_commands.shapeIsExportable(geo) and ms_commands.hasShaderConnected(geo)):
+                    geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
+                    if not (geo_transform in self.geo_objects):
+                        self.geo_objects[geo_transform] = Geometry(self.params, geo_transform, ('geo/'+self.name+'.obj'), self.name)
         else:
             for geo in cmds.listConnections(self.name, sh=True):
-                geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
-                if not geo_transform in self.geo_objects:
-                    self.geo_objects[geo_transform] = Geometry(self.params, geo_transform, ('geo/'+self.name+'.obj'), self.name)
+                if (ms_commands.shapeIsExportable(geo) and ms_commands.hasShaderConnected(geo)):
+                    geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
+                    if not geo_transform in self.geo_objects:
+                        self.geo_objects[geo_transform] = Geometry(self.params, geo_transform, ('geo/'+self.name+'.obj'), self.name)
                 
         #populate list with individual materials
         for geo in self.geo_objects:
@@ -733,7 +741,6 @@ class Assembly():
                     self.material_objects[name].surface_shader = (name + '_surface_shader')
                     self.addSurfaceShader(self.material_objects[name], name + '_surface_shader', cmds.getAttr(name+'.mayaseed_surface_shader', asString=True))  
 
-
             else: #create bsdf,edf & surface shader based on defaults
                 #create bsdf
                 if self.material_objects[name].shader_type == 'lambert':
@@ -865,10 +872,19 @@ class Assembly():
         for material in self.material_objects:
             self.material_objects[material].writeXML(doc)
         
-        #write .obj object
-        doc.startElement('object name="{0}" model="mesh_object"'.format(self.name))
-        doc.appendElement('parameter name="filename" value="geo/{0}.obj"'.format(self.name))
-        doc.endElement('object')
+        #export and write .obj object
+        for geo in self.geo_objects:
+            #export geo
+            cmds.select(geo)
+            output_file = os.path.join(self.params['outputDir'], 'geo', (geo + '.obj'))
+            print geo
+            print output_file
+            cmds.file(output_file, force=True, options='groups=0;ptgroups=0;materials=0;smoothing=0;normals=1', typ='OBJexport',pr=True, es=True)
+            cmds.select(cl=True)
+            #write xml
+            doc.startElement('object name="{0}" model="mesh_object"'.format(geo))
+            doc.appendElement('parameter name="filename" value="geo/{0}.obj"'.format(geo))
+            doc.endElement('object')
         
         #write lights
         for light_name in self.light_objects:
@@ -882,34 +898,6 @@ class Assembly():
         doc.startElement('assembly_instance name="{0}_inst" assembly="{1}"'.format(self.name, self.name))
         writeTransform(doc, self.params['scene_scale'])
         doc.endElement('assembly_instance')
-
-        #create geo directory if it doesnt already exist
-        print('exporting obj: ' + self.name + '.obj')
-        if not os.path.exists(self.params['outputDir']+'/geo'):
-            os.makedirs(self.params['outputDir']+'/geo')
-
-        #create list of all the top level objects
-        all_objects = []
-
-        for geo in self.geo_objects:
-            all_objects.append(self.geo_objects[geo].name)
-
-        top_level_objects = []
-
-        for object in all_objects:
-            current_object = object
-            while cmds.listRelatives(current_object, parent=True):
-                current_object = cmds.listRelatives(current_object, parent=True)[0]
-            if not current_object in top_level_objects:
-                top_level_objects.append(current_object)
-        cmds.select(cl=True)
-        for geo_name in top_level_objects:
-            cmds.select(geo_name, add=True)
-        try:
-            cmds.file(('{0}/{1}'.format(os.path.join(self.params['outputDir'], 'geo'), (self.name + '.obj'))), force=True, options='groups=1;ptgroups=1;materials=0;smoothing=0;normals=1', type='OBJexport', pr=True, es=True)
-        except:
-            cmds.error('error exporting {0}.obj'.format(self.name))
-        cmds.select(cl=True)
 
 #
 # scene class --
@@ -1115,14 +1103,18 @@ class Configurations():
 def export(render_settings_node):
     params = getMayaParams(render_settings_node)
     if not params['error']:
+        #make output directories if they dont exists
+        if not os.path.exists(os.path.join(params['outputDir'],'temp')):
+            os.makedirs(os.path.join(params['outputDir'],'temp'))
+        if not os.path.exists(os.path.join(params['outputDir'],'geo')):
+            os.makedirs(os.path.join(params['outputDir'],'geo'))
+        if not os.path.exists(os.path.join(params['outputDir'],'textures')):
+            os.makedirs(os.path.join(params['outputDir'],'textures'))
+
+        #begin export
         print('beginning export')
-
-
-
         print('opening output file: ' + params['fileName'])
-        
         doc = WriteXml('{0}/{1}'.format(params['outputDir'], params['fileName'].replace("#",'{0:05}'.format(int(cmds.currentTime(query=True))))))
-
         doc.appendLine('<?xml version="1.0" encoding="UTF-8"?>') # XML format string
         doc.appendLine('<!-- File generated by mayaseed version {0} -->'.format(ms_commands.MAYASEED_VERSION))
         print('writing project element')

@@ -56,7 +56,7 @@ def addShadingAttribs():
         print '# No objects with shader connectoins selectd'
     if shaderName:
         if not cmds.objExists(shaderName + '.mayaseed_bsdf'):
-            cmds.addAttr(shaderName, ln='mayaseed_bsdf',  at='enum', en='Lambertian:Ashikhmin-Shirley:Kelemen:Specular_BRDF:<none>')
+            cmds.addAttr(shaderName, ln='mayaseed_bsdf',  at='enum', en='Lambertian:Ashikhmin-Shirley:Kelemen:Specular_BRDF:<None>')
             cmds.addAttr(shaderName, ln='mayaseed_edf',  at='enum', en='<None>:Diffuse')
             cmds.addAttr(shaderName, ln='mayaseed_surface_shader', at='enum', en='Physical:Constant:<None>')
         else:
@@ -203,22 +203,22 @@ def shapeIsExportable(node_name):
     
     #has it got a parent and is it visible
     if cmds.listRelatives(node_name, parent=True):
-        if not ms_nodeIsExportable(cmds.listRelatives(node_name, parent=True)[0]):
+        if not shapeIsExportable(cmds.listRelatives(node_name, parent=True)[0]):
             return False
+
+    return True
     
+def hasShaderConnected(node_name):
+
     #check that the shape has a shader connected
     if not cmds.listConnections(node_name, t='shadingEngine'):
         return False
+
     else:
         shadingEngine = cmds.listConnections(node_name, t='shadingEngine')[0]
         if not cmds.connectionInfo((shadingEngine + '.surfaceShader'),sourceFromDestination=True).split('.')[0]:
             return False
-        
-
-
-        
     return True
-    
 
 
 
