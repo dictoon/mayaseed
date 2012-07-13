@@ -23,6 +23,7 @@ import maya.OpenMaya as OpenMaya
 import maya.OpenMayaMPx as OpenMayaMPx
 import maya.OpenMayaRender as OpenMayaRender
 import maya.OpenMayaUI as OpenMayaUI
+import maya.cmds as cmds
 import inspect
 import os
 import os.path
@@ -533,9 +534,20 @@ def initializePlugin(obj):
     except:
         sys.stderr.write( "Failed to register command: %s\n" % ms_renderSettings_nodeTypeName )
     
+    #load objExport plugin if its not loaded yet
+    try:
+
+        if not cmds.pluginInfo('objExport', query=True, loaded=True):
+            cmds.loadPlugin('objExport')
+    except: 
+        print 'objExport plugin could not be loaded, cannot load mayaseed'
+
+
+
     #create menu
     ms_menu.createMenu()
     ms_menu.buildMenu()
+
 
 def uninitializePlugin(obj):
     #deregister nodes
