@@ -82,6 +82,13 @@ def ms_renderSettings_nodeInitializer():
     export_motion_blur_nAttr = OpenMaya.MFnNumericAttribute()
     ms_renderSettings.export_motion_blur = export_motion_blur_nAttr.create("export_motion_blur", "motion_blur", OpenMaya.MFnNumericData.kBoolean, True)
 
+    #motion samples
+    motion_samples_AttrInt = OpenMaya.MFnNumericAttribute()
+    ms_renderSettings.motion_samples = motion_samples_AttrInt.create("motion_samples", "motion_samples", OpenMaya.MFnNumericData.kInt, 2)
+    motion_samples_AttrInt.setHidden(False)
+    motion_samples_AttrInt.setKeyable(True)
+
+
     #shutter open time
     shutter_open_AttrFloat = OpenMaya.MFnNumericAttribute()
     ms_renderSettings.shutter_open = shutter_open_AttrFloat.create("shutter_open_time", "shutter_open", OpenMaya.MFnNumericData.kFloat, 0)
@@ -223,6 +230,7 @@ def ms_renderSettings_nodeInitializer():
         ms_renderSettings.addAttribute(ms_renderSettings.convert_textures_to_exr)
         ms_renderSettings.addAttribute(ms_renderSettings.overwrite_existing_exrs)
         ms_renderSettings.addAttribute(ms_renderSettings.export_motion_blur)
+        ms_renderSettings.addAttribute(ms_renderSettings.motion_samples)
         ms_renderSettings.addAttribute(ms_renderSettings.shutter_open)
         ms_renderSettings.addAttribute(ms_renderSettings.shutter_close)
         ms_renderSettings.addAttribute(ms_renderSettings.export_animation)

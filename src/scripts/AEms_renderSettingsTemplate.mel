@@ -193,6 +193,7 @@ global proc AEms_renderSettingsTemplate(string $nodeName)
          editorTemplate -addControl "overwrite_existing_exrs";
          editorTemplate -addSeparator;
          editorTemplate -addControl "export_motion_blur";
+         editorTemplate -addControl "motion_samples";
          editorTemplate -addControl "shutter_open";
          editorTemplate -addControl "shutter_close";
          editorTemplate -addSeparator;

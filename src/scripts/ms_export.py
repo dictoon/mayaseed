@@ -80,18 +80,68 @@ class WriteXml(): #(file_path)
 # writeTransform function --
 #
 
-def writeTransform(doc, scale = 1, transform = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]):
-    doc.startElement('transform')
-    doc.appendElement('scaling value="{0}"'.format(scale))
-    doc.startElement('matrix')
+def writeTransform(doc, scale = 1, object=False, motion=False, motion_samples=2):
 
-    doc.appendLine('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][0], transform[1][0], transform[2][0], transform[3][0]))
-    doc.appendLine('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][1], transform[1][1], transform[2][1], transform[3][1]))
-    doc.appendLine('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][2], transform[1][2], transform[2][2], transform[3][2]))
-    doc.appendLine('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][3], transform[1][3], transform[2][3], transform[3][3]))    
 
-    doc.endElement('matrix')
-    doc.endElement('transform')
+    if motion:
+        start_time = cmds.currentTime(query=True)
+
+        if motion_samples < 2:
+            print 'Motion samples is set too low, must be atleast 2, using 2'
+            motion_samples = 2
+        sample_interval = 1.0/(motion_samples - 1)
+
+        cmds.select(object)
+        cmds.currentTime(cmds.currentTime(query=True)-1)
+
+        for i in range(motion_samples):
+            new_time = start_time + (sample_interval * i)
+            cmds.currentTime(new_time)
+            cmds.refresh()
+
+            if (object):
+                m = cmds.getAttr(object+'.matrix')
+                transform = [m[0],m[1],m[2],m[3]], [m[4],m[5],m[6],m[7]], [m[8],m[9],m[10],m[11]], [m[12],m[13],m[14],m[15]]
+            else:
+                transform = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
+
+            doc.startElement('transform time="{0:03}"'.format(i))
+            doc.appendElement('scaling value="{0}"'.format(scale))
+            doc.startElement('matrix')
+
+            doc.appendLine('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][0], transform[1][0], transform[2][0], transform[3][0]))
+            doc.appendLine('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][1], transform[1][1], transform[2][1], transform[3][1]))
+            doc.appendLine('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][2], transform[1][2], transform[2][2], transform[3][2]))
+            doc.appendLine('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][3], transform[1][3], transform[2][3], transform[3][3]))    
+
+            doc.endElement('matrix')
+            doc.endElement('transform')
+
+        cmds.currentTime(start_time)
+        cmds.select(cl=True)
+
+
+
+    else:
+
+        if (object):
+            m = cmds.getAttr(object+'.matrix')
+            transform = [m[0],m[1],m[2],m[3]], [m[4],m[5],m[6],m[7]], [m[8],m[9],m[10],m[11]], [m[12],m[13],m[14],m[15]]
+        else:
+            transform = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
+
+        doc.startElement('transform')
+        doc.appendElement('scaling value="{0}"'.format(scale))
+        doc.startElement('matrix')
+
+        doc.appendLine('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][0], transform[1][0], transform[2][0], transform[3][0]))
+        doc.appendLine('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][1], transform[1][1], transform[2][1], transform[3][1]))
+        doc.appendLine('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][2], transform[1][2], transform[2][2], transform[3][2]))
+        doc.appendLine('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][3], transform[1][3], transform[2][3], transform[3][3]))    
+
+        doc.endElement('matrix')
+        doc.endElement('transform')
+
 
 #
 # load params function
@@ -112,6 +162,7 @@ def getMayaParams(render_settings_node):
     params['overwriteExistingExrs'] = cmds.getAttr(render_settings_node + '.overwrite_existing_exrs')
     params['fileName'] = cmds.getAttr(render_settings_node + '.output_file')
     params['exportMotionBlur'] = cmds.getAttr(render_settings_node + '.export_motion_blur')
+    params['motionSamples'] = cmds.getAttr(render_settings_node + '.motion_samples')
     params['exportAnimation'] = cmds.getAttr(render_settings_node + '.export_animation')
     params['scene_scale'] = 1
     
@@ -254,13 +305,11 @@ class Light():
         self.color = cmds.getAttr(self.name+'.color')[0]
         self.multiplier = cmds.getAttr(self.name+'.intensity')
         self.decay = cmds.getAttr(self.name+'.decayRate')
-        m = cmds.getAttr(self.name+'.matrix')
-        self.transform = [m[0],m[1],m[2],m[3]], [m[4],m[5],m[6],m[7]], [m[8],m[9],m[10],m[11]], [m[12],m[13],m[14],m[15]]
     def writeXML(self, doc):
         print('writing light: {0}'.format(self.name))
         doc.startElement('light name="{0}" model="point_light"'.format(self.name))
         doc.appendElement('parameter name="exitance" value="{0}"'.format(self.color_name))
-        writeTransform(doc, 1, self.transform)
+        writeTransform(doc, params['scene_scale'], name, False, params['motionSamples'])
         doc.endElement('light')
 
 #
@@ -474,7 +523,12 @@ class Camera(): #(camera_name)
             doc.appendElement('parameter name="diaphragm_blades" value="{0}"'.format(self.diaphram_blades))
             doc.appendElement('parameter name="diaphragm_tilt_angle" value="{0}"'.format(self.diaphram_tilt_angle))
         #output transform matrix
-        writeTransform(doc, self.params['scene_scale'], self.transform)
+        
+        
+        writeTransform(doc, self.params['scene_scale'], self.name, self.params['exportMotionBlur'], self.params['motionSamples'])
+        
+
+
         doc.endElement('camera')
 
 
@@ -875,16 +929,45 @@ class Assembly():
         #export and write .obj object
         for geo in self.geo_objects:
             #export geo
-            cmds.select(geo)
-            output_file = os.path.join(self.params['outputDir'], 'geo', (geo + '.obj'))
-            print geo
-            print output_file
-            cmds.file(output_file, force=True, options='groups=0;ptgroups=0;materials=0;smoothing=0;normals=1', typ='OBJexport',pr=True, es=True)
-            cmds.select(cl=True)
-            #write xml
-            doc.startElement('object name="{0}" model="mesh_object"'.format(geo))
-            doc.appendElement('parameter name="filename" value="geo/{0}.obj"'.format(geo))
-            doc.endElement('object')
+            if  self.params['exportMotionBlur']:
+
+                #store the star time of the export
+                start_time = cmds.currentTime(query=True)
+                motion_samples = self.params['motionSamples']
+                if motion_samples < 2:
+                    print 'Motion samples is set too low, must be atleast 2, using 2'
+                    motion_samples = 2
+                sample_interval = 1.0/(motion_samples - 1)
+
+                doc.startElement('object name="{0}" model="mesh_object"'.format(geo))
+                doc.startElement('parameters name="filename"')
+                cmds.select(geo)
+                cmds.currentTime(cmds.currentTime(query=True)-1)
+                for i in range(motion_samples):
+                    print "exporting frame {0}".format((start_time + (sample_interval * i)))
+                    new_time = start_time + (sample_interval * i)
+                    cmds.currentTime(new_time)
+                    cmds.refresh()
+                    output_file = os.path.join(self.params['outputDir'], 'geo', ('{0}.{1:03}.obj'.format(geo,i)))
+                    cmds.file(output_file, force=True, options='groups=0;ptgroups=0;materials=0;smoothing=0;normals=1', typ='OBJexport',pr=True, es=True)
+                    doc.appendElement('parameter name="{0:03}" value="geo/{1}.{2:03}.obj"'.format(i,geo,i))
+                    
+
+
+                doc.endElement('parameters')
+                doc.endElement('object')
+                cmds.currentTime(start_time)
+                cmds.select(cl=True)
+
+            else:
+                cmds.select(geo)
+                output_file = os.path.join(self.params['outputDir'], 'geo', (geo + '.obj'))
+                cmds.file(output_file, force=True, options='groups=0;ptgroups=0;materials=0;smoothing=0;normals=1', typ='OBJexport',pr=True, es=True)
+                cmds.select(cl=True)
+                #write xml
+                doc.startElement('object name="{0}" model="mesh_object"'.format(geo))
+                doc.appendElement('parameter name="filename" value="geo/{0}.obj"'.format(geo))
+                doc.endElement('object')
         
         #write lights
         for light_name in self.light_objects:
@@ -1078,7 +1161,7 @@ class Configurations():
             print('writing custom final config')
             doc.startElement('configuration name="final" base="base_final"')
             engine = ''
-            if cmds.optionMenu('ms_customFinalConfigEngine', query=True, value=True) == "Path Tracing":
+            if self.params['customFinalConfigEngine'] == "Path Tracing":
                 engine = 'pt'
             else:
                 engine = 'drt'
