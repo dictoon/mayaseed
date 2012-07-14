@@ -410,8 +410,7 @@ class Material(): #object transform name
             cmds.error('no valid texture connected to {0} using default'.format(self.name))
             self.name = 'default_texture'
 
-    def writeXML(self,doc):
-
+    def writeXML(self, doc):
         print('writing material {0}'.format(self.name))
         doc.startElement('material name="{0}" model="generic_material"'.format(self.name))
         if self.bsdf:
@@ -888,8 +887,6 @@ class Assembly():
                             self.material_objects[name].surface_shader = (name + '_surface_shader')
                             self.addSurfaceShader(self.material_objects[name], name + '_surface_shader', self.params['matDefaultSurfaceShader'])
 
-
-        
     def writeXML(self, doc):
         print('writing assembly: {0}'.format(self.name))
         doc.startElement('assembly name="{0}"'.format(self.name))
@@ -1179,8 +1176,6 @@ class Configurations():
 #****************************************************************************************************************************************************************************************************
 
 def export(render_settings_node):
-
-
     params = getMayaParams(render_settings_node)
 
     start_frame = cmds.currentTime(query=True)
@@ -1189,7 +1184,6 @@ def export(render_settings_node):
     if params['exportAnimation']:
         start_frame = params['animationStartFrame']
         end_frame = params['animationEndFrame']
-
 
     if not params['error']:
 
@@ -1219,8 +1213,6 @@ def export(render_settings_node):
                 if not os.path.exists(os.path.join(params['outputDir'],params['tex_dir'])):
                     os.makedirs(os.path.join(params['outputDir'],params['tex_dir']))
 
-
-
             #begin export
             print('beginning export')
             print('opening output file: ' + params['fileName'])
@@ -1244,13 +1236,6 @@ def export(render_settings_node):
 
         cmds.currentTime(original_time)
 
-
     else:
         cmds.error('error validating ui attributes ')
         raise RuntimeError('check script editor for details')
-
-
-
-
-
-
