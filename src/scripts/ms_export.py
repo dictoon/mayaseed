@@ -147,7 +147,7 @@ def writeTransform(doc, scale = 1, object=False, motion=False, motion_samples=2)
 
 def getMayaParams(render_settings_node):
     print('getting params from ui')
-    #comile regular expression to check for non numeric chracters
+    #compile regular expression to check for non numeric characters
     is_numeric = re.compile('^[0-9]+$')
     
     params = {'error':False}
@@ -216,7 +216,7 @@ def getMayaParams(render_settings_node):
     params['outputResHeight'] = cmds.getAttr(render_settings_node + '.height')
 
     # configurations
-    # custom intercative config
+    # custom interactive config
     params['customInteractiveConfigCheck'] = cmds.getAttr(render_settings_node + '.export_custom_interactive_config')
     params['customInteractiveConfigEngine'] = cmds.getAttr(render_settings_node + '.interactive_lighting_engine')
     params['customInteractiveConfigMinSamples'] = cmds.getAttr(render_settings_node + '.interactive_min_samples')
@@ -368,7 +368,7 @@ class Material(): #object transform name
 
 
 
-        #get specular conponent for shaders which have one
+        #get specular component for shaders which have one
         elif (self.shader_type == 'blinn') or (self.shader_type == 'phong') or (self.shader_type == 'phongE'):
             self.specular_color = ms_commands.normalizeRGB(cmds.getAttr(self.name+'.specularColor')[0])
             specular_connection = cmds.connectionInfo((self.name + '.specularColor'), sourceFromDestination=True).split('.')[0]
@@ -1099,7 +1099,7 @@ class Scene():
                 if not set[0] in self.assembly_list:
                     self.assembly_list.append(cmds.listSets(object=g)[0])
         
-        #create assemblys if any assembly names are present otherwise create default assembly
+        #create assemblies if any assembly names are present otherwise create default assembly
         if self.assembly_list:
             #for each assemply in assembly_list create an object and output its XML
             for assembly in self.assembly_list:
@@ -1216,7 +1216,7 @@ def export(render_settings_node):
             params['tex_dir'] = 'textures'
 
             if params['animatedTextures']:
-                #set textures diectory as child of the root directory
+                #set textures directory as child of the root directory
                 tex_dir = os.path.join('{0:05}'.format(current_frame), 'textures')
                 if not os.path.exists(os.path.join(params['outputDir'],params['tex_dir'])):
                     os.makedirs(os.path.join(params['outputDir'],params['tex_dir'])) 
