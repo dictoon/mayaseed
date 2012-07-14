@@ -251,12 +251,6 @@ class Color():
         self.wavelength_range = '400.0 700.0'
         self.alpha = 1.0
 
-        print self.name
-        print self.color
-        print self.multiplier
-
-
-
     def writeXML(self, doc):
         print('writing color {0}'.format(self.name))
         doc.startElement('color name="{0}"'.format(self.name))
