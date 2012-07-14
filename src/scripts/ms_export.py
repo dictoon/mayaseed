@@ -304,7 +304,7 @@ class Light():
         print('writing light: {0}'.format(self.name))
         doc.startElement('light name="{0}" model="point_light"'.format(self.name))
         doc.appendElement('parameter name="exitance" value="{0}"'.format(self.color_name))
-        writeTransform(doc, params['scene_scale'], name, False, params['motionSamples'])
+        writeTransform(doc, self.params['scene_scale'], self.name, False, self.params['motionSamples'])
         doc.endElement('light')
 
 #
