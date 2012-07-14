@@ -200,6 +200,7 @@ global proc AEms_renderSettingsTemplate(string $nodeName)
          editorTemplate -addControl "export_animation";
          editorTemplate -addControl "animation_start_frame";
          editorTemplate -addControl "animation_end_frame";
+         editorTemplate -addControl "export_animated_textures";
       editorTemplate -endLayout;
 
       editorTemplate -beginLayout "Environment settings" -collapse true;

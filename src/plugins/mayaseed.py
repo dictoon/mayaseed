@@ -118,6 +118,11 @@ def ms_renderSettings_nodeInitializer():
     end_frame_AttrInt.setHidden(False)
     end_frame_AttrInt.setKeyable(False)
 
+    #export animated textures
+    export_animated_textures_nAttr = OpenMaya.MFnNumericAttribute()
+    ms_renderSettings.export_animated_textures = export_animated_textures_nAttr.create("export_animated_textures", "animated_textures", OpenMaya.MFnNumericData.kBoolean, False)
+
+
     #environent -----------------------------------------------
     #environment message
     environment_msgAttr = OpenMaya.MFnMessageAttribute()
@@ -237,6 +242,7 @@ def ms_renderSettings_nodeInitializer():
         ms_renderSettings.addAttribute(ms_renderSettings.export_animation)
         ms_renderSettings.addAttribute(ms_renderSettings.start_frame)
         ms_renderSettings.addAttribute(ms_renderSettings.end_frame)
+        ms_renderSettings.addAttribute(ms_renderSettings.export_animated_textures)
 
         ms_renderSettings.addAttribute(ms_renderSettings.environment)
         ms_renderSettings.addAttribute(ms_renderSettings.export_all_cameras)

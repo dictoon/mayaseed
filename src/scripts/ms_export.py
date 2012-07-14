@@ -33,8 +33,6 @@ import ms_commands
 inch_to_meter = 0.02539999983236
 
 
-
-
 #****************************************************************************************************************************************************************************************************
 # utilitiy functions & classes **********************************************************************************************************************************************************************
 #****************************************************************************************************************************************************************************************************
@@ -164,6 +162,9 @@ def getMayaParams(render_settings_node):
     params['exportMotionBlur'] = cmds.getAttr(render_settings_node + '.export_motion_blur')
     params['motionSamples'] = cmds.getAttr(render_settings_node + '.motion_samples')
     params['exportAnimation'] = cmds.getAttr(render_settings_node + '.export_animation')
+    params['animationStartFrame'] = cmds.getAttr(render_settings_node + '.animation_start_frame')
+    params['animationEndFrame'] = cmds.getAttr(render_settings_node + '.animation_end_frame')
+    params['animatedTextures'] = cmds.getAttr(render_settings_node + '.export_animated_textures')
     params['scene_scale'] = 1
     
     #Advanced options
@@ -656,13 +657,13 @@ class Assembly():
                 if (ms_commands.shapeIsExportable(geo) and ms_commands.hasShaderConnected(geo)):
                     geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
                     if not (geo_transform in self.geo_objects):
-                        self.geo_objects[geo_transform] = Geometry(self.params, geo_transform, ('geo/'+self.name+'.obj'), self.name)
+                        self.geo_objects[geo_transform] = Geometry(self.params, geo_transform, (self.params['geo_dir']+self.name+'.obj'), self.name)
         else:
             for geo in cmds.listConnections(self.name, sh=True):
                 if (ms_commands.shapeIsExportable(geo) and ms_commands.hasShaderConnected(geo)):
                     geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
                     if not geo_transform in self.geo_objects:
-                        self.geo_objects[geo_transform] = Geometry(self.params, geo_transform, ('geo/'+self.name+'.obj'), self.name)
+                        self.geo_objects[geo_transform] = Geometry(self.params, geo_transform, (self.params['geo_dir']+self.name+'.obj'), self.name)
                 
         #populate list with individual materials
         for geo in self.geo_objects:
@@ -948,9 +949,9 @@ class Assembly():
                     new_time = start_time + (sample_interval * i)
                     cmds.currentTime(new_time)
                     cmds.refresh()
-                    output_file = os.path.join(self.params['outputDir'], 'geo', ('{0}.{1:03}.obj'.format(geo,i)))
+                    output_file = os.path.join(self.params['outputDir'], self.params['geo_dir'], ('{0}.{1:03}.obj'.format(geo,i)))
                     cmds.file(output_file, force=True, options='groups=0;ptgroups=0;materials=0;smoothing=0;normals=1', typ='OBJexport',pr=True, es=True)
-                    doc.appendElement('parameter name="{0:03}" value="geo/{1}.{2:03}.obj"'.format(i,geo,i))
+                    doc.appendElement('parameter name="{0:03}" value="{1}/{2}.{3:03}.obj"'.format(i,self.params['geo_dir'],geo,i))
                     
 
 
@@ -961,12 +962,12 @@ class Assembly():
 
             else:
                 cmds.select(geo)
-                output_file = os.path.join(self.params['outputDir'], 'geo', (geo + '.obj'))
+                output_file = os.path.join(self.params['outputDir'], self.params['geo_dir'], (geo + '.obj'))
                 cmds.file(output_file, force=True, options='groups=0;ptgroups=0;materials=0;smoothing=0;normals=1', typ='OBJexport',pr=True, es=True)
                 cmds.select(cl=True)
                 #write xml
                 doc.startElement('object name="{0}" model="mesh_object"'.format(geo))
-                doc.appendElement('parameter name="filename" value="geo/{0}.obj"'.format(geo))
+                doc.appendElement('parameter name="filename" value="{0}/{1}.obj"'.format(self.params['geo_dir'], geo))
                 doc.endElement('object')
         
         #write lights
@@ -1184,34 +1185,70 @@ class Configurations():
 #****************************************************************************************************************************************************************************************************
 
 def export(render_settings_node):
-    params = getMayaParams(render_settings_node)
-    if not params['error']:
-        #make output directories if they dont exists
-        if not os.path.exists(os.path.join(params['outputDir'],'temp')):
-            os.makedirs(os.path.join(params['outputDir'],'temp'))
-        if not os.path.exists(os.path.join(params['outputDir'],'geo')):
-            os.makedirs(os.path.join(params['outputDir'],'geo'))
-        if not os.path.exists(os.path.join(params['outputDir'],'textures')):
-            os.makedirs(os.path.join(params['outputDir'],'textures'))
 
-        #begin export
-        print('beginning export')
-        print('opening output file: ' + params['fileName'])
-        doc = WriteXml('{0}/{1}'.format(params['outputDir'], params['fileName'].replace("#",'{0:05}'.format(int(cmds.currentTime(query=True))))))
-        doc.appendLine('<?xml version="1.0" encoding="UTF-8"?>') # XML format string
-        doc.appendLine('<!-- File generated by mayaseed version {0} -->'.format(ms_commands.MAYASEED_VERSION))
-        print('writing project element')
-        doc.startElement('project')
-        scene_element = Scene(params)
-        scene_element.writeXML(doc)
-        output_element = Output(params)
-        output_element.writeXML(doc)
-        config_element = Configurations(params)
-        config_element.writeXML(doc)
-    
-        doc.endElement('project')
-        doc.close()
-        print('export finished')
+
+    params = getMayaParams(render_settings_node)
+
+    start_frame = cmds.currentTime(query=True)
+    end_frame = start_frame
+
+    if params['exportAnimation']:
+        start_frame = params['animationStartFrame']
+        end_frame = params['animationEndFrame']
+
+
+    if not params['error']:
+
+        current_frame = start_frame
+        original_time = cmds.currentTime(query=True)
+        while (current_frame  <= end_frame):
+
+            cmds.currentTime(current_frame)
+            #set up correct directories
+            params['temp_dir'] = os.path.join('{0:05}'.format(current_frame), 'temp')
+            params['geo_dir'] = os.path.join('{0:05}'.format(current_frame), 'geo')
+
+            if not os.path.exists(os.path.join(params['outputDir'],params['temp_dir'])):
+                os.makedirs(os.path.join(params['outputDir'],params['temp_dir']))
+            if not os.path.exists(os.path.join(params['outputDir'],params['geo_dir'])):
+                os.makedirs(os.path.join(params['outputDir'],params['geo_dir']))
+
+            params['tex_dir'] = 'textures'
+
+            if params['animatedTextures']:
+                #set textures diectory as child of the root directory
+                tex_dir = os.path.join('{0:05}'.format(current_frame), 'textures')
+                if not os.path.exists(os.path.join(params['outputDir'],params['tex_dir'])):
+                    os.makedirs(os.path.join(params['outputDir'],params['tex_dir'])) 
+            else:
+                #set textures directory as child of frame directory
+                if not os.path.exists(os.path.join(params['outputDir'],params['tex_dir'])):
+                    os.makedirs(os.path.join(params['outputDir'],params['tex_dir']))
+
+
+
+            #begin export
+            print('beginning export')
+            print('opening output file: ' + params['fileName'])
+            doc = WriteXml('{0}/{1}'.format(params['outputDir'], params['fileName'].replace("#",'{0:05}'.format(int(cmds.currentTime(query=True))))))
+            doc.appendLine('<?xml version="1.0" encoding="UTF-8"?>') # XML format string
+            doc.appendLine('<!-- File generated by mayaseed version {0} -->'.format(ms_commands.MAYASEED_VERSION))
+            print('writing project element')
+            doc.startElement('project')
+            scene_element = Scene(params)
+            scene_element.writeXML(doc)
+            output_element = Output(params)
+            output_element.writeXML(doc)
+            config_element = Configurations(params)
+            config_element.writeXML(doc)
+        
+            doc.endElement('project')
+            doc.close()
+            print('export finished')
+
+            current_frame += 1
+
+        cmds.currentTime(original_time)
 
 
     else:
