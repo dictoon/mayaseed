@@ -483,8 +483,8 @@ class Camera(): #(camera_name)
             self.model = 'thinlens_camera'
             self.f_stop = cmds.getAttr(cam+'.fStop')
             self.focal_distance = cmds.getAttr(cam+'.focusDistance')
-            self.diaphram_blades = 0
-            self.diaphram_tilt_angle = 0.0
+            self.diaphragm_blades = 0
+            self.diaphragm_tilt_angle = 0.0
         else:
             self.model = 'pinhole_camera'
         self.name = cam
@@ -515,8 +515,8 @@ class Camera(): #(camera_name)
             print('exporting ' + self.name + ' as thinlens camera')
             doc.appendElement('parameter name="focal_distance" value="{0}"'.format(self.focal_distance))
             doc.appendElement('parameter name="f_stop" value="{0}"'.format(self.f_stop))
-            doc.appendElement('parameter name="diaphragm_blades" value="{0}"'.format(self.diaphram_blades))
-            doc.appendElement('parameter name="diaphragm_tilt_angle" value="{0}"'.format(self.diaphram_tilt_angle))
+            doc.appendElement('parameter name="diaphragm_blades" value="{0}"'.format(self.diaphragm_blades))
+            doc.appendElement('parameter name="diaphragm_tilt_angle" value="{0}"'.format(self.diaphragm_tilt_angle))
         #output transform matrix
         
         
