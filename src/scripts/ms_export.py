@@ -231,7 +231,7 @@ def getMayaParams(render_settings_node):
     params['customFinalConfigMaxSamples'] = cmds.getAttr(render_settings_node + '.final_max_samples')
     params['customFinalConfigMaxRayDepth'] = cmds.getAttr(render_settings_node + '.final_max_ray_depth')
     params['customFinalConfigLightSamples'] = cmds.getAttr(render_settings_node + '.final_light_samples')
-    return(params)
+    return params
 
 
 #****************************************************************************************************************************************************************************************************
@@ -315,7 +315,7 @@ class Material(): #object transform name
     def __init__(self, params, name, bsdf=None, edf=None, surface_shader=None): 
         self.params = params
         self.name = name
-        self.shader_type = cmds.nodeType(self.name)
+        self.shader_type = cmds.nodeType(name)
         self.bsdf = bsdf 
         self.edf = edf
         self.surface_shader = surface_shader
@@ -1129,8 +1129,8 @@ class Configurations():
     def __init__(self, params):
         self.params = params
     def writeXML(self,doc):
-        doc.startElement("configurations")
         print('writing configurations')
+        doc.startElement("configurations")
         #if 'customise interactive configuration' is set read customised values
         if self.params['customInteractiveConfigCheck']:
             print('writing custom interactive config')
