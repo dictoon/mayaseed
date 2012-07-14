@@ -1167,7 +1167,6 @@ class Configurations():
         else:# otherwise add default configurations
             print('writing default final config')
             doc.appendElement('configuration name="final" base="base_final"')
-        # begin adding custom configurations
         doc.endElement('configurations')
 	
 
