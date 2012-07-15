@@ -147,7 +147,7 @@ def writeTransform(doc, scale = 1, object=False, motion=False, motion_samples=2)
 
 def getMayaParams(render_settings_node):
     print('getting params from ui')
-    #comile regular expression to check for non numeric chracters
+    #compile regular expression to check for non numeric characters
     is_numeric = re.compile('^[0-9]+$')
     
     params = {'error':False}
@@ -216,7 +216,7 @@ def getMayaParams(render_settings_node):
     params['outputResHeight'] = cmds.getAttr(render_settings_node + '.height')
 
     # configurations
-    # custom intercative config
+    # custom interactive config
     params['customInteractiveConfigCheck'] = cmds.getAttr(render_settings_node + '.export_custom_interactive_config')
     params['customInteractiveConfigEngine'] = cmds.getAttr(render_settings_node + '.interactive_lighting_engine')
     params['customInteractiveConfigMinSamples'] = cmds.getAttr(render_settings_node + '.interactive_min_samples')
@@ -231,7 +231,7 @@ def getMayaParams(render_settings_node):
     params['customFinalConfigMaxSamples'] = cmds.getAttr(render_settings_node + '.final_max_samples')
     params['customFinalConfigMaxRayDepth'] = cmds.getAttr(render_settings_node + '.final_max_ray_depth')
     params['customFinalConfigLightSamples'] = cmds.getAttr(render_settings_node + '.final_light_samples')
-    return(params)
+    return params
 
 
 #****************************************************************************************************************************************************************************************************
@@ -250,12 +250,6 @@ class Color():
         self.color_space = 'srgb'
         self.wavelength_range = '400.0 700.0'
         self.alpha = 1.0
-
-        print self.name
-        print self.color
-        print self.multiplier
-
-
 
     def writeXML(self, doc):
         print('writing color {0}'.format(self.name))
@@ -310,7 +304,7 @@ class Light():
         print('writing light: {0}'.format(self.name))
         doc.startElement('light name="{0}" model="point_light"'.format(self.name))
         doc.appendElement('parameter name="exitance" value="{0}"'.format(self.color_name))
-        writeTransform(doc, params['scene_scale'], name, False, params['motionSamples'])
+        writeTransform(doc, self.params['scene_scale'], self.name, False, self.params['motionSamples'])
         doc.endElement('light')
 
 #
@@ -321,7 +315,7 @@ class Material(): #object transform name
     def __init__(self, params, name, bsdf=None, edf=None, surface_shader=None): 
         self.params = params
         self.name = name
-        self.shader_type = cmds.nodeType(self.name)
+        self.shader_type = cmds.nodeType(name)
         self.bsdf = bsdf 
         self.edf = edf
         self.surface_shader = surface_shader
@@ -368,7 +362,7 @@ class Material(): #object transform name
 
 
 
-        #get specular conponent for shaders which have one
+        #get specular component for shaders which have one
         elif (self.shader_type == 'blinn') or (self.shader_type == 'phong') or (self.shader_type == 'phongE'):
             self.specular_color = ms_commands.normalizeRGB(cmds.getAttr(self.name+'.specularColor')[0])
             specular_connection = cmds.connectionInfo((self.name + '.specularColor'), sourceFromDestination=True).split('.')[0]
@@ -416,8 +410,7 @@ class Material(): #object transform name
             cmds.error('no valid texture connected to {0} using default'.format(self.name))
             self.name = 'default_texture'
 
-    def writeXML(self,doc):
-
+    def writeXML(self, doc):
         print('writing material {0}'.format(self.name))
         doc.startElement('material name="{0}" model="generic_material"'.format(self.name))
         if self.bsdf:
@@ -489,8 +482,8 @@ class Camera(): #(camera_name)
             self.model = 'thinlens_camera'
             self.f_stop = cmds.getAttr(cam+'.fStop')
             self.focal_distance = cmds.getAttr(cam+'.focusDistance')
-            self.diaphram_blades = 0
-            self.diaphram_tilt_angle = 0.0
+            self.diaphragm_blades = 0
+            self.diaphragm_tilt_angle = 0.0
         else:
             self.model = 'pinhole_camera'
         self.name = cam
@@ -521,8 +514,8 @@ class Camera(): #(camera_name)
             print('exporting ' + self.name + ' as thinlens camera')
             doc.appendElement('parameter name="focal_distance" value="{0}"'.format(self.focal_distance))
             doc.appendElement('parameter name="f_stop" value="{0}"'.format(self.f_stop))
-            doc.appendElement('parameter name="diaphragm_blades" value="{0}"'.format(self.diaphram_blades))
-            doc.appendElement('parameter name="diaphragm_tilt_angle" value="{0}"'.format(self.diaphram_tilt_angle))
+            doc.appendElement('parameter name="diaphragm_blades" value="{0}"'.format(self.diaphragm_blades))
+            doc.appendElement('parameter name="diaphragm_tilt_angle" value="{0}"'.format(self.diaphragm_tilt_angle))
         #output transform matrix
         
         
@@ -894,8 +887,6 @@ class Assembly():
                             self.material_objects[name].surface_shader = (name + '_surface_shader')
                             self.addSurfaceShader(self.material_objects[name], name + '_surface_shader', self.params['matDefaultSurfaceShader'])
 
-
-        
     def writeXML(self, doc):
         print('writing assembly: {0}'.format(self.name))
         doc.startElement('assembly name="{0}"'.format(self.name))
@@ -1099,7 +1090,7 @@ class Scene():
                 if not set[0] in self.assembly_list:
                     self.assembly_list.append(cmds.listSets(object=g)[0])
         
-        #create assemblys if any assembly names are present otherwise create default assembly
+        #create assemblies if any assembly names are present otherwise create default assembly
         if self.assembly_list:
             #for each assemply in assembly_list create an object and output its XML
             for assembly in self.assembly_list:
@@ -1135,8 +1126,8 @@ class Configurations():
     def __init__(self, params):
         self.params = params
     def writeXML(self,doc):
-        doc.startElement("configurations")
         print('writing configurations')
+        doc.startElement("configurations")
         #if 'customise interactive configuration' is set read customised values
         if self.params['customInteractiveConfigCheck']:
             print('writing custom interactive config')
@@ -1176,7 +1167,6 @@ class Configurations():
         else:# otherwise add default configurations
             print('writing default final config')
             doc.appendElement('configuration name="final" base="base_final"')
-        # begin adding custom configurations
         doc.endElement('configurations')
 	
 
@@ -1185,8 +1175,6 @@ class Configurations():
 #****************************************************************************************************************************************************************************************************
 
 def export(render_settings_node):
-
-
     params = getMayaParams(render_settings_node)
 
     start_frame = cmds.currentTime(query=True)
@@ -1195,7 +1183,6 @@ def export(render_settings_node):
     if params['exportAnimation']:
         start_frame = params['animationStartFrame']
         end_frame = params['animationEndFrame']
-
 
     if not params['error']:
 
@@ -1216,7 +1203,7 @@ def export(render_settings_node):
             params['tex_dir'] = 'textures'
 
             if params['animatedTextures']:
-                #set textures diectory as child of the root directory
+                #set textures directory as child of the root directory
                 tex_dir = os.path.join('{0:05}'.format(current_frame), 'textures')
                 if not os.path.exists(os.path.join(params['outputDir'],params['tex_dir'])):
                     os.makedirs(os.path.join(params['outputDir'],params['tex_dir'])) 
@@ -1224,8 +1211,6 @@ def export(render_settings_node):
                 #set textures directory as child of frame directory
                 if not os.path.exists(os.path.join(params['outputDir'],params['tex_dir'])):
                     os.makedirs(os.path.join(params['outputDir'],params['tex_dir']))
-
-
 
             #begin export
             print('beginning export')
@@ -1250,13 +1235,6 @@ def export(render_settings_node):
 
         cmds.currentTime(original_time)
 
-
     else:
         cmds.error('error validating ui attributes ')
         raise RuntimeError('check script editor for details')
-
-
-
-
-
-
