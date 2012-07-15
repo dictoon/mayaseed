@@ -43,14 +43,25 @@ def createMenu():
 
 
 def buildMenu():
+
+    #create list of render setting nodes
+    render_settings_nodes = cmds.ls(type='ms_renderSettings')
+
     cmds.menu('ms_menu', edit=True, deleteAllItems=True, pmc=('import ms_menu\nms_menu.buildMenu()'))
+    
+    cmds.menuItem('menu_export', subMenu=True, label='Export', to=True, parent='ms_menu')        
+    #create sub menu of render setings nodes
+    for render_settings_node in render_settings_nodes:
+        cmds.menuItem(label=render_settings_node, parent='menu_export', command=('import ms_export \nms_export.export("{0}")'.format(render_settings_node)))
+
+    cmds.menuItem(divider=True, parent='ms_menu')
+
     cmds.menuItem(label='Add Render Settings Node', parent='ms_menu', command='import maya.cmds\nmaya.cmds.createNode("ms_renderSettings")') #need to import maya.cmds module otehrwise cmds isnt recognised
     cmds.menuItem('menu_select_render_settings', subMenu=True, label='Select Render settings Node', to=True, parent='ms_menu')
-    #list menuSettings nodes
-    renderSettingss = cmds.ls(type='ms_renderSettings')
-    for renderSetting in renderSettingss:
-        cmds.menuItem(label=renderSetting, parent='menu_select_render_settings', command=('import maya.cmds as cmds\ncmds.select("{0}")'.format(renderSetting)))
-        
+    #create sub menu of render setings nodes
+    for render_settings_node in render_settings_nodes:
+        cmds.menuItem(label=render_settings_node, parent='menu_select_render_settings', command=('import maya.cmds as cmds\ncmds.select("{0}")'.format(render_settings_node)))
+    
 
     cmds.menuItem(divider=True, parent='ms_menu')
     cmds.menuItem(label='Add Environment Node', parent='ms_menu', command='import maya.cmds\nmaya.cmds.createNode("ms_environment")') #need to import maya.cmds module otehrwise cmds isnt recognised
