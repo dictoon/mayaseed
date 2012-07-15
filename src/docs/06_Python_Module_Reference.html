@@ -191,9 +191,7 @@ body .highlight pre, pre{background-color:#f8f8f8;border:1px solid #ccc;font-siz
 body pre code, pre tt{background-color:transparent;border:none;}
 </style></head>
 <body>
-<h1>Mayaseed docs</h1>
-
-<h2>Python Module reference</h2>
+<h1>Mayaseed docs - Python Module reference</h1>
 
 <p>With mayaseed correctly installed you also have the following new python modules available to you.</p>
 
@@ -202,71 +200,71 @@ body pre code, pre tt{background-color:transparent;border:none;}
 <li>ms_export</li>
 </ul>
 
-<h3>ms_commands module</h3>
+<h2>ms_commands module</h2>
 
 <p><strong>ms_commands</strong> is where all the common functions, classes and variables reside, this section describes them. </p>
 
-<h4>Variable: ms_commands.MAYASEED_VERSION</h4>
+<h3>Variable: ms_commands.MAYASEED_VERSION</h3>
 
 <p>This variable will return the current Mayaseed version.</p>
 
-<h4>Variable: ms_commands.MAYASEED_URL</h4>
+<h3>Variable: ms_commands.MAYASEED_URL</h3>
 
 <p>This variable will return the URL of the Mayaseed website.</p>
 
-<h4>Variable: ms_commands.APPLESEED_URL</h4>
+<h3>Variable: ms_commands.APPLESEED_URL</h3>
 
 <p>This variable will return the URL of the appleseed website.</p>
 
-<h4>Variable: ms_commands.ROOT_DIRECTORY</h4>
+<h3>Variable: ms_commands.ROOT_DIRECTORY</h3>
 
 <p>This variable will return the URL of the Mayaseed install&#39;s root directory.</p>
 
-<h4>Function: ms_commands.addShadingAttribs()</h4>
+<h3>Function: ms_commands.addShadingAttribs()</h3>
 
 <p>With an object or shader selected use this function to add custom shader translation attributes to a shader.</p>
 
-<h4>Function: ms_commands.removeShadingAttribs()</h4>
+<h3>Function: ms_commands.removeShadingAttribs()</h3>
 
 <p>With an object or shader selected use this function to remove custom shader translation attributes to a shader</p>
 
-<h4>Class: ms_commands.MsInfoDial()</h4>
+<h3>Class: ms_commands.MsInfoDial()</h3>
 
 <p>This function shows the Mayaseed info dialogue.</p>
 
-<h4>Function: ms_commands.normalizeRGB(Tuple[Float:R,Float:G,Float:B]: Color) Returns Tuple[Float:R,Float:G,Float:B,Float:M]</h4>
+<h3>Function: ms_commands.normalizeRGB(Tuple[Float:R,Float:G,Float:B]: Color) Returns Tuple[Float:R,Float:G,Float:B,Float:M]</h3>
 
 <p>Use this function normalises a 3 value [R,G,B] tuple and returns a normalised tuple with the RGB values normalised to a 0-1 range with a 4th multiplier value.</p>
 
-<h4>Function: ms_commands.convertConnectionToImage(String:shader, String:attribute, String:dest_file, Int:resolution=1024) Returns String:dest_file</h4>
+<h3>Function: ms_commands.convertConnectionToImage(String:shader, String:attribute, String:dest_file, Int:resolution=1024) Returns String:dest_file</h3>
 
 <p>This function will bake a given shading connection to an image file. </p>
 
-<h5>Argument: String:shader</h5>
+<h4>Argument: String:shader</h4>
 
 <p>Name of the shader. e.g. &quot;Lambert1&quot;</p>
 
-<h5>Argument: String:attribute</h5>
+<h4>Argument: String:attribute</h4>
 
 <p>The name of the attribute you want to bake. e.g. &quot;Color&quot;</p>
 
-<h5>Argument: String:dest_file</h5>
+<h4>Argument: String:dest_file</h4>
 
 <p>The destination of the file you&#39;d like to export</p>
 
-<h5>Argument: Int:resolution</h5>
+<h4>Argument: Int:resolution</h4>
 
 <p>The resolution of the image you would like to bake, images are always square.</p>
 
-<h4>Function: convertTexToExr(String:file_path, String:dest_dir, Boolean: overwrite=True) Returns String:dest_file</h4>
+<h3>Function: convertTexToExr(String:file_path, String:dest_dir, Boolean: overwrite=True) Returns String:dest_file</h3>
 
 <p>Use this function to convert an image to an .exr file using the <strong>imf_copy</strong> utility that ships with maya. The function returns a string containing the path to the destination file.</p>
 
-<h5>Argument: String:file_path</h5>
+<h4>Argument: String:file_path</h4>
 
 <p>File path of the image to be converted.</p>
 
-<h5>Argument: String:dest_dir</h5>
+<h4>Argument: String:dest_dir</h4>
 
 <p>The directory that you would like to save the converted image to. </p>
 
@@ -274,15 +272,15 @@ body pre code, pre tt{background-color:transparent;border:none;}
 <p>Note: The converted image will have the same name as the source file but with the .exr extension.</p>
 </blockquote>
 
-<h5>Argument: Boolean:overwrite = True</h5>
+<h4>Argument: Boolean:overwrite = True</h4>
 
 <p>By default Mayaseed will overwrite any images that have the same name as the output file, set this argument to false if you want to cancel image conversion for existing images</p>
 
-<h4>Function: ms_commands.shapeIsExportable(String:node_name) Returns Boolean</h4>
+<h3>Function: ms_commands.shapeIsExportable(String:node_name) Returns Boolean</h3>
 
 <p>This function will check to see if a maya shape node is exportable based on whether it is visible and is a valid shape node.</p>
 
-<h5>Argument: String:node_name</h5>
+<h4>Argument: String:node_name</h4>
 
 <p>This string is the name of the node you wish to check</p>
 
@@ -290,19 +288,19 @@ body pre code, pre tt{background-color:transparent;border:none;}
 
 <p>This function checks whether a shape node has a shader connected.</p>
 
-<h5>Argument: String:node_name</h5>
+<h4>Argument: String:node_name</h4>
 
 <p>This string is the name of the shape node you want to check.</p>
 
-<h3>ms_export module</h3>
+<h2>ms_export module</h2>
 
 <p>This module contains the main bulk of the code that handles the export and essentially only has one useful function.</p>
 
-<h4>Function: ms<em>export.export(String:render</em>settings_node)</h4>
+<h3>Function: ms<em>export.export(String:render</em>settings_node)</h3>
 
 <p>This function is the workhorse of Mayaseed and does all the work in translating, exporting and writing your scene to disk based on the settings from your render settings node.</p>
 
-<h5>Argument: String:String:render<em>settings</em>node</h5>
+<h4>Argument: String:String:render<em>settings</em>node</h4>
 
 <p>This string is the name of the render settings node that contains the settings of your export.</p>
 

@@ -191,13 +191,11 @@ body .highlight pre, pre{background-color:#f8f8f8;border:1px solid #ccc;font-siz
 body pre code, pre tt{background-color:transparent;border:none;}
 </style></head>
 <body>
-<h1>Mayaseed docs</h1>
-
-<h2>Node reference</h2>
+<h1>Mayaseed docs - Node Reference</h1>
 
 <p>This section contains information on the nodes that make up the Mayaseed plugin and their atributes.</p>
 
-<h3>ms_renderSettings node</h3>
+<h2>ms_renderSettings node</h2>
 
 <p>The ms_renderSettings (render settings) node is the biggest node in the Mayaseed plugin and contains most of the attributes that you will use to control your export. </p>
 
@@ -209,81 +207,89 @@ body pre code, pre tt{background-color:transparent;border:none;}
 <p>Note: The ms_renderSettings node&#39;s attributes are organised in a way that mirrors the internal file structure, so if an attribute seems like its in a strange place there is a good reason. By using Mayaseed you are also learning about appleseed at the same time.</p>
 </blockquote>
 
-<h4>Export settings section</h4>
+<h3>Export settings section</h3>
 
-<h5>Output Directory</h5>
+<h4>Output Directory</h4>
 
 <p>This is where you tell Mayaseed where to export the appleseed scene file and other relevant files to.</p>
 
-<h5>Output File</h5>
+<h4>Output File</h4>
 
 <p>This is where you choose the name of your output file, the <code>#</code> character will be replaced with the frame number padded to 5 characters. So <code>my_scene.#.appleseed</code> will export as my_scene.00001.appleseed`.</p>
 
-<h5>Convert Shading Nodes To Textures</h5>
+<h4>Convert Shading Nodes To Textures</h4>
 
 <p>Use this checkbox to convert maya shading networks to textures on export. If a color attribute has a shading network attached Mayaseed will check to see the shading network is a texture node, if not with this option checked Mayaseed will bake the shading network to an exr image. </p>
 
-<h5>Overwrite Existing EXRs</h5>
+<h4>Overwrite Existing EXRs</h4>
 
 <p>If this checkbox is checked then Maya will convert and overwrite texture files with every export.</p>
 
-<h5>Export Motion Blur</h5>
+<h4>Export Motion Blur</h4>
 
 <p>This attribute is only a placeholder at this point.</p>
 
-<h5>Shutter Open Time</h5>
+<h4>Motion Samples</h4>
+
+<p>Sets the number of motion samples to be used in motion blur to give the appearence of curved motion blur.</p>
+
+<h4>Shutter Open Time</h4>
 
 <p>This attribute is only a placeholder at this point.</p>
 
-<h5>Shutter Close Time</h5>
+<h4>Shutter Close Time</h4>
 
 <p>This attribute is only a placeholder at this point.</p>
 
-<h5>Export Animation</h5>
+<h4>Export Animation</h4>
 
 <p>This attribute is only a placeholder at this point.</p>
 
-<h5>Animation Start Frame</h5>
+<h4>Animation Start Frame</h4>
 
 <p>This attribute is only a placeholder at this point.</p>
 
-<h5>Animation End Frame</h5>
+<h4>Animation End Frame</h4>
 
 <p>This attribute is only a placeholder at this point.</p>
 
-<h4>Environment Settings section</h4>
+<h4>Export Animated Textures</h4>
 
-<h5>Environment</h5>
+<p>This attribute tells Mayaseed whether to export textures for every frame or only the first one.</p>
+
+<h3>Environment Settings section</h3>
+
+<h4>Environment</h4>
 
 <p>A Maya scene can contain many environment nodes, here you can select which environment node to use in your export and also create new ones.</p>
 
-<h4>Camera Settings Section</h4>
+<h3>Camera Settings Section</h3>
 
-<h5>Export All Cameras</h5>
+<h4>Export All Cameras</h4>
 
 <p>Although appleseed can only use one camera at a time it is possible to have more than one included in the scene file, use this checkbox to export all the maya cameras. </p>
 
-<h5>Export All Cameras As Thinlens</h5>
+<h4>Export All Cameras As Thinlens</h4>
 
 <p>Appleseed has two types of cameras: <strong>Pinhole</strong> and <strong>Thinlens</strong>, the main difference being that a Thinlens camera can simulate depth of field and the Pinhole cannot. By default Mayaseed will export cameras with depth of field turned off as Pinhole and with depth of field turned on as Thinlens. Use this option to force Mayaseed to export all cameras as Thinlens.</p>
 
-<h4>Assembly Settings Section</h4>
+<h3>Assembly Settings Section</h3>
 
 <blockquote>
 <p>Note: Appleseed uses the concept of Assembles to divide up the scene into smaller components. </p>
 </blockquote>
 
-<h5>Interpret Sets As Assemblies</h5>
+<h4>Interpret Sets As Assemblies</h4>
 
 <p>With this option checked Mayaseed will export any sets containing geometry as an assembly.</p>
 
-<h5>Double Sided Shading</h5>
+<h4>Double Sided Shading</h4>
 
 <p>Use this option to turn on double shading in your appleseed scene file. Double shading causes geometry to be rendered on both sides of the shading normal. This can help reduce rendering artifacts especially on low poly geometry with smoothed normals.</p>
 
-<h4>Output Settings Section</h4>
+<h3>Output Settings Section</h3>
 
-<h5>Camera</h5>
+<h4>Camera</h4>
 
 <p>Use this attribute to select the camera you would like to export.</p>
 
@@ -291,51 +297,51 @@ body pre code, pre tt{background-color:transparent;border:none;}
 <p>Note: If you do not select a camera the export will fail.</p>
 </blockquote>
 
-<h5>Resolution Width</h5>
+<h4>Resolution Width</h4>
 
 <p>This attribute sets the width of the framebuffer.</p>
 
-<h5>Resolution Height</h5>
+<h4>Resolution Height</h4>
 
 <p>This attribute sets the height of the framebuffer.</p>
 
-<h5>Color Space</h5>
+<h4>Color Space</h4>
 
 <p>This sets the color space that appleseed will use, the default is <strong>sRGB</strong>.</p>
 
-<h4>Configuration Settings Section</h4>
+<h3>Configuration Settings Section</h3>
 
 <p>Appleseed configurations contain information on the rendering method and quality setting of a render. Appleseed can have an arbitrarily high number of these render settings but must contain at least two, an <strong>Interactive Config</strong> and a <strong>Final config</strong>. These configurations control the quality of appleseed&#39;s default interactive render and final render. Without checking <strong>Export Custom Interactive COnfig</strong> or <strong>Export Custom Final Config</strong> Mayaseed will export a default settings. </p>
 
 <p>Both Interactive Config and Final COnfig have the following attributes.</p>
 
-<h5>Lighting Engine</h5>
+<h4>Lighting Engine</h4>
 
 <p>This drop-down menu currently has two options: <strong>Path Tracing</strong> and <strong>Distributed Ray Tracing</strong>. Path tracing is more physically accurate and will compute color bleeding and caustics whereas distributed ray tracing is slower but less accurate.</p>
 
-<h5>Min Samples</h5>
+<h4>Min Samples</h4>
 
 <p>Use this attribute to set the minimum render samples.</p>
 
-<h5>Max Samples</h5>
+<h4>Max Samples</h4>
 
 <p>Use this attribute to set the maximum render samples.</p>
 
-<h5>Max Ray Depth</h5>
+<h4>Max Ray Depth</h4>
 
 <p>Max Ray depth controls the maximum number of bounces that a ray can go through. Higher numbers are more accurate but slower to render.</p>
 
-<h5>Light Samples</h5>
+<h4>Light Samples</h4>
 
 <p>This attribute controls the number of samples per light.</p>
 
-<h3>ms_environment node</h3>
+<h2>ms_environment node</h2>
 
 <p>The ms_environment (environment) node is used to control the environment settings for your export. Right now it could easily be implemented in the render settings node but when environment transformations are implemented in appleseed it will be useful to have the environment node as a separate entity with its own transform node.</p>
 
 <p>Below is a list of the node&#39;s attributes and their functions.</p>
 
-<h5>Model</h5>
+<h4>Model</h4>
 
 <p>This drop down menu contains the different types of environment models that appleseed provides(below).</p>
 
@@ -346,7 +352,7 @@ body pre code, pre tt{background-color:transparent;border:none;}
 <li>Mirrorball Map</li>
 </ul>
 
-<h5>Constant Exitance</h5>
+<h4>Constant Exitance</h4>
 
 <p>Use this attribute if you have selected <strong>Constant Environment</strong> as your model. </p>
 
@@ -354,7 +360,7 @@ body pre code, pre tt{background-color:transparent;border:none;}
 <p>Note: only modify the color of this attribute, connecting a shading network will have no effect.</p>
 </blockquote>
 
-<h5>Gradient Horizon Exitance</h5>
+<h4>Gradient Horizon Exitance</h4>
 
 <p>Use this attribute to set the horizon color of the evironment if you have selected <strong>Gradient Environment</strong> as your model. </p>
 
@@ -362,7 +368,7 @@ body pre code, pre tt{background-color:transparent;border:none;}
 <p>Note: only modify the color of this attribute, connecting a shading network will have no effect.</p>
 </blockquote>
 
-<h5>Gradient Zenith Exitance</h5>
+<h4>Gradient Zenith Exitance</h4>
 
 <p>Use this attribute to set the zenith (highest point) color of the environment if you have selected <strong>Gradient Environment</strong> as your model. </p>
 
@@ -370,15 +376,15 @@ body pre code, pre tt{background-color:transparent;border:none;}
 <p>Note: only modify the color of this attribute, connecting a shading network will have no effect</p>
 </blockquote>
 
-<h5>Latitude Longitude Exitance</h5>
+<h4>Latitude Longitude Exitance</h4>
 
 <p>Attach a texture node to this attribute if you have selected <strong>Latitude Longitude Map</strong> as your environment model. The image should be in latitude longitude format for correct results.</p>
 
-<h5>Mirror Ball Exitance</h5>
+<h4>Mirror Ball Exitance</h4>
 
 <p>Attach a texture node to this attribute if you have selected <strong>Mirror Ball Map</strong> as your environment model.</p>
 
-<h3>Maya shaders</h3>
+<h2>Maya shaders</h2>
 
 <p>Mayaseed will automatically translate maya shaders as best as possible to appleseed shaders but this often isn&#39;t perfect, when automatic shader translation isn&#39;t enough you can add a <strong>Custom Shader Translation</strong>. With an object or shader selected you can Choose <strong>Mayaseed -&gt; Add Custom Shader Translation</strong>to add some Mayaseed specific attributes to your shader.</p>
 
@@ -388,7 +394,7 @@ body pre code, pre tt{background-color:transparent;border:none;}
 
 <p>Once you have added a custom shader translation to your shader you will now find three new attributes in the <strong>Extra Attributes</strong> section of the Shaders attribute editor, the following is a list of the attributes and their functions.</p>
 
-<h4>Mayaseed BSDF</h4>
+<h3>Mayaseed BSDF</h3>
 
 <p>The <strong>Mayaseed BSDF</strong> drop-down menu lets you choose the BSDF model that Mayaseed will translate your shader to on export. BSDF stands for Bidirectional scattering distribution function and controls how light is reflected off the surface of an object. Although appleseed contains more BSDF options Mayaseed only supports the following BSDF&#39;s.</p>
 
@@ -400,7 +406,7 @@ body pre code, pre tt{background-color:transparent;border:none;}
 <li>&lt;None&gt;</li>
 </ul>
 
-<h4>Mayaseed EDF</h4>
+<h3>Mayaseed EDF</h3>
 
 <p>The <strong>Mayaseed EDF</strong> drop-down menu lets you choose the EDF model that Mayaseed will translate your shader to on export. EDF stands for <strong>emittance distribution function</strong> and controls how light is emitted from a surface. Mayaseed has the following 2 options available:</p>
 
@@ -409,7 +415,7 @@ body pre code, pre tt{background-color:transparent;border:none;}
 <li>Diffuse</li>
 </ul>
 
-<h4>Mayaseed Surface Shader</h4>
+<h3>Mayaseed Surface Shader</h3>
 
 <p>The <strong>Mayaseed Surface Shader</strong> controls how an object is rendered when it is directly visible to the camera. By default this is set to <strong>Physical</strong> which means that the object will be rendered according to the BSDF, this is usually the most physically accurate setting. Mayaseed has the following options available:</p>
 
@@ -418,40 +424,6 @@ body pre code, pre tt{background-color:transparent;border:none;}
 <li>Constant</li>
 <li>&lt;None&gt;</li>
 </ul>
-
-<h2>Menu reference</h2>
-
-<p>The Mayaseed menu will appear when the plugin is correctly installed, if you cant see it make sure the plugin installed correctly and is enabled.</p>
-
-<p>The following section contains all the items in the Mayaseed menu and their uses.</p>
-
-<h3>Add Render Settings Node</h3>
-
-<p>Use this to create a new instance of the ms_renderSettings node.</p>
-
-<h3>Select Render Settings Node</h3>
-
-<p>Use this to select any ms_renderSettings nodes that exist in the maya scene.</p>
-
-<h3>Add Environment Node</h3>
-
-<p>Use this to create a new instance of the ms_environment node.</p>
-
-<h3>Select Environment Node</h3>
-
-<p>Use this to select any ms_environment nodes that exist in the maya scene.</p>
-
-<h3>Add Custom Shader Translation</h3>
-
-<p>With a shader or an object selected use this to add a custom shader translation to a shader, more in the <strong>Maya Shaders</strong> section of the </p>
-
-<h3>Remove Custom Shader Translation</h3>
-
-<p>Use this to remove a custom shader translation from a Maya shader</p>
-
-<h3>About</h3>
-
-<p>Show information about Mayaseed.</p>
 
 </body>
 </html>

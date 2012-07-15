@@ -1,9 +1,7 @@
-Mayaseed docs
-=============
+Mayaseed docs - Menu Reference
+==============================
 
 
-Menu reference
---------------
 The Mayaseed menu will appear when the plugin is correctly installed, if you cant see it make sure the plugin installed correctly and is enabled.
 
 The following section contains all the items in the Mayaseed menu and their uses.

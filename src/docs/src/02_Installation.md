@@ -1,11 +1,8 @@
-Mayaseed docs
-=============
+Mayaseed docs - Installation
+============================
 
 
-Installation
--------------------
-
-To install Mayaseed just open 'open_me_to_install.ma' and it should guide you through the steps to install. If this doesnt work or you'd prefer to install in manually you just need to edit your userSetup.mel file which should be here:
+To install Mayaseed just open 'open\_me\_to\_install.ma' and it should guide you through the steps to install. If this doesnt work or you'd prefer to install in manually you just need to edit your userSetup.mel file which should be here:
 
     Mac: /Users/<username>/Library/Preferences/Autodesk/maya/<maya version>/scripts
 
