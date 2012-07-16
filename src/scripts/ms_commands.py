@@ -208,6 +208,11 @@ def shapeIsExportable(node_name):
 
     return True
     
+
+#
+# check is object has shader connected ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#
+
 def hasShaderConnected(node_name):
 
     #check that the shape has a shader connected
