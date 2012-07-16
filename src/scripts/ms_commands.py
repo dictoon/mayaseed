@@ -138,7 +138,7 @@ def normalizeRGB(color):
 # convert shader connection to image ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 
-def convertConnectionToImage(shader, attribute, dest_file, resolution=1024):
+def convertConnectionToImage(shader, attribute, dest_file, resolution=1024, pass_through=False):
     if not cmds.objExists(shader+'.'+attribute):
         print 'error converting texture, no object named {0} exists'.format(shader+'.'+attribute)
     else:
@@ -157,7 +157,7 @@ def convertConnectionToImage(shader, attribute, dest_file, resolution=1024):
 # convert texture to exr ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 
-def convertTexToExr(file_path, dest_dir, overwrite=True):
+def convertTexToExr(file_path, dest_dir, overwrite=True, pass_through=False):
     if os.path.exists(file_path):
         dest_file = os.path.join(dest_dir, os.path.splitext(os.path.split(file_path)[1])[0] + '.exr')
         if (overwrite == False) and (os.path.exists(dest_file)):
