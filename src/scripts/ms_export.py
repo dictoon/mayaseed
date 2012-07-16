@@ -337,7 +337,7 @@ class Material(): #object transform name
                 if cmds.nodeType(color_connection) == 'file':
                     print('# texture connected to {0}'.format(self.name + '.color'))
                     if params['convertTexturesToExr']:
-                        self.bsdf_texture = ( os.path.join(params['tex_dir'], os.path.split(ms_commands.convertTexToExr(cmds.getAttr(color_connection+ '.fileTextureName'), os.path.join(params['outputDir'], params['tex_dir']), params['overwriteExistingExrs']))[1]))
+                        self.bsdf_texture = ( os.path.join(params['tex_dir'], os.path.split(ms_commands.convertTexToExr(cmds.getAttr(color_connection+ '.fileTextureName'), os.path.join(params['outputDir'], params['tex_dir']), params['overwriteExistingExrs'], params['skipTextures']))[1]))
                     else:
                         self.bsdf_texture = cmds.getAttr(color_connection+ '.fileTextureName')
                 elif params['convertShadingNodes']:
@@ -345,21 +345,21 @@ class Material(): #object transform name
                     temp_dir = os.path.join(self.params['outputDir'],'temp')
                     temp_file = os.path.join(temp_dir, (color_connection + '.iff'))
                     ms_commands.convertConnectionToImage(self.name, 'color', temp_file, 1024)
-                    self.bsdf_texture =  (os.path.join(params['tex_dir'], os.path.split(ms_commands.convertTexToExr(temp_file, os.path.join(params['outputDir'], params['tex_dir']), params['overwriteExistingExrs']))[1]))
+                    self.bsdf_texture =  (os.path.join(params['tex_dir'], os.path.split(ms_commands.convertTexToExr(temp_file, os.path.join(params['outputDir'], params['tex_dir']), params['overwriteExistingExrs'], params['skipTextures']))[1]))
 
 
             if incandecence_connection:
                 if cmds.nodeType(incandecence_connection) == 'file':
                     print('texture connected to {0}'.format(self.name + '.incandescence'))
                     if params['convertTexturesToExr']:
-                        self.edf_texture = (os.path.join(params['tex_dir'] + os.path.split(ms_commands.convertTexToExr(cmds.getAttr(incandecence_connection+ '.fileTextureName'), os.path.join(params['outputDir'], params['tex_dir']), params['overwriteExistingExrs']))[1]))
+                        self.edf_texture = (os.path.join(params['tex_dir'] + os.path.split(ms_commands.convertTexToExr(cmds.getAttr(incandecence_connection+ '.fileTextureName'), os.path.join(params['outputDir'], params['tex_dir']), params['overwriteExistingExrs'], params['skipTextures']))[1]))
                     else:
                         self.edf_texture = cmds.getAttr(incandecence_connection+ '.fileTextureName')
                 else:
                     #convert connection to exr
                     temp_file = os.path.join(params['outputDir'], 'temp_files', (incandecence_connection + '.iff'))
                     ms_commands.convertConnectionToImage(self.name, 'incandescence', temp_file, 1024)
-                    self.edf_texture =  (os.path.join(params['tex_dir'] + os.path.split(ms_commands.convertTexToExr(temp_file, os.path.join(params['outputDir'], params['tex_dir']), params['overwriteExistingExrs']))[1]))
+                    self.edf_texture =  (os.path.join(params['tex_dir'] + os.path.split(ms_commands.convertTexToExr(temp_file, os.path.join(params['outputDir'], params['tex_dir']), params['overwriteExistingExrs'], params['skipTextures']))[1]))
 
 
 
@@ -371,14 +371,14 @@ class Material(): #object transform name
                 if cmds.nodeType(specular_connection) == 'file':
                     print('texture connected to {0}'.format(self.name + '.specularColor'))
                     if params['convertTexturesToExr']:
-                        self.specular_texture = (os.path.join(params['tex_dir'] + os.path.split(ms_commands.convertTexToExr(cmds.getAttr(specular_connection+ '.fileTextureName'), os.path.join(params['outputDir'], params['tex_dir']), params['overwriteExistingExrs']))[1]))
+                        self.specular_texture = (os.path.join(params['tex_dir'] + os.path.split(ms_commands.convertTexToExr(cmds.getAttr(specular_connection+ '.fileTextureName'), os.path.join(params['outputDir'], params['tex_dir']), params['overwriteExistingExrs'], params['skipTextures']))[1]))
                     else:
                         self.specular_texture = cmds.getAttr(specular_connection+ '.fileTextureName')
                 else:
                     #convert connection to exr
                     temp_file = os.path.join(params['outputDir'], 'temp_files', (specular_connection + '.iff'))
                     ms_commands.convertConnectionToImage(self.name, 'specularColor', temp_file, 1024)
-                    self.specular_texture =  (os.path.join(params['tex_dir'] + os.path.split(ms_commands.convertTexToExr(temp_file, os.path.join(params['outputDir'], params['tex_dir']), params['overwriteExistingExrs']))[1]))
+                    self.specular_texture =  (os.path.join(params['tex_dir'] + os.path.split(ms_commands.convertTexToExr(temp_file, os.path.join(params['outputDir'], params['tex_dir']), params['overwriteExistingExrs'], params['skipTextures']))[1]))
 
         #for surface shaders interpret outColor as bsdf and edf
         elif self.shader_type == 'surfaceShader':
@@ -391,7 +391,7 @@ class Material(): #object transform name
                 if cmds.nodeType(outColor_connection) == 'file':
                     print('texture connected to {0}'.format(self.name + '.outColor'))
                     if params['convertTexturesToExr']:
-                        self.bsdf_texture = (os.path.join(params['tex_dir'] + os.path.split(ms_commands.convertTexToExr(cmds.getAttr(outColor_connection+ '.fileTextureName'), os.path.join(params['outputDir'], params['tex_dir']), params['overwriteExistingExrs']))[1]))
+                        self.bsdf_texture = (os.path.join(params['tex_dir'] + os.path.split(ms_commands.convertTexToExr(cmds.getAttr(outColor_connection+ '.fileTextureName'), os.path.join(params['outputDir'], params['tex_dir']), params['overwriteExistingExrs'], params['skipTextures']))[1]))
                     else:
                         self.bsdf_texture = cmds.getAttr(outColor_connection+ '.fileTextureName')
 
@@ -400,7 +400,7 @@ class Material(): #object transform name
                     #convert connection to exr
                     temp_file = os.path.join(params['outputDir'], 'temp_files', (outColor_connection + '.iff'))
                     ms_commands.convertConnectionToImage(self.name, 'outColor', temp_file, 1024)
-                    self.edf_texture =  (os.path.join(params['tex_dir'] + os.path.split(ms_commands.convertTexToExr(temp_file, os.path.join(params['outputDir'], params['tex_dir']), params['overwriteExistingExrs']))[1]))
+                    self.edf_texture =  (os.path.join(params['tex_dir'] + os.path.split(ms_commands.convertTexToExr(temp_file, os.path.join(params['outputDir'], params['tex_dir']), params['overwriteExistingExrs'], params['skipTextures']))[1]))
 
             else:
                 self.bsdf_texture = None
@@ -1192,9 +1192,13 @@ def export(render_settings_node):
 
         current_frame = start_frame
         original_time = cmds.currentTime(query=True)
+
+
+        #loop through frames and perform export
         while (current_frame  <= end_frame):
 
             cmds.currentTime(current_frame)
+
             #set up correct directories
             params['temp_dir'] = os.path.join('{0:05}'.format(int(current_frame)), 'temp')
             params['geo_dir'] = os.path.join('{0:05}'.format(int(current_frame)), 'geo')
@@ -1206,6 +1210,7 @@ def export(render_settings_node):
                 os.makedirs(os.path.join(params['outputDir'],params['geo_dir']))
 
             params['tex_dir'] = 'textures'
+            params['skipTextures'] = False
 
             if params['animatedTextures']:
                 #set textures directory as child of the root directory
@@ -1221,11 +1226,7 @@ def export(render_settings_node):
             print('beginning export')
             print('opening output file: ' + params['fileName'])
 
-
             doc = WriteXml('{0}/{1}'.format(params['outputDir'], params['fileName'].replace("#" , '{0:05}'.format(int(cmds.currentTime(query=True))))))
-
-
-            # doc = WriteXml(os.path.join(     params['outputDir'], '{0:05}'.format(int(current_frame)), params['fileName'].replace("#" , '{0:05}'.format(int(cmds.currentTime(query=True))))    ))
 
             doc.appendLine('<?xml version="1.0" encoding="UTF-8"?>') # XML format string
             doc.appendLine('<!-- File generated by mayaseed version {0} -->'.format(ms_commands.MAYASEED_VERSION))
@@ -1243,6 +1244,10 @@ def export(render_settings_node):
             print('export finished')
 
             current_frame += 1
+
+            #once the first frame has exported textures set exportTetures to false to prevent future frames from exporting
+            if not params['animatedTextures']:
+                params['skipTextures'] = True
 
         cmds.currentTime(original_time)
         cmds.select(render_settings_node)

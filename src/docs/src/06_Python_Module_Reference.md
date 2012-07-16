@@ -53,7 +53,7 @@ This function shows the Mayaseed info dialogue.
 Use this function normalises a 3 value [R,G,B] tuple and returns a normalised tuple with the RGB values normalised to a 0-1 range with a 4th multiplier value.
 
 
-###Function: ms\_commands.convertConnectionToImage(String:shader, String:attribute, String:dest\_file, Int:resolution=1024) Returns String:dest\_file###
+###Function: ms\_commands.convertConnectionToImage(String:shader, String:attribute, String:dest\_file, Int:resolution=1024, Boolean:pass_through=False) Returns String:dest\_file###
 
 This function will bake a given shading connection to an image file. 
 
@@ -77,7 +77,12 @@ The destination of the file you'd like to export
 The resolution of the image you would like to bake, images are always square.
 
 
-###Function: convertTexToExr(String:file\_path, String:dest\_dir, Boolean: overwrite=True) Returns String:dest_file###
+####Argument: Boolean:pass_through=False####
+
+Set this argument to True if you'd like to skip export of the textures but still return a file path. Useful if you want to skip the actual file conversion for non animated textures
+
+
+###Function: convertTexToExr(String:file\_path, String:dest\_dir, Boolean: overwrite=True, Boolean: pass_through=False) Returns String:dest_file###
 
 Use this function to convert an image to an .exr file using the **imf_copy** utility that ships with maya. The function returns a string containing the path to the destination file.
 
@@ -97,6 +102,10 @@ The directory that you would like to save the converted image to.
 ####Argument: Boolean:overwrite = True####
 
 By default Mayaseed will overwrite any images that have the same name as the output file, set this argument to false if you want to cancel image conversion for existing images
+
+####Argument: Boolean:pass_through=False####
+
+Set this argument to True if you'd like to skip export of the textures but still return a file path. Useful if you want to skip the actual file conversion for non animated textures
 
 
 ###Function: ms\_commands.shapeIsExportable(String:node\_name) Returns Boolean###

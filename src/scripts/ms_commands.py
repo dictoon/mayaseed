@@ -144,13 +144,16 @@ def convertConnectionToImage(shader, attribute, dest_file, resolution=1024, pass
     else:
         connection = cmds.listConnections(shader+'.'+attribute)
         if not connection:
-            print 'nothing connected to {0}'.format(plug_name)
+            print 'nothing connected to {0}, skipping conversion'.format(plug_name)
+        elif pass_through == True:
+            print '{0}: skipping conversion'.format(plug_name)
         else:
             cmds.hyperShade(objects=shader)
             connected_object = cmds.ls(sl=True)[0]
             print connected_object
             cmds.convertSolidTx(connection[0] ,connected_object ,fileImageName=dest_file, antiAlias=True, bm=3, fts=True, sp=True, alpha=True, doubleSided=True, resolutionX=resolution, resolutionY=resolution)
-            return dest_file
+        
+        return dest_file
   
 
 #
@@ -162,6 +165,8 @@ def convertTexToExr(file_path, dest_dir, overwrite=True, pass_through=False):
         dest_file = os.path.join(dest_dir, os.path.splitext(os.path.split(file_path)[1])[0] + '.exr')
         if (overwrite == False) and (os.path.exists(dest_file)):
             print '# {0} exists, skipping conversion'.format(dest_file)
+        elif pass_through == True:
+            print '# {0}: skipping conversion'.format(dest_file)
         else:
             imf_copy_path = os.path.join(os.path.split(sys.path[0])[0], 'bin', 'imf_copy')
             if not os.path.exists(dest_dir):

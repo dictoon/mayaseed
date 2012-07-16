@@ -28,7 +28,7 @@ This is where you choose the name of your output file, the `#` character will be
 
 ####Convert Shading Nodes To Textures####
 
-Use this checkbox to convert maya shading networks to textures on export. If a color attribute has a shading network attached Mayaseed will check to see the shading network is a texture node, if not with this option checked Mayaseed will bake the shading network to an exr image. 
+Use this checkbox to convert maya shading networks to textures on export. If a color attribute has a shading network attached Mayaseed will check to see the shading network is a texture node, if not with this option checked Mayaseed will bake the shading network to an .exr image. 
 
 ####Overwrite Existing EXRs####
 
@@ -39,7 +39,7 @@ If this checkbox is checked then Maya will convert and overwrite texture files w
 This attribute is only a placeholder at this point.
 
 ####Motion Samples####
-Sets the number of motion samples to be used in motion blur to give the appearence of curved motion blur.
+Sets the number of motion samples to be used in motion blur to give the appearance of curved motion blur.
 
 ####Shutter Open Time####
 
@@ -63,7 +63,7 @@ This attribute is only a placeholder at this point.
 
 ####Export Animated Textures####
 
-This attribute tells Mayaseed whether to export textures for every frame or only the first one.
+This attribute tells Mayaseed whether to export textures for every frame or only the first one. If animated textures is turned on a textures directory will be present in the frame's sub directory otherwise a texture directory will be present in the frame's parent directory.
 
 ###Environment Settings section###
 
