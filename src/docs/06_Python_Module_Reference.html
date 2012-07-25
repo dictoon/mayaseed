@@ -236,7 +236,7 @@ body pre code, pre tt{background-color:transparent;border:none;}
 
 <p>Use this function normalises a 3 value [R,G,B] tuple and returns a normalised tuple with the RGB values normalised to a 0-1 range with a 4th multiplier value.</p>
 
-<h3>Function: ms_commands.convertConnectionToImage(String:shader, String:attribute, String:dest_file, Int:resolution=1024) Returns String:dest_file</h3>
+<h3>Function: ms_commands.convertConnectionToImage(String:shader, String:attribute, String:dest_file, Int:resolution=1024, Boolean:pass<em>through=False) Returns String:dest\</em>file</h3>
 
 <p>This function will bake a given shading connection to an image file. </p>
 
@@ -256,7 +256,11 @@ body pre code, pre tt{background-color:transparent;border:none;}
 
 <p>The resolution of the image you would like to bake, images are always square.</p>
 
-<h3>Function: convertTexToExr(String:file_path, String:dest_dir, Boolean: overwrite=True) Returns String:dest_file</h3>
+<h4>Argument: Boolean:pass_through=False</h4>
+
+<p>Set this argument to True if you&#39;d like to skip export of the textures but still return a file path. Useful if you want to skip the actual file conversion for non animated textures</p>
+
+<h3>Function: convertTexToExr(String:file_path, String:dest_dir, Boolean: overwrite=True, Boolean: pass<em>through=False) Returns String:dest</em>file</h3>
 
 <p>Use this function to convert an image to an .exr file using the <strong>imf_copy</strong> utility that ships with maya. The function returns a string containing the path to the destination file.</p>
 
@@ -276,6 +280,10 @@ body pre code, pre tt{background-color:transparent;border:none;}
 
 <p>By default Mayaseed will overwrite any images that have the same name as the output file, set this argument to false if you want to cancel image conversion for existing images</p>
 
+<h4>Argument: Boolean:pass_through=False</h4>
+
+<p>Set this argument to True if you&#39;d like to skip export of the textures but still return a file path. Useful if you want to skip the actual file conversion for non animated textures</p>
+
 <h3>Function: ms_commands.shapeIsExportable(String:node_name) Returns Boolean</h3>
 
 <p>This function will check to see if a maya shape node is exportable based on whether it is visible and is a valid shape node.</p>
@@ -291,6 +299,14 @@ body pre code, pre tt{background-color:transparent;border:none;}
 <h4>Argument: String:node_name</h4>
 
 <p>This string is the name of the shape node you want to check.</p>
+
+<h3>Function: ms_commands.getEntityDefs(String:xml_file_path) Returns Dict</h3>
+
+<p>This function is used to retrieve a dict containing definitions of all the available appleseed nodes.</p>
+
+<h4>Argument: String:xml_file_path</h4>
+
+<p>This argument is a string pointing to the path of the appleseed exported <strong>appleseedEntityDefs.xml</strong>. </p>
 
 <h2>ms_export module</h2>
 

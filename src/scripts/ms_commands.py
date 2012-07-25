@@ -27,6 +27,7 @@ import os
 import sys
 import inspect
 import subprocess
+from xml.dom.minidom import parseString
 
 
 #****************************************************************************************************************************************************************************************************
@@ -229,6 +230,112 @@ def hasShaderConnected(node_name):
         if not cmds.connectionInfo((shadingEngine + '.surfaceShader'),sourceFromDestination=True).split('.')[0]:
             return False
     return True
+
+
+#
+# read entity defs xml file and return dict ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#
+
+def getEntityDefs(xml_file_path):
+
+    nodes = dict()
+
+    class Node():
+        def __init__(self, name, type):
+            self.name = name
+            self.type = type
+            self.attributes = dict()
+            
+    class Attribute():
+        def __init__(self, name):
+            self.name = name
+            self.label = name
+            self.type = 'entity'
+            self.default_value = ''
+            self.entity_types = []
+
+
+
+    file = open(xml_file_path,'r')
+    data = file.read()
+    file.close()
+
+    dom = parseString(data)
+
+
+    for entity in dom.getElementsByTagName('entity'):
+        
+        #create new dict entry to store the node info
+        nodes[entity.getAttribute('model')] = Node(entity.getAttribute('model'), entity.getAttribute('type'))
+
+        for child in entity.childNodes:
+            if child.nodeName =='parameters':
+                
+                #add an attribute and give it a name
+                nodes[entity.getAttribute('model')].attributes[child.getAttribute('name')] = Attribute(child.getAttribute('name'))
+                
+                #itterate over child nodes and check that they are nodes not text
+                for param in child.childNodes:
+                    if not param.nodeName == '#text': 
+                        
+                        #node is a parameter with single value               
+                        if param.nodeName == 'parameter':
+                            
+                            #get attribute type
+                            if param.getAttribute('name') == 'widget':
+                                nodes[entity.getAttribute('model')].attributes[child.getAttribute('name')].type = param.getAttribute('value')
+                            
+                            elif param.getAttribute('name') == 'default':
+                                nodes[entity.getAttribute('model')].attributes[child.getAttribute('name')].default_value = param.getAttribute('value')
+                            
+                            elif param.getAttribute('name') == 'label':
+                                nodes[entity.getAttribute('model')].attributes[child.getAttribute('name')].label = param.getAttribute('value')
+                                
+                        #node is a parameter with multiple values          
+                        elif param.nodeName == 'parameters':
+                            
+                            #if the node contains entity types we are interested
+                            if param.getAttribute('name') == 'entity_types':
+                                for node in param.childNodes:
+                                    if not param.nodeName == '#text': 
+                                        if node.nodeName == 'parameter':
+                                            nodes[entity.getAttribute('model')].attributes[child.getAttribute('name')].entity_types.append(node.getAttribute('name'))
+
+    #print out all the discovered nodes
+
+    print 'Found the following appleseed nodes\n'
+
+    for node_key in nodes.iterkeys():
+        print '  ' + nodes[node_key].name
+        
+        print '    type                      :' + nodes[node_key].type
+        print '    attributes                :'
+
+        
+        for attr_key in nodes[node_key].attributes.iterkeys():
+            print '      name                    :' + nodes[node_key].attributes[attr_key].name
+            print '      type                    :' + nodes[node_key].attributes[attr_key].type
+            print '      label                   :' + nodes[node_key].attributes[attr_key].label
+            print '      default                 :' + nodes[node_key].attributes[attr_key].default_value
+            print '      allowed connections     :'
+            
+            for entity_type in nodes[node_key].attributes[attr_key].entity_types:
+                print '        ' + entity_type
+            print''
+        print'\n'
+    return nodes
+        
+        
+        
+        
+        
+
+
+
+
+
+
+
 
 
 

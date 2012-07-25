@@ -128,6 +128,15 @@ This function checks whether a shape node has a shader connected.
 This string is the name of the shape node you want to check.
 
 
+###Function: ms\_commands.getEntityDefs(String:xml\_file\_path) Returns Dict###
+
+This function is used to retrieve a dict containing definitions of all the available appleseed nodes.
+
+####Argument: String:xml\_file\_path####
+
+This argument is a string pointing to the path of the appleseed exported **appleseedEntityDefs.xml**. 
+
+
 ms_export module
 ----------------
 
