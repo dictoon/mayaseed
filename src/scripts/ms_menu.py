@@ -22,6 +22,8 @@ import maya.cmds as cmds
 import maya.mel
 import maya.utils as mu
 import __main__ 
+import ms_commands
+import os
 
 #****************************************************************************************************************************************************************************************************
 # create ms_menu ************************************************************************************************************************************************************************************
@@ -72,12 +74,64 @@ def buildMenu():
         cmds.menuItem(label=environment, parent='menu_select_environment', command=('import maya.cmds as cmds\ncmds.select("{0}")'.format(environment)))
 
     cmds.menuItem(divider=True, parent='ms_menu')
+
+    cmds.menuItem(label='Create appleseed material', parent='ms_menu', command=('import maya.cmds as cmds\ncmds.shadingNode("ms_appleseed_material", asShader=True)'))
+
+
+   # load shader types
+    entity_defs = ms_commands.getEntityDefs(os.path.join(ms_commands.ROOT_DIRECTORY, 'scripts', 'appleseedEntityDefs.xml'))
+ 
+    # create BSDFs
+    cmds.menuItem('menu_create_BSDF', subMenu=True, label='Create BSDF', to=True, parent='ms_menu')
+    for entity_key in entity_defs.keys():
+        if (entity_defs[entity_key].type == 'bsdf'):
+            command = 'import ms_commands\nms_commands.createShadingNode("' + entity_key + '")'
+            cmds.menuItem(label=entity_key, parent='menu_create_BSDF', command=command)
+
+    # create EDFs
+    cmds.menuItem('menu_create_EDF', subMenu=True, label='Create EDF', to=True, parent='ms_menu')
+    for entity_key in entity_defs.keys():
+        if (entity_defs[entity_key].type == 'edf'):
+            command = 'import ms_commands\nms_commands.createShadingNode("' + entity_key + '")'
+            cmds.menuItem(label=entity_key, parent='menu_create_EDF', command=command)
+
+    # create surface_shaders
+    cmds.menuItem('menu_create_surface_shader', subMenu=True, label='Create Surface Shader', to=True, parent='ms_menu')
+    for entity_key in entity_defs.keys():
+        if (entity_defs[entity_key].type == 'surface_shader'):
+            command = 'import ms_commands\nms_commands.createShadingNode("' + entity_key + '")'
+            cmds.menuItem(label=entity_key, parent='menu_create_surface_shader', command=command)
+
+
+    cmds.menuItem(divider=True, parent='ms_menu')
     cmds.menuItem(label='Add custom shader translation', parent='ms_menu', command='import ms_commands\nms_commands.addShadingAttribs()') 
     cmds.menuItem(label='Remove custom shader translation', parent='ms_menu', command='import ms_commands\nms_commands.removeShadingAttribs()')    
     
     cmds.menuItem(divider=True, parent='ms_menu')
     cmds.menuItem(label='About', parent='ms_menu', command='import ms_commands\nms_commands.msInfoDial()')
 
-
 def deleteMenu():
     cmds.deleteUI('ms_menu')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -120,7 +120,7 @@ def ms_renderSettings_nodeInitializer():
 
     #export animated textures
     export_animated_textures_nAttr = OpenMaya.MFnNumericAttribute()
-    ms_renderSettings.export_animated_textures = export_animated_textures_nAttr.create("export_animated_textures", "animated_textures", OpenMaya.MFnNumericData.kBoolean, False)
+    ms_renderSettings.export_animated_textures = export_animated_textures_nAttr .create("export_animated_textures", "animated_textures", OpenMaya.MFnNumericData.kBoolean, False)
 
 
     #environent -----------------------------------------------
@@ -480,7 +480,7 @@ def ms_environment_nodeInitializer():
     model_enumAttr = OpenMaya.MFnEnumAttribute()
     ms_environment.model = model_enumAttr.create("model", "model")
     model_enumAttr.addField("Constant Environment", 0)
-    model_enumAttr.addField("Gradient Cnvironment", 1)
+    model_enumAttr.addField("Gradient Environment", 1)
     model_enumAttr.addField("Latitude Longitude Map", 2)
     model_enumAttr.addField("Mirrorball Map", 3)
     #model_enumAttr.setDefault(0)
@@ -539,6 +539,8 @@ def initializePlugin(obj):
         plugin.registerNode( ms_renderSettings_nodeTypeName, ms_renderSettings_nodeTypeId, ms_renderSettings_nodeCreator, ms_renderSettings_nodeInitializer )
     except:
         sys.stderr.write( "Failed to register command: %s\n" % ms_renderSettings_nodeTypeName )
+    
+
     
     #load objExport plugin if its not loaded yet
     try:

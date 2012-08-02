@@ -236,7 +236,7 @@ def hasShaderConnected(node_name):
 # read entity defs xml file and return dict ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 
-def getEntityDefs(xml_file_path):
+def getEntityDefs(xml_file_path, list=False):
 
     nodes = dict()
 
@@ -301,35 +301,85 @@ def getEntityDefs(xml_file_path):
                                         if node.nodeName == 'parameter':
                                             nodes[entity.getAttribute('model')].attributes[child.getAttribute('name')].entity_types.append(node.getAttribute('name'))
 
-    #print out all the discovered nodes
 
-    print 'Found the following appleseed nodes\n'
 
-    for node_key in nodes.iterkeys():
-        print '  ' + nodes[node_key].name
-        
-        print '    type                      :' + nodes[node_key].type
-        print '    attributes                :'
+    if list:
+        #print out all the discovered nodes
 
-        
-        for attr_key in nodes[node_key].attributes.iterkeys():
-            print '      name                    :' + nodes[node_key].attributes[attr_key].name
-            print '      type                    :' + nodes[node_key].attributes[attr_key].type
-            print '      label                   :' + nodes[node_key].attributes[attr_key].label
-            print '      default                 :' + nodes[node_key].attributes[attr_key].default_value
-            print '      allowed connections     :'
+        print 'Found the following appleseed nodes\n'
+        for node_key in nodes.iterkeys():
+            print '  ' + nodes[node_key].name
             
-            for entity_type in nodes[node_key].attributes[attr_key].entity_types:
-                print '        ' + entity_type
-            print''
-        print'\n'
+            print '    type                      :' + nodes[node_key].type
+            print '    attributes                :'
+
+            
+            for attr_key in nodes[node_key].attributes.iterkeys():
+                print '      name                    :' + nodes[node_key].attributes[attr_key].name
+                print '      type                    :' + nodes[node_key].attributes[attr_key].type
+                print '      label                   :' + nodes[node_key].attributes[attr_key].label
+                print '      default                 :' + nodes[node_key].attributes[attr_key].default_value
+                print '      allowed connections     :'
+                
+                for entity_type in nodes[node_key].attributes[attr_key].entity_types:
+                    print '        ' + entity_type
+                print''
+            print'\n'
     return nodes
         
         
+#
+# addd color attribute to node ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#             
         
-        
-        
+def addColorAttr(node_name, attribute_name, default_value=(0,0,0)):
+    cmds.addAttr(node_name, longName=attribute_name, usedAsColor=True, attributeType='float3' )
+    cmds.addAttr(node_name, longName=(attribute_name + '_R'), attributeType='float', parent=attribute_name )
+    cmds.addAttr(node_name, longName=(attribute_name + '_G'), attributeType='float', parent=attribute_name )
+    cmds.addAttr(node_name, longName=(attribute_name + '_B'), attributeType='float', parent=attribute_name )
 
+    cmds.setAttr((node_name + '.' + attribute_name), default_value[0], default_value[1], default_value[2])
+
+
+
+#
+# cerate shading node ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# 
+
+def createShadingNode(model, entity_defs_obj=False):
+    
+    entity_defs = ''
+
+    if entity_defs_obj:
+        entity_defs = entity_defs_obj
+    else:
+       entity_defs = getEntityDefs(os.path.join(ROOT_DIRECTORY, 'scripts', 'appleseedEntityDefs.xml'))
+
+
+    shading_node_name = cmds.shadingNode('ms_appleseed_shading_node', asUtility=True)
+
+    cmds.addAttr(shading_node_name, longName='node_model', dt="string")
+    cmds.setAttr((shading_node_name + '.node_model'), model, type="string", lock=True)
+
+    cmds.addAttr(shading_node_name, longName='node_type', dt="string")
+    cmds.setAttr((shading_node_name + '.node_type'), entity_defs[model].type, type="string", lock=True)
+    
+    for entity_key in entity_defs.keys():
+        if entity_key == model:
+            for attr_key in entity_defs[entity_key].attributes.keys():
+                if entity_defs[entity_key].attributes[attr_key].type == 'entity_picker':
+                    
+                    #if there is a defualt value, use it
+                    if entity_defs[entity_key].attributes[attr_key].default_value:
+                        default_value = float(entity_defs[entity_key].attributes[attr_key].default_value)
+                        print default_value
+                        addColorAttr(shading_node_name, attr_key, (default_value,default_value,default_value))
+                    else:
+                        addColorAttr(shading_node_name, attr_key)
+                    
+                elif entity_defs[entity_key].attributes[attr_key].type == 'text_box':
+                     cmds.addAttr(shading_node_name, longName=attr_key, dt="string")
+                     cmds.setAttr((shading_node_name + '.' + attr_key), entity_defs[entity_key].attributes[attr_key].default_value, type="string")
 
 
 
