@@ -29,6 +29,7 @@ import re
 import subprocess
 import sys
 import ms_commands
+import ms_export_obj
 
 inch_to_meter = 0.02539999983236
 
@@ -102,7 +103,8 @@ def writeTransform(doc, scale = 1, object=False, motion=False, motion_samples=2)
             cmds.refresh()
 
             if (object):
-                m = cmds.getAttr(object+'.matrix')
+                print '********', object
+                m = cmds.xform(object, query=True, ws=True, matrix=True)
                 transform = [m[0],m[1],m[2],m[3]], [m[4],m[5],m[6],m[7]], [m[8],m[9],m[10],m[11]], [m[12],m[13],m[14],m[15]]
             else:
                 transform = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
@@ -126,11 +128,11 @@ def writeTransform(doc, scale = 1, object=False, motion=False, motion_samples=2)
 
     else:
 
+        transform = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
+        print '**************', object
         if (object):
-            m = cmds.getAttr(object+'.matrix')
+            m = cmds.xform(object, query=True, ws=True, matrix=True)
             transform = [m[0],m[1],m[2],m[3]], [m[4],m[5],m[6],m[7]], [m[8],m[9],m[10],m[11]], [m[12],m[13],m[14],m[15]]
-        else:
-            transform = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
 
         doc.startElement('transform')
         doc.appendElement('scaling value="{0}"'.format(scale))
@@ -163,7 +165,9 @@ def getMayaParams(render_settings_node):
     params['convertTexturesToExr'] = cmds.getAttr(render_settings_node + '.convert_textures_to_exr')
     params['overwriteExistingExrs'] = cmds.getAttr(render_settings_node + '.overwrite_existing_exrs')
     params['fileName'] = cmds.getAttr(render_settings_node + '.output_file')
-    params['exportMotionBlur'] = cmds.getAttr(render_settings_node + '.export_motion_blur')
+    params['exportCameraBlur'] = cmds.getAttr(render_settings_node + '.export_camera_blur')
+    params['exportTransformationBlur'] = cmds.getAttr(render_settings_node + '.export_transformation_blur')
+    params['exportDeformationBlur'] = cmds.getAttr(render_settings_node + '.export_deformation_blur')
     params['motionSamples'] = cmds.getAttr(render_settings_node + '.motion_samples')
     params['exportAnimation'] = cmds.getAttr(render_settings_node + '.export_animation')
     params['animationStartFrame'] = cmds.getAttr(render_settings_node + '.animation_start_frame')
@@ -320,6 +324,8 @@ class Light():
             doc.appendParameter('outer_angle', self.outer_angle)
 
         doc.appendParameter('exitance', self.color_name)
+
+
         writeTransform(doc, self.params['scene_scale'], self.name, False, self.params['motionSamples'])
         doc.endElement('light')
 
@@ -625,7 +631,7 @@ class Camera(): #(camera_name)
 
         self.focal_length = float(cmds.getAttr(self.name+'.focalLength')) / 1000
         # transpose camera matrix -> XXX0, YYY0, ZZZ0, XYZ1
-        m = cmds.getAttr(cam+'.matrix')
+        m = cmds.xform(cam, query=True, ws=True, matrix=True)
         self.transform = [m[0],m[1],m[2],m[3]], [m[4],m[5],m[6],m[7]], [m[8],m[9],m[10],m[11]], [m[12],m[13],m[14],m[15]]
    
     def writeXML(self, doc):
@@ -643,7 +649,7 @@ class Camera(): #(camera_name)
             doc.appendParameter('diaphragm_tilt_angle', self.diaphragm_tilt_angle)
 
         #output transform matrix
-        writeTransform(doc, self.params['scene_scale'], self.name, self.params['exportMotionBlur'], self.params['motionSamples'])
+        writeTransform(doc, self.params['scene_scale'], self.name, self.params['exportCameraBlur'], self.params['motionSamples'])
 
         doc.endElement('camera')
 
@@ -742,7 +748,7 @@ class Geometry():
             cmds.warning(self.name + ' has no shading engine connected')
 
         # transpose matrix -> XXX0, YYY0, ZZZ0, XYZ1
-        m = cmds.getAttr(name+'.matrix')
+        m = cmds.xform(name, query=True, ws=True, matrix=True)
         self.transform = [m[0],m[1],m[2],m[3]], [m[4],m[5],m[6],m[7]], [m[8],m[9],m[10],m[11]], [m[12],m[13],m[14],m[15]]
         
 
@@ -766,9 +772,10 @@ class Geometry():
 #
 
 class Assembly():
-    def __init__(self, params, name='main_assembly'):
+    def __init__(self, params, name='main_assembly', object_list=False, position_from_object=False):
         self.params = params
         self.name = name
+        self.position_from_object = position_from_object
         self.light_objects = dict()
         self.geo_objects = []
         self.material_objects = []
@@ -776,26 +783,31 @@ class Assembly():
         self.color_objects = []
         self.texture_objects = []
 
-        #if name is default populate list with all lights otherwise just lights from set with the same name as the object
-        if (self.name == 'main_assembly'):
-        
-            for light_shape in cmds.ls(lights=True):
-                self.light_objects[light_shape] = Light(self.params, cmds.listRelatives(light_shape, ad=True, ap=True)[0])
-                #if the light is a spotlight then add the spotlight's attribs
-                if cmds.nodeType(light_shape) == 'spotLight':
-                    self.light_objects[light_shape].model = 'spot_light'
-                    self.light_objects[light_shape].inner_angle = cmds.getAttr(light_shape+'.coneAngle')
-                    self.light_objects[light_shape].outer_angle = cmds.getAttr(light_shape+'.coneAngle') + cmds.getAttr(light_shape+'.penumbraAngle')
-        
+        #if there is an object list variable use that!
+        if object_list:
+            pass
+
+        #else if name is default populate list with all lights otherwise just lights from set with the same name as the object
         else:
-        
-            for light_shape in cmds.listRelatives(self.name, typ='light'):
-                self.light_objects[light_shape] = Light(self.params, cmds.listRelatives(light_shape, ad=True, ap=True)[0])
-                #if the light is a spotlight then add the spotlight's attribs
-                if cmds.nodeType(light_shape) == 'spotLight':
-                    self.light_objects[light_shape].model = 'spot_light'
-                    self.light_objects[light_shape].inner_angle = cmds.getAttr(light_shape+'.coneAngle')
-                    self.light_objects[light_shape].outer_angle = cmds.getAttr(light_shape+'.coneAngle') + cmds.getAttr(light_shape+'.penumbraAngle')
+            if (self.name == 'main_assembly'):
+            
+                for light_shape in cmds.ls(lights=True):
+                    self.light_objects[light_shape] = Light(self.params, cmds.listRelatives(light_shape, ad=True, ap=True)[0])
+                    #if the light is a spotlight then add the spotlight's attribs
+                    if cmds.nodeType(light_shape) == 'spotLight':
+                        self.light_objects[light_shape].model = 'spot_light'
+                        self.light_objects[light_shape].inner_angle = cmds.getAttr(light_shape+'.coneAngle')
+                        self.light_objects[light_shape].outer_angle = cmds.getAttr(light_shape+'.coneAngle') + cmds.getAttr(light_shape+'.penumbraAngle')
+            
+            else:
+            
+                for light_shape in cmds.listRelatives(self.name, typ='light'):
+                    self.light_objects[light_shape] = Light(self.params, cmds.listRelatives(light_shape, ad=True, ap=True)[0])
+                    #if the light is a spotlight then add the spotlight's attribs
+                    if cmds.nodeType(light_shape) == 'spotLight':
+                        self.light_objects[light_shape].model = 'spot_light'
+                        self.light_objects[light_shape].inner_angle = cmds.getAttr(light_shape+'.coneAngle')
+                        self.light_objects[light_shape].outer_angle = cmds.getAttr(light_shape+'.coneAngle') + cmds.getAttr(light_shape+'.penumbraAngle')
         
 
 
@@ -807,26 +819,34 @@ class Assembly():
         if not len(self.light_objects):
             cmds.warning('no light present in: ' + self.name)
         
-        #if name is default populate list with all geometry otherwise just geometry from set with the same name as the object
-        if (self.name == 'main_assembly'):
-            #create a list of all geometry objects and itterate over them
-            for geo in cmds.ls(typ='mesh'):
-                if (ms_commands.shapeIsExportable(geo) and ms_commands.hasShaderConnected(geo)):
-                    geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
+
+        #add shape nodes as geo objects
+        if object_list:
+            for object in object_list:
+                if cmds.nodeType(object) == 'mesh':
+                    geo_transform = cmds.listRelatives(object, ad=True, ap=True)[0]
                     if not (geo_transform in self.geo_objects):
                         self.geo_objects.append(Geometry(self.params, geo_transform, (self.params['geo_dir']+self.name+'.obj'), self.name))
+
         else:
-            for geo in cmds.listConnections(self.name, sh=True):
-                if (ms_commands.shapeIsExportable(geo) and ms_commands.hasShaderConnected(geo)):
-                    geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
-                    if not geo_transform in self.geo_objects:
-                        self.geo_objects.append(Geometry(self.params, geo_transform, (self.params['geo_dir']+self.name+'.obj'), self.name))
+            #if name is default populate list with all geometry otherwise just geometry from set with the same name as the object
+            if (self.name == 'main_assembly'):
+                #create a list of all geometry objects and itterate over them
+                for geo in cmds.ls(typ='mesh'):
+                    if (ms_commands.shapeIsExportable(geo) and ms_commands.hasShaderConnected(geo)):
+                        geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
+                        if not (geo_transform in self.geo_objects):
+                            self.geo_objects.append(Geometry(self.params, geo_transform, (self.params['geo_dir']+self.name+'.obj'), self.name))
+            else:
+                for geo in cmds.listConnections(self.name, sh=True):
+                    if (ms_commands.shapeIsExportable(geo) and ms_commands.hasShaderConnected(geo)):
+                        geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
+                        if not geo_transform in self.geo_objects:
+                            self.geo_objects.append(Geometry(self.params, geo_transform, (self.params['geo_dir']+self.name+'.obj'), self.name))
                 
         #if there are no objects in the scene raise error
         if not len(self.geo_objects):
-            cmds.error('no objects present in ' + self.name)
-            raise RuntimeError('no objects present in ' + self.name)
-
+            cmds.warning('no objects present in ' + self.name)
 
         #populate material, shading_node and color list
         for geo in self.geo_objects:
@@ -914,7 +934,7 @@ class Assembly():
         #export and write .obj object
         for geo in self.geo_objects:
             #export geo
-            if  self.params['exportMotionBlur']:
+            if  self.params['exportDeformationBlur']:
 
                 #store the star time of the export
                 start_time = cmds.currentTime(query=True)
@@ -926,7 +946,7 @@ class Assembly():
 
                 doc.startElement('object name="{0}" model="mesh_object"'.format(geo.name))
                 doc.startElement('parameters name="filename"')
-                cmds.select(geo.name)
+                #cmds.select(geo.name)
                 cmds.currentTime(cmds.currentTime(query=True)-1)
                 for i in range(motion_samples):
                     print "exporting frame {0}".format((start_time + (sample_interval * i)))
@@ -934,7 +954,9 @@ class Assembly():
                     cmds.currentTime(new_time)
                     cmds.refresh()
                     output_file = os.path.join(self.params['outputDir'], self.params['geo_dir'], ('{0}.{1:03}.obj'.format(geo.name,i)))
-                    cmds.file(output_file, force=True, options='groups=0;ptgroups=0;materials=0;smoothing=0;normals=1', typ='OBJexport',pr=True, es=True)
+                    
+                    ms_export_obj.export(geo.name, output_file)
+
                     doc.appendParameter('{0:03}'.format(i), '{0}/{1}.{2:03}.obj'.format(self.params['geo_dir'],geo.name,i))
                     
 
@@ -942,7 +964,7 @@ class Assembly():
                 doc.endElement('parameters')
                 doc.endElement('object')
                 cmds.currentTime(start_time)
-                cmds.select(cl=True)
+                #cmds.select(cl=True)
 
             else:
                 cmds.select(geo.name)
@@ -955,8 +977,8 @@ class Assembly():
                 doc.endElement('object')
         
         #write lights
-        for light_object in self.light_objects:
-            self.light_objects[light_object].writeXML(doc)
+        #for light_object in self.light_objects:
+        #    self.light_objects[light_object].writeXML(doc)
         
         #write geo object instances
         for geo in self.geo_objects:
@@ -964,7 +986,12 @@ class Assembly():
         
         doc.endElement('assembly')
         doc.startElement('assembly_instance name="{0}_inst" assembly="{1}"'.format(self.name, self.name))
-        writeTransform(doc, self.params['scene_scale'])
+        
+        #if transformation blur is set output the transform with motion from the position_from_object variable
+        if self.params['exportTransformationBlur']:
+            writeTransform(doc, self.params['scene_scale'], self.position_from_object, True, self.params['motionSamples'])
+        else:
+            writeTransform(doc, self.params['scene_scale'], self.position_from_object)
         doc.endElement('assembly_instance')
 
 #
@@ -977,6 +1004,7 @@ class Scene():
         self.assembly_list = []
         self.color_objects = dict()
         self.texture_objects = dict()
+        self.assembly_objects = dict()
 
         #setup environment 
         if self.params['environment']:
@@ -1080,27 +1108,14 @@ class Scene():
         #get maya geometry
         shape_list = cmds.ls(g=True, v=True) 
         geo_transform_list = []
-        for g in shape_list:
+        for geo in shape_list:
             # add first connected transform to the list
-            geo_transform_list.append(cmds.listRelatives(g, ad=True, ap=True)[0]) 
+            geo_transform_list.append(cmds.listRelatives(geo, ad=True, ap=True)[0]) 
 
-        #populate a list of assemblies
-        for g in geo_transform_list:
-            set = cmds.listSets(object=g)
-            if set:
-                if not set[0] in self.assembly_list:
-                    self.assembly_list.append(cmds.listSets(object=g)[0])
-        
-        #create assemblies if any assembly names are present otherwise create default assembly
-        if self.assembly_list:
-            #for each assemply in assembly_list create an object and output its XML
-            for assembly in self.assembly_list:
-                new_assembly = Assembly(self.params, assembly)
-                new_assembly.writeXML(doc)
-        else:
-            print('no populated maya sets present, using default "main_assembly"')
-            new_assembly = Assembly(self.params, 'main_assembly')
-            new_assembly.writeXML(doc)
+        for geo in shape_list:
+            if (ms_commands.shapeIsExportable(geo) and ms_commands.hasShaderConnected(geo)):
+                geo_assembly = Assembly(self.params, ((cmds.listRelatives(geo, ad=True, ap=True)[0]) + '_assebly'), [geo], cmds.listRelatives(geo, ad=True, ap=True)[0])
+                geo_assembly.writeXML(doc)        
         doc.endElement('scene')
 
 #

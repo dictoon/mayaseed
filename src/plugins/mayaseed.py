@@ -79,9 +79,17 @@ def ms_renderSettings_nodeInitializer():
     overwrite_existing_exrs_nAttr = OpenMaya.MFnNumericAttribute()
     ms_renderSettings.overwrite_existing_exrs = overwrite_existing_exrs_nAttr.create("overwrite_existing_exrs", "overwrite_exrs", OpenMaya.MFnNumericData.kBoolean, True)
 
-    #export motion blur
-    export_motion_blur_nAttr = OpenMaya.MFnNumericAttribute()
-    ms_renderSettings.export_motion_blur = export_motion_blur_nAttr.create("export_motion_blur", "motion_blur", OpenMaya.MFnNumericData.kBoolean, True)
+    #export camera blur
+    export_camera_blur_nAttr = OpenMaya.MFnNumericAttribute()
+    ms_renderSettings.export_camera_blur = export_camera_blur_nAttr.create("export_camera_blur", "camera_blur", OpenMaya.MFnNumericData.kBoolean, True)
+
+    #export transformation blur
+    export_transformation_blur_nAttr = OpenMaya.MFnNumericAttribute()
+    ms_renderSettings.export_transformation_blur = export_transformation_blur_nAttr.create("export_transformation_blur", "transformation_blur", OpenMaya.MFnNumericData.kBoolean, True)
+
+    #export deformation blur
+    export_deformation_blur_nAttr = OpenMaya.MFnNumericAttribute()
+    ms_renderSettings.export_deformation_blur = export_deformation_blur_nAttr.create("export_deformation_blur", "deformation_blur", OpenMaya.MFnNumericData.kBoolean, True)
 
     #motion samples
     motion_samples_AttrInt = OpenMaya.MFnNumericAttribute()
@@ -235,7 +243,9 @@ def ms_renderSettings_nodeInitializer():
         ms_renderSettings.addAttribute(ms_renderSettings.convert_shading_nodes_to_textures)
         ms_renderSettings.addAttribute(ms_renderSettings.convert_textures_to_exr)
         ms_renderSettings.addAttribute(ms_renderSettings.overwrite_existing_exrs)
-        ms_renderSettings.addAttribute(ms_renderSettings.export_motion_blur)
+        ms_renderSettings.addAttribute(ms_renderSettings.export_camera_blur)
+        ms_renderSettings.addAttribute(ms_renderSettings.export_transformation_blur)
+        ms_renderSettings.addAttribute(ms_renderSettings.export_deformation_blur)
         ms_renderSettings.addAttribute(ms_renderSettings.motion_samples)
         ms_renderSettings.addAttribute(ms_renderSettings.shutter_open)
         ms_renderSettings.addAttribute(ms_renderSettings.shutter_close)
