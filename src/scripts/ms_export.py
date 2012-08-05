@@ -103,7 +103,6 @@ def writeTransform(doc, scale = 1, object=False, motion=False, motion_samples=2)
             cmds.refresh()
 
             if (object):
-                print '********', object
                 m = cmds.xform(object, query=True, ws=True, matrix=True)
                 transform = [m[0],m[1],m[2],m[3]], [m[4],m[5],m[6],m[7]], [m[8],m[9],m[10],m[11]], [m[12],m[13],m[14],m[15]]
             else:
@@ -129,7 +128,6 @@ def writeTransform(doc, scale = 1, object=False, motion=False, motion_samples=2)
     else:
 
         transform = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
-        print '**************', object
         if (object):
             m = cmds.xform(object, query=True, ws=True, matrix=True)
             transform = [m[0],m[1],m[2],m[3]], [m[4],m[5],m[6],m[7]], [m[8],m[9],m[10],m[11]], [m[12],m[13],m[14],m[15]]
@@ -209,7 +207,7 @@ def getMayaParams(render_settings_node):
     if cmds.listConnections(render_settings_node + '.camera'):
         params['outputCamera'] = cmds.listConnections(render_settings_node + '.camera')[0]
     else:
-        cmds.warning('no camera connected to ' + render_settings_node)
+        raise RuntimeError('no camera connected to ' + render_settings_node)
     
     if cmds.getAttr(render_settings_node + '.color_space') == 1:
         params['outputColorSpace'] = 'linear_rgb'
@@ -326,7 +324,7 @@ class Light():
         doc.appendParameter('exitance', self.color_name)
 
 
-        writeTransform(doc, self.params['scene_scale'], self.name, False, self.params['motionSamples'])
+        writeTransform(doc, self.params['scene_scale'], self.name, self.params['exportTransformationBlur'], self.params['motionSamples'])
         doc.endElement('light')
 
 #
@@ -668,7 +666,7 @@ class Environment():
         print('writing environment: ' + self.name)
         doc.startElement('environment name="{0}" model="generic_environment"'.format(self.name))
         doc.appendParameter('environment_edf', self.environment_edf)
-        doc.appendParameter('environment_shader', self.environment_shader)
+        #doc.appendParameter('environment_shader', self.environment_shader)
 
         doc.endElement('environment')
 
@@ -776,49 +774,12 @@ class Assembly():
         self.params = params
         self.name = name
         self.position_from_object = position_from_object
-        self.light_objects = dict()
+        self.light_objects = []
         self.geo_objects = []
         self.material_objects = []
         self.shading_node_objects = []
         self.color_objects = []
         self.texture_objects = []
-
-        #if there is an object list variable use that!
-        if object_list:
-            pass
-
-        #else if name is default populate list with all lights otherwise just lights from set with the same name as the object
-        else:
-            if (self.name == 'main_assembly'):
-            
-                for light_shape in cmds.ls(lights=True):
-                    self.light_objects[light_shape] = Light(self.params, cmds.listRelatives(light_shape, ad=True, ap=True)[0])
-                    #if the light is a spotlight then add the spotlight's attribs
-                    if cmds.nodeType(light_shape) == 'spotLight':
-                        self.light_objects[light_shape].model = 'spot_light'
-                        self.light_objects[light_shape].inner_angle = cmds.getAttr(light_shape+'.coneAngle')
-                        self.light_objects[light_shape].outer_angle = cmds.getAttr(light_shape+'.coneAngle') + cmds.getAttr(light_shape+'.penumbraAngle')
-            
-            else:
-            
-                for light_shape in cmds.listRelatives(self.name, typ='light'):
-                    self.light_objects[light_shape] = Light(self.params, cmds.listRelatives(light_shape, ad=True, ap=True)[0])
-                    #if the light is a spotlight then add the spotlight's attribs
-                    if cmds.nodeType(light_shape) == 'spotLight':
-                        self.light_objects[light_shape].model = 'spot_light'
-                        self.light_objects[light_shape].inner_angle = cmds.getAttr(light_shape+'.coneAngle')
-                        self.light_objects[light_shape].outer_angle = cmds.getAttr(light_shape+'.coneAngle') + cmds.getAttr(light_shape+'.penumbraAngle')
-        
-
-
-        #add light colors to list
-        for light_object in self.light_objects:
-            light_color_object = Color(self.light_objects[light_object].color_name, self.light_objects[light_object].color, self.light_objects[light_object].multiplier)
-            self.color_objects = self.color_objects + [light_color_object]
-
-        if not len(self.light_objects):
-            cmds.warning('no light present in: ' + self.name)
-        
 
         #add shape nodes as geo objects
         if object_list:
@@ -827,26 +788,23 @@ class Assembly():
                     geo_transform = cmds.listRelatives(object, ad=True, ap=True)[0]
                     if not (geo_transform in self.geo_objects):
                         self.geo_objects.append(Geometry(self.params, geo_transform, (self.params['geo_dir']+self.name+'.obj'), self.name))
+                elif cmds.nodeType(object) == 'pointLight':
+                    light_transform = cmds.listRelatives(object, ad=True, ap=True)[0]
+                    if not (light_transform in self.light_objects):
+                        self.light_objects.append(Light(self.params, cmds.listRelatives(object, ad=True, ap=True)[0]))
+                elif cmds.nodeType(object) == 'spotLight':
+                    light_transform = cmds.listRelatives(object, ad=True, ap=True)[0]
+                    if not (light_transform in self.light_objects):
+                        light_object = Light(self.params, cmds.listRelatives(object, ad=True, ap=True)[0])
+                        light_object.model = 'spotLight'
+                        light_object.inner_angle = cmds.getAttr(object + '.coneAngle')
+                        light_object.outer_angle = cmds.getAttr(object + '.coneAngle') + cmds.getAttr(object + '.penumbraAngle')
+                        self.light_objects.append(light_object)
 
-        else:
-            #if name is default populate list with all geometry otherwise just geometry from set with the same name as the object
-            if (self.name == 'main_assembly'):
-                #create a list of all geometry objects and itterate over them
-                for geo in cmds.ls(typ='mesh'):
-                    if (ms_commands.shapeIsExportable(geo) and ms_commands.hasShaderConnected(geo)):
-                        geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
-                        if not (geo_transform in self.geo_objects):
-                            self.geo_objects.append(Geometry(self.params, geo_transform, (self.params['geo_dir']+self.name+'.obj'), self.name))
-            else:
-                for geo in cmds.listConnections(self.name, sh=True):
-                    if (ms_commands.shapeIsExportable(geo) and ms_commands.hasShaderConnected(geo)):
-                        geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
-                        if not geo_transform in self.geo_objects:
-                            self.geo_objects.append(Geometry(self.params, geo_transform, (self.params['geo_dir']+self.name+'.obj'), self.name))
-                
-        #if there are no objects in the scene raise error
-        if not len(self.geo_objects):
-            cmds.warning('no objects present in ' + self.name)
+        #add light colors to list
+        for light_object in self.light_objects:
+            light_color_object = Color(light_object.color_name, light_object.color, light_object.multiplier)
+            self.color_objects.append(light_color_object)
 
         #populate material, shading_node and color list
         for geo in self.geo_objects:
@@ -854,15 +812,11 @@ class Assembly():
                 self.material_objects = self.material_objects + [geo.getMaterial()]
             else:
                 cmds.warning('no material connected to: ' + geo.name)
-
             self.shading_node_objects = self.shading_node_objects + geo.getShadingNodes()
-
             self.color_objects = self.color_objects + geo.colors
-
             self.texture_objects = self.texture_objects + geo.textures
 
         #uniquify lists of materials, shadig_nodes ,colors and textures by turning them into dicts
-
         #materials
         unsorted_materials = self.material_objects
         self.material_objects = dict()
@@ -967,18 +921,16 @@ class Assembly():
                 #cmds.select(cl=True)
 
             else:
-                cmds.select(geo.name)
                 output_file = os.path.join(self.params['outputDir'], self.params['geo_dir'], (geo.name + '.obj'))
-                cmds.file(output_file, force=True, options='groups=0;ptgroups=0;materials=0;smoothing=0;normals=1', typ='OBJexport',pr=True, es=True)
-                cmds.select(cl=True)
+                ms_export_obj.export(geo.name, output_file)
                 #write xml
                 doc.startElement('object name="{0}" model="mesh_object"'.format(geo.name))
                 doc.appendParameter('filename', '{0}/{1}.obj'.format(self.params['geo_dir'], geo.name))
                 doc.endElement('object')
         
         #write lights
-        #for light_object in self.light_objects:
-        #    self.light_objects[light_object].writeXML(doc)
+        for light_object in self.light_objects:
+           light_object.writeXML(doc)
         
         #write geo object instances
         for geo in self.geo_objects:
@@ -989,6 +941,7 @@ class Assembly():
         
         #if transformation blur is set output the transform with motion from the position_from_object variable
         if self.params['exportTransformationBlur']:
+            print '************** position from ', self.position_from_object
             writeTransform(doc, self.params['scene_scale'], self.position_from_object, True, self.params['motionSamples'])
         else:
             writeTransform(doc, self.params['scene_scale'], self.position_from_object)
@@ -1107,16 +1060,24 @@ class Scene():
         #export assemblies
         #get maya geometry
         shape_list = cmds.ls(g=True, v=True) 
-        geo_transform_list = []
         for geo in shape_list:
-            # add first connected transform to the list
-            geo_transform_list.append(cmds.listRelatives(geo, ad=True, ap=True)[0]) 
-
-        for geo in shape_list:
-            if (ms_commands.shapeIsExportable(geo) and ms_commands.hasShaderConnected(geo)):
-                geo_assembly = Assembly(self.params, ((cmds.listRelatives(geo, ad=True, ap=True)[0]) + '_assebly'), [geo], cmds.listRelatives(geo, ad=True, ap=True)[0])
+            if ms_commands.shapeIsExportable(geo):
+                # add first connected transform to the list
+                geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
+                geo_assembly = Assembly(self.params, (geo_transform + '_assebly'), [geo], geo_transform)
                 geo_assembly.writeXML(doc)        
+
+        #get maya lights
+        light_list = cmds.ls(lt=True, v=True)
+        for light in light_list:
+                light_transform = cmds.listRelatives(light, ad=True, ap=True)[0]
+                light_assembly = Assembly(self.params, (light_transform + '_assebly'), [light], light_transform)
+                light_assembly.writeXML(doc)    
+
+
         doc.endElement('scene')
+
+
 
 #
 # output class --
