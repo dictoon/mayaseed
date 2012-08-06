@@ -507,7 +507,7 @@ class ShadingNode():
                         if cmds.nodeType(connected_node) == 'ms_appleseed_shading_node':
                             shading_node = ShadingNode(self.params, connected_node)
                             attribute_value = shading_node.name
-                            self.child_shading_nodes = self.child_shading_nodes + [shading_node] + shading_node.childNodes()
+                            self.child_shading_nodes = self.child_shading_nodes + [shading_node] + shading_node.child_shading_nodes
                             self.colors = self.colors + shading_node.colors
                             self.textures = self.textures + shading_node.textures
 
@@ -1276,7 +1276,6 @@ def export(render_settings_node):
         
             doc.endElement('project')
             doc.close()
-            print('export finished')
 
             current_frame += 1
 
@@ -1286,6 +1285,8 @@ def export(render_settings_node):
 
         cmds.currentTime(original_time)
         cmds.select(render_settings_node)
+
+        print('export finished')
 
     else:
         cmds.error('error validating ui attributes ')
