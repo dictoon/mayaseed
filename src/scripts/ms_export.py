@@ -221,23 +221,46 @@ def getMayaParams(render_settings_node):
     params['outputResWidth'] = cmds.getAttr(render_settings_node + '.width')
     params['outputResHeight'] = cmds.getAttr(render_settings_node + '.height')
 
-    # configurations
-    # custom interactive config
-    params['customInteractiveConfigCheck'] = cmds.getAttr(render_settings_node + '.export_custom_interactive_config')
-    params['customInteractiveConfigEngine'] = cmds.getAttr(render_settings_node + '.interactive_lighting_engine')
-    params['customInteractiveConfigMinSamples'] = cmds.getAttr(render_settings_node + '.interactive_min_samples')
-    params['customInteractiveConfigMaxSamples'] = cmds.getAttr(render_settings_node + '.interactive_max_samples')
-    params['customInteractiveConfigMaxRayDepth'] = cmds.getAttr(render_settings_node + '.interactive_max_ray_depth')
-    params['customInteractiveConfigLightSamples'] = cmds.getAttr(render_settings_node + '.interactive_light_samples')
-
+    # configuration
     # custom Final config
     params['customFinalConfigCheck'] = cmds.getAttr(render_settings_node + '.export_custom_final_config')
     params['customFinalConfigEngine'] = cmds.getAttr(render_settings_node + '.final_lighting_engine')
-    params['customFinalConfigMinSamples'] = cmds.getAttr(render_settings_node + '.final_min_samples')
-    params['customFinalConfigMaxSamples'] = cmds.getAttr(render_settings_node + '.final_max_samples')
-    params['customFinalConfigMaxRayDepth'] = cmds.getAttr(render_settings_node + '.final_max_ray_depth')
-    params['customFinalConfigLightSamples'] = cmds.getAttr(render_settings_node + '.final_light_samples')
+
+    params['customFinalConfigMinSamples'] = cmds.getAttr(render_settings_node + '.min_samples')
+    params['customFinalConfigMaxSamples'] = cmds.getAttr(render_settings_node + '.max_samples')
+
+
+    params['drtDLBSDFSamples'] = cmds.getAttr(render_settings_node + '.drt_dl_bsdf_samples')
+    params['drtDLLightSamples'] = cmds.getAttr(render_settings_node + '.drt_dl_light_samples')
+    params['drtEnableIBL'] = cmds.getAttr(render_settings_node + '.drt_enable_ibl')
+    params['drtIBLBSDFSamples'] = cmds.getAttr(render_settings_node + '.drt_ibl_bsdf_samples')
+    params['drtIBLEnvSamples'] = cmds.getAttr(render_settings_node + '.drt_ibl_env_samples')
+    params['drtMaxPathLength'] = cmds.getAttr(render_settings_node + '.drt_max_path_length')
+    params['drtRRMinPathLength'] = cmds.getAttr(render_settings_node + '.drt_rr_min_path_length')
+
+    params['ptDLLightSamples'] = cmds.getAttr(render_settings_node + '.pt_dl_light_samples')
+    params['ptEnableCaustics'] = cmds.getAttr(render_settings_node + '.pt_enable_caustics')
+    params['ptEnableDL'] = cmds.getAttr(render_settings_node + '.pt_enable_dl')
+    params['ptEnableIBL'] = cmds.getAttr(render_settings_node + '.pt_enable_ibl')
+    params['ptIBLBSDFSamples'] = cmds.getAttr(render_settings_node + '.pt_ibl_bsdf_samples')
+    params['ptIBLEnvSamples'] = cmds.getAttr(render_settings_node + '.pt_ibl_env_samples')
+    params['ptMaxPathLength'] = cmds.getAttr(render_settings_node + '.pt_max_path_length')
+    params['ptNextEventEstimation'] = cmds.getAttr(render_settings_node + '.pt_next_event_estimation')
+    params['ptRRMinPathLength'] = cmds.getAttr(render_settings_node + '.pt_rr_min_path_length')
+
+    params['gtrFilterSize'] = cmds.getAttr(render_settings_node + '.gtr_filter_size')
+    params['gtrMinSamples'] = cmds.getAttr(render_settings_node + '.gtr_min_samples')
+    params['gtrMaxSamples'] = cmds.getAttr(render_settings_node + '.gtr_max_samples')
+    params['gtrMaxContrast'] = cmds.getAttr(render_settings_node + '.gtr_max_contrast')
+    params['gtrMaxVariation'] = cmds.getAttr(render_settings_node + '.gtr_max_variation')
+    params['gtrSampler'] = cmds.getAttr(render_settings_node + '.gtr_sampler')
+
     return params
+
+
+
+
+
 
 
 #****************************************************************************************************************************************************************************************************
@@ -1105,44 +1128,56 @@ class Configurations():
     def writeXML(self,doc):
         print('writing configurations')
         doc.startElement("configurations")
-        #if 'customise interactive configuration' is set read customised values
-        if self.params['customInteractiveConfigCheck']:
-            print('writing custom interactive config')
-            doc.startElement('configuration name="interactive" base="base_interactive"')
-            engine = ''
-            if self.params['customInteractiveConfigEngine'] == 'Path Tracing':
-                engine = "pt"
-            else:
-                engine = "drt"
-            doc.appendElement('parameter name="lighting_engine" value="{0}"'.format(engine))
-            doc.startElement('parameters name="{0}"'.format(engine))
-            doc.appendParameter('max_path_length', self.params['customInteractiveConfigMaxRayDepth'])
-            doc.endElement('parameters')
-            doc.appendParameter('min_samples', self.params['customInteractiveConfigMinSamples'])
-            doc.appendParameter('max_samples', self.params['customInteractiveConfigMaxSamples'])
+        #add base custom interactive config
+        doc.appendElement('configuration name="interactive" base="base_interactive"')
 
-            doc.endElement('configuration')
-        else:# otherwise add default configurations
-            print('writing default interactive config')
-            doc.appendElement('configuration name="interactive" base="base_interactive"')
 
         #if 'customise final configuration' is set read customised values
         if self.params['customFinalConfigCheck']:
             print('writing custom final config')
             doc.startElement('configuration name="final" base="base_final"')
+
             engine = ''
             if self.params['customFinalConfigEngine'] == "Path Tracing":
                 engine = 'pt'
             else:
                 engine = 'drt'
-            doc.appendElement('parameter name="lighting_engine" value="{0}"'.format(engine))
-            doc.startElement('parameters name="{0}"'.format(engine))
-            doc.appendParameter('max_path_length', self.params['customFinalConfigMaxRayDepth'])
-
-            doc.endElement('parameters')
-            doc.appendParameter('min_samples', self.params['customFinalConfigMinSamples'])
+            doc.appendParameter('lighting_engine,', engine)
+            doc.appendParameter('min_samples', self.params['customFinalConfigMaxSamples'])
             doc.appendParameter('max_samples', self.params['customFinalConfigMaxSamples'])
+            
+            doc.startElement('parameters name="drt"')
+            doc.appendParameter('dl_bsdf_samples', self.params['drtDLBSDFSamples'])
+            doc.appendParameter('dl_light_samples', self.params['drtDLLightSamples'])
+            doc.appendParameter('enable_ibl', self.params['drtEnableIBL'])
+            doc.appendParameter('ibl_bsdf_samples', self.params['drtIBLBSDFSamples'])
+            doc.appendParameter('ibl_env_samples', self.params['drtIBLEnvSamples'])
+            doc.appendParameter('max_path_length', self.params['drtMaxPathLength'])
+            doc.appendParameter('rr_min_path_length', self.params['drtRRMinPathLength'])
+            doc.endElement("parameters")
+
+            doc.startElement('parameters name="pt"')
+            doc.appendParameter('dl_light_samples', self.params['ptDLLightSamples'])
+            doc.appendParameter('enable_caustics', self.params['ptEnableCaustics'])
+            doc.appendParameter('enable_dl', self.params['ptEnableDL'])
+            doc.appendParameter('enable_ibl', self.params['ptEnableIBL'])
+            doc.appendParameter('ibl_bsdf_samples', self.params['ptIBLBSDFSamples'])
+            doc.appendParameter('ibl_env_samples', self.params['ptIBLEnvSamples'])
+            doc.appendParameter('max_path_length', self.params['ptMaxPathLength'])
+            doc.appendParameter('next_event_estimation', self.params['ptNextEventEstimation'])
+            doc.appendParameter('rr_min_path_length', self.params['ptRRMinPathLength'])
+            doc.endElement("parameters")
+
+            doc.startElement('parameters name="generic_tile_renderer"')
+            doc.appendParameter('filter_size', self.params['gtrFilterSize'])
+            doc.appendParameter('max_contrast', self.params['gtrMaxContrast'])
+            doc.appendParameter('max_samples', self.params['gtrMaxSamples'])
+            doc.appendParameter('max_variation', self.params['gtrMaxVariation'])
+            doc.appendParameter('min_samples', self.params['gtrMinSamples'])
+            doc.appendParameter('sampler', self.params['gtrSampler'])
+            doc.endElement('parameters')
             doc.endElement("configuration")
+
         else:# otherwise add default configurations
             print('writing default final config')
             doc.appendElement('configuration name="final" base="base_final"')

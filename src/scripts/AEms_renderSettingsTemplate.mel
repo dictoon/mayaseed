@@ -205,6 +205,13 @@ global proc AEms_renderSettingsTemplate(string $nodeName)
          editorTemplate -addControl "export_animated_textures";
       editorTemplate -endLayout;
 
+      editorTemplate -beginLayout "Output settings" -collapse true (uiRes("m_AElocatorTemplate.kLocatorAttributes"));
+         editorTemplate -callCustom "AEcustomCameraMenuCreate" "AEcustomCameraMenuEdit" "camera";
+         editorTemplate -addControl "resolution_width";
+         editorTemplate -addControl "resolution_height";
+         editorTemplate -addControl "color_space";
+      editorTemplate -endLayout;
+
       editorTemplate -beginLayout "Environment settings" -collapse true;
          editorTemplate -callCustom "AEcustomEnvironmentMenuCreate" "AEcustomEnvironmentMenuEdit" "environment";
       editorTemplate -endLayout;
@@ -221,28 +228,58 @@ global proc AEms_renderSettingsTemplate(string $nodeName)
          editorTemplate -addControl "double_sided_shading";
       editorTemplate -endLayout;
 
-      editorTemplate -beginLayout "Output settings" -collapse true (uiRes("m_AElocatorTemplate.kLocatorAttributes"));
-         editorTemplate -callCustom "AEcustomCameraMenuCreate" "AEcustomCameraMenuEdit" "camera";
-         editorTemplate -addControl "resolution_width";
-         editorTemplate -addControl "resolution_height";
-         editorTemplate -addControl "color_space";
+      editorTemplate -beginLayout "Configuration settings" -collapse true;
+         editorTemplate -addControl "export_custom_final_config";
+
+         editorTemplate -addControl "min_samples";
+         editorTemplate -addControl "max_samples";
+
+         editorTemplate -addControl "gtr_sampler";
+         editorTemplate -addControl "gtr_filter_size";
+         editorTemplate -addControl "gtr_min_samples";
+         editorTemplate -addControl "gtr_max_samples";
+         editorTemplate -addControl "gtr_max_contrast";
+         editorTemplate -addControl "gtr_max_variation";
+
+         editorTemplate -addControl "final_lighting_engine";
+
+         editorTemplate -beginLayout "DRT Settings" -collapse true;
+            editorTemplate -addControl "drt_dl_bsdf_samples";
+            editorTemplate -addControl "drt_dl_light_samples";
+            editorTemplate -addControl "drt_enable_ibl";
+            editorTemplate -addControl "drt_ibl_bsdf_samples";
+            editorTemplate -addControl "drt_ibl_env_samples";
+            editorTemplate -addControl "drt_max_path_length";
+            editorTemplate -addControl "drt_rr_min_path_length";
+         editorTemplate -endLayout;
+
+         editorTemplate -beginLayout "PT Settings" -collapse true;
+            editorTemplate -addControl "pt_dl_light_samples";
+            editorTemplate -addControl "pt_enable_caustics";
+            editorTemplate -addControl "pt_enable_dl";
+            editorTemplate -addControl "pt_enable_ibl";
+            editorTemplate -addControl "pt_ibl_bsdf_samples";
+            editorTemplate -addControl "pt_ibl_env_samples";
+            editorTemplate -addControl "pt_max_path_length";
+            editorTemplate -addControl "pt_next_event_estimation";
+            editorTemplate -addControl "pt_rr_min_path_length";
+         editorTemplate -endLayout;
+
+            editorTemplate -addControl "";
+            editorTemplate -addControl "";
+            editorTemplate -addControl "";
+            editorTemplate -addControl "";
+            editorTemplate -addControl "";
+            editorTemplate -addControl "";
+            editorTemplate -addControl "";
+            editorTemplate -addControl "";
+            editorTemplate -addControl "";
+            editorTemplate -addControl "";
+            editorTemplate -addControl "";
       editorTemplate -endLayout;
 
-      editorTemplate -beginLayout "Configuration settings" -collapse true;
-         editorTemplate -addControl "export_custom_interactive_config";
-         editorTemplate -addControl "interactive_lighting_engine";
-         editorTemplate -addControl "interactive_min_samples";
-         editorTemplate -addControl "interactive_max_samples";
-         editorTemplate -addControl "interactive_max_ray_depth";
-         editorTemplate -addControl "interactive_light_samples";
-         editorTemplate -addSeparator;
-         editorTemplate -addControl "export_custom_final_config";
-         editorTemplate -addControl "final_lighting_engine";
-         editorTemplate -addControl "final_min_samples";
-         editorTemplate -addControl "final_max_samples";
-         editorTemplate -addControl "final_max_ray_depth";
-         editorTemplate -addControl "final_light_samples";
-      editorTemplate -endLayout;
+
+
 
 
       AEdependNodeTemplate $nodeName; // add any base class attributes
