@@ -253,7 +253,11 @@ def getMayaParams(render_settings_node):
     params['gtrMaxSamples'] = cmds.getAttr(render_settings_node + '.gtr_max_samples')
     params['gtrMaxContrast'] = cmds.getAttr(render_settings_node + '.gtr_max_contrast')
     params['gtrMaxVariation'] = cmds.getAttr(render_settings_node + '.gtr_max_variation')
-    params['gtrSampler'] = cmds.getAttr(render_settings_node + '.gtr_sampler')
+
+    if cmds.getAttr(render_settings_node + '.gtr_sampler') == 0:
+        params['gtrSampler'] = 'uniform'
+    else:
+        params['gtrSampler'] = 'adaptive'
 
     return params
 
@@ -405,10 +409,10 @@ class Material(): #object transform name
                 #create texture node and 
                     #work out texture path
                     maya_texture_file = cmds.getAttr(alpha_map_connection + '.fileTextureName')
-                    ouutput_texture = os.path.join(params['tex_dir'], os.path.split(maya_texture_file)[1])
-                    texture = ms_commands.convertTexToExr(maya_texture_file, ouutput_texture, overwrite=self.params['overwriteExistingExrs'], pass_through=False)
+                    output_dir = os.path.join(params['outputDir'], params['tex_dir'])
+                    texture = ms_commands.convertTexToExr(maya_texture_file, output_dir, overwrite=self.params['overwriteExistingExrs'], pass_through=False)
 
-                    texture_node = Texture((self.name + '_alpha_texture'), texture, color_space='srgb')
+                    texture_node = Texture((self.name + '_alpha_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
                     self.alpha_map = texture_node.name
                     self.textures = self.textures + [texture_node]
 
@@ -419,10 +423,10 @@ class Material(): #object transform name
                 #create texture node and 
                     #work out texture path
                     maya_texture_file = cmds.getAttr(normal_map_connection + '.fileTextureName')
-                    ouutput_texture = os.path.join(params['tex_dir'], os.path.split(maya_texture_file)[1])
-                    texture = ms_commands.convertTexToExr(maya_texture_file, ouutput_texture, overwrite=self.params['overwriteExistingExrs'], pass_through=False)
+                    output_dir = os.path.join(params['outputDir'], params['tex_dir'])
+                    texture = ms_commands.convertTexToExr(maya_texture_file, output_dir, overwrite=self.params['overwriteExistingExrs'], pass_through=False)
 
-                    texture_node = Texture((self.name + '_alpha_texture'), texture, color_space='srgb')
+                    texture_node = Texture((self.name + '_alpha_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
                     self.normal_map = texture_node.name
                     self.textures = self.textures + [texture_node]
 
@@ -511,10 +515,11 @@ class ShadingNode():
                         elif cmds.nodeType(connected_node) == 'file':
                             #work out texture path
                             maya_texture_file = cmds.getAttr(connected_node + '.fileTextureName')
-                            ouutput_texture = os.path.join(params['outputDir'], params['tex_dir'])
-                            texture = ms_commands.convertTexToExr(maya_texture_file, ouutput_texture, overwrite=self.params['overwriteExistingExrs'], pass_through=False)
+                            output_dir = os.path.join(params['outputDir'], params['tex_dir'])
 
-                            texture_node = Texture((connected_node + '_texture'), texture, color_space='srgb')
+                            texture = ms_commands.convertTexToExr(maya_texture_file, output_dir, overwrite=self.params['overwriteExistingExrs'], pass_through=False)
+
+                            texture_node = Texture((connected_node + '_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
                             attribute_value = (texture_node.name + '_inst')
                             self.textures = self.textures + [texture_node]
 
@@ -525,7 +530,7 @@ class ShadingNode():
                                 output_texture = os.path.join(params['tex_dir'], (connected_node + '.exr'))
                                 texture = convertConnectionToImage(self.name, self.attribute_key, output_texture, resolution=1024)
 
-                                texture_node = Texture((connected_node + '_texture'), texture, color_space='srgb')
+                                texture_node = Texture((connected_node + '_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
                                 attribute_value = (texture_node.name + '_inst')
                                 self.textures = self.textures + [texture_node]
 
@@ -964,7 +969,6 @@ class Assembly():
         
         #if transformation blur is set output the transform with motion from the position_from_object variable
         if self.params['exportTransformationBlur']:
-            print '************** position from ', self.position_from_object
             writeTransform(doc, self.params['scene_scale'], self.position_from_object, True, self.params['motionSamples'])
         else:
             writeTransform(doc, self.params['scene_scale'], self.position_from_object)
@@ -1012,11 +1016,11 @@ class Scene():
                 environment_edf_model = 'latlong_map_environment_edf'
                 if lat_long_connection:
                     if cmds.nodeType(lat_long_connection) == 'file':
-                        dest_dir = os.path.join(self.params['outputDir'], 'textures')
+                        dest_dir = os.path.join(params['outputDir'], params['tex_dir'])
                         maya_texture_file = cmds.getAttr(lat_long_connection + '.fileTextureName')
                         texture_file = ms_commands.convertTexToExr(maya_texture_file, dest_dir, self.params['overwriteExistingExrs'])
 
-                        self.addTexture(self.params['environment'] + '_latlong_edf_map', texture_file)
+                        self.addTexture(self.params['environment'] + '_latlong_edf_map', (os.path.join(params['tex_dir'], os.path.split(texture_file)[1])))
                         env_edf_params['exitance'] = self.params['environment'] + '_latlong_edf_map_inst'
                         env_edf_params['horizontal_shift'] = 0
                         env_edf_params['vertical_shift'] = 0
@@ -1029,10 +1033,10 @@ class Scene():
                 environment_edf_model = 'mirrorball_map_environment_edf'
                 if mirrorball_edf_connection:
                     if cmds.nodeType(mirrorball_edf_connection) == 'file':
-                        dest_dir = os.path.join(self.params['outputDir'], 'textures')
+                        dest_dir = os.path.join(params['outputDir'], params['tex_dir'])
                         maya_texture_name = cmds.getAttr(mirrorball_edf_connection + '.fileTextureName')
                         texture_file = ms_commands.convertTexToExr(maya_texture_name, dest_dir, self.params['overwriteExistingExrs'])
-                        self.addTexture(self.params['environment'] + '_mirrorball_map_environment_edf', texture_file)
+                        self.addTexture(self.params['environment'] + '_mirrorball_map_environment_edf', (os.path.join(params['tex_dir'], os.path.split(texture_file)[1])))
                         env_edf_params['exitance'] = self.params['environment'] + '_mirrorball_map_environment_edf_inst'
                 else:
                     cmds.error('no texture connected to {0}.mirrorball_exitance'.format(self.params['environment']))
@@ -1158,13 +1162,31 @@ class Configurations():
 
             doc.startElement('parameters name="pt"')
             doc.appendParameter('dl_light_samples', self.params['ptDLLightSamples'])
-            doc.appendParameter('enable_caustics', self.params['ptEnableCaustics'])
-            doc.appendParameter('enable_dl', self.params['ptEnableDL'])
-            doc.appendParameter('enable_ibl', self.params['ptEnableIBL'])
+
+            if self.params['ptEnableCaustics']:
+                doc.appendParameter('enable_caustics', 'true')
+            else:
+                doc.appendParameter('enable_caustics', 'false')
+
+            if self.params['ptEnableDL']:
+                doc.appendParameter('enable_dl', 'true')
+            else:
+                doc.appendParameter('enable_dl', 'false')
+
+            if self.params['ptEnableIBL']:
+                doc.appendParameter('enable_ibl', 'true')
+            else:
+                doc.appendParameter('enable_ibl', 'false')
+
             doc.appendParameter('ibl_bsdf_samples', self.params['ptIBLBSDFSamples'])
             doc.appendParameter('ibl_env_samples', self.params['ptIBLEnvSamples'])
             doc.appendParameter('max_path_length', self.params['ptMaxPathLength'])
-            doc.appendParameter('next_event_estimation', self.params['ptNextEventEstimation'])
+
+            if self.params['ptNextEventEstimation']:
+                doc.appendParameter('next_event_estimation', 'true')
+            else:
+                doc.appendParameter('next_event_estimation', 'false')
+
             doc.appendParameter('rr_min_path_length', self.params['ptRRMinPathLength'])
             doc.endElement("parameters")
 
