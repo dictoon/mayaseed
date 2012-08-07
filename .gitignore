@@ -16,3 +16,5 @@ ROADMAP.txt
 releases/Mayaseed_0.1.5.zip
 releases/Mayaseed_0.1.7.zip
 *.pyc
+src/scripts/ms_menu.pyc
+src/scripts/ms_menu.pyc
