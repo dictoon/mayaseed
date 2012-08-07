@@ -381,7 +381,26 @@ def createShadingNode(model, entity_defs_obj=False):
                      cmds.addAttr(shading_node_name, longName=attr_key, dt="string")
                      cmds.setAttr((shading_node_name + '.' + attr_key), entity_defs[entity_key].attributes[attr_key].default_value, type="string")
 
+#
+# get file texture node file name with correct frame numbr  ------------------------------------------------------------------------------------------------------------------------------------------
+# 
 
+
+def getFileTextureName(file_node):
+    
+    maya_file_texture_name = cmds.getAttr(file_node + '.fileTextureName')
+    
+    if cmds.getAttr(file_node + '.useFrameExtension'):
+        if 
+        file_texture_name = maya_file_texture_name.split('.')        
+        frame_ofset = cmds.getAttr(file_node + '.frameOffset')
+        current_frame = cmds.currentTime(q=True)
+        frame_padding = len(file_texture_name[1])
+        frame_number = str(int(current_frame + frame_ofset)).zfill(5)
+        
+        maya_file_texture_name = (file_texture_name[0] + '.' + frame_number + '.' + file_texture_name[2])
+    
+    return maya_file_texture_name 
 
 
 

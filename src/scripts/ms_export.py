@@ -408,7 +408,7 @@ class Material(): #object transform name
             if cmds.nodeType(alpha_map_connection[0]) == 'file':
                 #create texture node and 
                     #work out texture path
-                    maya_texture_file = cmds.getAttr(alpha_map_connection + '.fileTextureName')
+                    maya_texture_file = ms_commands.getFileTextureName(alpha_map_connection)
                     output_dir = os.path.join(params['outputDir'], params['tex_dir'])
                     texture = ms_commands.convertTexToExr(maya_texture_file, output_dir, overwrite=self.params['overwriteExistingExrs'], pass_through=False)
 
@@ -422,7 +422,7 @@ class Material(): #object transform name
             if cmds.nodeType(normal_map_connection[0]) == 'file':
                 #create texture node and 
                     #work out texture path
-                    maya_texture_file = cmds.getAttr(normal_map_connection + '.fileTextureName')
+                    maya_texture_file = ms_commands.getFileTextureName(normal_map_connection)
                     output_dir = os.path.join(params['outputDir'], params['tex_dir'])
                     texture = ms_commands.convertTexToExr(maya_texture_file, output_dir, overwrite=self.params['overwriteExistingExrs'], pass_through=False)
 
@@ -514,7 +514,7 @@ class ShadingNode():
                         #else if its a maya texture node
                         elif cmds.nodeType(connected_node) == 'file':
                             #work out texture path
-                            maya_texture_file = cmds.getAttr(connected_node + '.fileTextureName')
+                            maya_texture_file = ms_commands.getFileTextureName(connected_node)
                             output_dir = os.path.join(params['outputDir'], params['tex_dir'])
 
                             texture = ms_commands.convertTexToExr(maya_texture_file, output_dir, overwrite=self.params['overwriteExistingExrs'], pass_through=False)
@@ -1017,7 +1017,7 @@ class Scene():
                 if lat_long_connection:
                     if cmds.nodeType(lat_long_connection) == 'file':
                         dest_dir = os.path.join(params['outputDir'], params['tex_dir'])
-                        maya_texture_file = cmds.getAttr(lat_long_connection + '.fileTextureName')
+                        maya_texture_file = ms_commands.getFileTextureName(lat_long_connection)
                         texture_file = ms_commands.convertTexToExr(maya_texture_file, dest_dir, self.params['overwriteExistingExrs'])
 
                         self.addTexture(self.params['environment'] + '_latlong_edf_map', (os.path.join(params['tex_dir'], os.path.split(texture_file)[1])))
@@ -1034,7 +1034,7 @@ class Scene():
                 if mirrorball_edf_connection:
                     if cmds.nodeType(mirrorball_edf_connection) == 'file':
                         dest_dir = os.path.join(params['outputDir'], params['tex_dir'])
-                        maya_texture_name = cmds.getAttr(mirrorball_edf_connection + '.fileTextureName')
+                        maya_texture_name = ms_commands.getFileTextureName(mirrorball_edf_connection)
                         texture_file = ms_commands.convertTexToExr(maya_texture_name, dest_dir, self.params['overwriteExistingExrs'])
                         self.addTexture(self.params['environment'] + '_mirrorball_map_environment_edf', (os.path.join(params['tex_dir'], os.path.split(texture_file)[1])))
                         env_edf_params['exitance'] = self.params['environment'] + '_mirrorball_map_environment_edf_inst'
