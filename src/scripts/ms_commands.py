@@ -391,7 +391,6 @@ def getFileTextureName(file_node):
     maya_file_texture_name = cmds.getAttr(file_node + '.fileTextureName')
     
     if cmds.getAttr(file_node + '.useFrameExtension'):
-        if 
         file_texture_name = maya_file_texture_name.split('.')        
         frame_ofset = cmds.getAttr(file_node + '.frameOffset')
         current_frame = cmds.currentTime(q=True)
