@@ -14,16 +14,24 @@ print '\n\n\n'
 class printc():
 	@staticmethod
 	def warning(text):
-		print '\033[93m' + text + '\033[0m'
+		if os.system = 'darwin':
+			print '\033[93m' + text + '\033[0m'
+		else: 
+			print text
 	
 	@staticmethod
 	def error(text):
-		print '\033[91m' + text + '\033[0m'
-
+		if os.system = 'darwin':
+			print '\033[91m' + text + '\033[0m'
+		else: 
+			print text
+			
 	@staticmethod
 	def success(text):
-		print '\033[92m' + text + '\033[0m'
-
+		if os.system = 'darwin':
+			print '\033[92m' + text + '\033[0m'
+		else: 
+			print text
 
 
 
