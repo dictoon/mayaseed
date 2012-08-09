@@ -53,7 +53,15 @@ def listAppleseedFiles(directory_path):
 		file_path = os.path.join(directory_path, entity)
 		if os.path.isfile(file_path):
 			if os.path.splitext(file_path)[1] == '.appleseed':
+
+				if os.system == 'win32' or 'win64':
+					file_path = file_path.replace('/', '\\')
+				else:
+					file_path = file_path.replace('\\', '/')
+
 				appleseed_files.append(file_path)
+
+
 
 	return appleseed_files
 
@@ -71,8 +79,6 @@ def isRenderable(file):
 			printc.error('MISSING  ' + depend)
 			is_renderable = False
 	return is_renderable
-
-
 
 
 
