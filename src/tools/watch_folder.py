@@ -40,7 +40,18 @@ def getDepends(xml_file_path):
 
 	for entity in dom.getElementsByTagName('parameter'):
 		if entity.getAttribute('name') == 'filename':
-			depend_list.append( os.path.join( directory, entity.getAttribute('value') ) )
+
+			file_name_attr = entity.getAttribute('value')
+
+			if os.system == 'win32' or 'win64':
+				file_name_attr = file_name_attr.replace('/', '\\')
+			else:
+				file_name_attr = file_name_attr.replace('\\', '/')
+
+			depend_list.append( os.path.join( directory,  file_name_attr) )
+
+
+
 
 	return depend_list
 
@@ -53,12 +64,6 @@ def listAppleseedFiles(directory_path):
 		file_path = os.path.join(directory_path, entity)
 		if os.path.isfile(file_path):
 			if os.path.splitext(file_path)[1] == '.appleseed':
-
-				if os.system == 'win32' or 'win64':
-					file_path = file_path.replace('/', '\\')
-				else:
-					file_path = file_path.replace('\\', '/')
-
 				appleseed_files.append(file_path)
 
 
