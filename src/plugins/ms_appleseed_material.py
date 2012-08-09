@@ -71,23 +71,21 @@ class appleseed_material(OpenMayaMPx.MPxNode):
             # Get the data handles corresponding to your attributes among the values in the data block.
             surfacePointDataHandle = pDataBlock.inputValue( appleseed_material.surfacePointAttribute )
             BSDFDataHandle = pDataBlock.inputValue( appleseed_material.BSDFAttribute )
+            hardwareColorDataHandle = pDataBlock.inputValue( appleseed_material.hardwareColInAttribute )
             
             # Obtain the (x,y,z) location of the currently rendered point in camera coordinates.
             surfacePoint = surfacePointDataHandle.asFloatVector()
             
             # Get the BSDF and hardware Color values.
             BSDFValue = BSDFDataHandle.asFloatVector()
+            hardwareValue = hardwareColorDataHandle.asFloatVector()
 
             outColor = OpenMaya.MFloatVector(0.5, 0.5, 0.5)
             hardwareColor = OpenMaya.MFloatVector(0.5, 0.5, 0.5)
 
-            # outColor.x = BSDFValue.x
-            # outColor.y = BSDFValue.y
-            # outColor.z = BSDFValue.z
-
-            # hardwareColor.x = BSDFValue.x
-            # hardwareColor.y = BSDFValue.y
-            # hardwareColor.z = BSDFValue.z
+            outColor.x = hardwareValue.x
+            outColor.y = hardwareValue.y
+            outColor.z = hardwareValue.z
 
             # Write to the output data.
             outColorDataHandle = pDataBlock.outputValue( appleseed_material.outColorAttribute )
@@ -165,11 +163,11 @@ def nodeInitializer():
     numericAttributeFn.setDefault( 0.0,0.0,0.0 )
     appleseed_material.addAttribute( appleseed_material.normal_mapAttribute )
 
-    # #hardware Color Attribute
-    # appleseed_material.hardwareColInAttribute = numericAttributeFn.createColor( 'hardware_color_in', 'hci' )
-    # numericAttributeFn.setStorable( True )
-    # numericAttributeFn.setDefault( 0.5,0.5,0.5 )
-    # appleseed_material.addAttribute( appleseed_material.hardwareColInAttribute )
+    #hardware Color Attribute
+    appleseed_material.hardwareColInAttribute = numericAttributeFn.createColor( 'hardware_color_in', 'hci' )
+    numericAttributeFn.setStorable( True )
+    numericAttributeFn.setDefault( 0.5,0.5,0.5 )
+    appleseed_material.addAttribute( appleseed_material.hardwareColInAttribute )
     
 
     #==================================
@@ -198,6 +196,7 @@ def nodeInitializer():
     #  - All the input attributes affect the computation of the pixel color output (outColor).
     appleseed_material.attributeAffects( appleseed_material.BSDFAttribute, appleseed_material.outColorAttribute )
     appleseed_material.attributeAffects( appleseed_material.BSDFAttribute, appleseed_material.hardwareColorAttribute )
+    appleseed_material.attributeAffects( appleseed_material.hardwareColInAttribute, appleseed_material.outColorAttribute )
 
 def initializePlugin( mobject ):
     ''' Initializes the plug-in. '''
