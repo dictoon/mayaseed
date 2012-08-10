@@ -1,5 +1,6 @@
 from xml.dom.minidom import parseString
 import os
+import sys
 import time
 from datetime import datetime
 import shutil
@@ -14,21 +15,21 @@ print '\n\n\n'
 class printc():
 	@staticmethod
 	def warning(text):
-		if os.system = 'darwin':
+		if os.system == 'darwin':
 			print '\033[93m' + text + '\033[0m'
 		else: 
 			print text
 	
 	@staticmethod
 	def error(text):
-		if os.system = 'darwin':
+		if os.system == 'darwin':
 			print '\033[91m' + text + '\033[0m'
 		else: 
 			print text
 			
 	@staticmethod
 	def success(text):
-		if os.system = 'darwin':
+		if os.system == 'darwin':
 			print '\033[92m' + text + '\033[0m'
 		else: 
 			print text
@@ -51,7 +52,8 @@ def getDepends(xml_file_path):
 
 			file_name_attr = entity.getAttribute('value')
 
-			if os.system == 'win32' or 'win64':
+
+			if (sys.platform == 'win32') or (sys.platform == 'win64'):
 				file_name_attr = file_name_attr.replace('/', '\\')
 			else:
 				file_name_attr = file_name_attr.replace('\\', '/')
