@@ -155,6 +155,8 @@ def getMayaParams(render_settings_node):
     is_numeric = re.compile('^[0-9]+$')
     
     params = {'error':False}
+
+    params['entityDefs'] = ms_commands.getEntityDefs(os.path.join(ms_commands.ROOT_DIRECTORY, 'scripts', 'appleseedEntityDefs.xml'))
     
     #main settings
     params['outputDir'] = cmds.getAttr(render_settings_node + '.output_directory')
@@ -307,7 +309,13 @@ class Color():
 class Texture():
     def __init__(self, name, file_name, color_space='srgb'):
         self.name = name
-        self.file_name = file_name
+        
+        dir_name, file = ms_commands.legalise(os.path.split(file_name))
+
+        file = ms_commands.legalise(file)
+
+        self.file_name = os.path.join(dir_name, file)
+
         self.color_space = color_space
     def writeXMLObject(self, doc):
         print('writing texture object {0}'.format(self.name))
@@ -477,8 +485,7 @@ class ShadingNode():
 
 
             #add the correct attributes based on the entity defs xml
-            entity_defs = ms_commands.getEntityDefs(os.path.join(ms_commands.ROOT_DIRECTORY, 'scripts', 'appleseedEntityDefs.xml'))
-            for attribute_key in entity_defs[self.model].attributes.keys():
+            for attribute_key in params['entityDefs'][self.model].attributes.keys():
                 self.attributes[attribute_key] = ''
 
             for attribute_key in self.attributes.keys():
@@ -489,7 +496,7 @@ class ShadingNode():
 
                 #if the attribute is a color/entity 
 
-                if entity_defs[self.model].attributes[attribute_key].type == 'entity_picker':
+                if params['entityDefs'][self.model].attributes[attribute_key].type == 'entity_picker':
 
                     #get attribute color value
                     attribute_color = cmds.getAttr(maya_attribute)[0]
@@ -518,6 +525,8 @@ class ShadingNode():
                             output_dir = os.path.join(params['outputDir'], params['tex_dir'])
 
                             texture = ms_commands.convertTexToExr(maya_texture_file, output_dir, overwrite=self.params['overwriteExistingExrs'], pass_through=False)
+
+                            print '****', texture
 
                             texture_node = Texture((connected_node + '_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
                             attribute_value = (texture_node.name + '_inst')
@@ -550,7 +559,7 @@ class ShadingNode():
                             attribute_value = color_node.name
                             self.colors = self.colors + [color_node]
 
-                elif entity_defs[self.model].attributes[attribute_key].type == 'dropdown_list': 
+                elif params['entityDefs'][self.model].attributes[attribute_key].type == 'dropdown_list': 
                     pass
                 #the node must be a text entity
                 else:
@@ -736,6 +745,8 @@ class Geometry():
     def __init__(self, params, name, output_file, assembly='main_assembly'):
         self.params = params
         self.name = name
+        self.safe_name = ms_commands.legalise(name)
+
         #get name in heirarchy
         self.heirarchy_name = name
         self.material_name = ''
@@ -786,7 +797,7 @@ class Geometry():
 
     def writeXMLInstance(self, doc):
         print('writing object instance: '+ self.name)
-        doc.startElement('object_instance name="{0}.0_inst" object="{1}.0"'.format(self.name, self.name))
+        doc.startElement('object_instance name="{0}.0_inst" object="{1}.0"'.format(self.safe_name, self.safe_name))
         writeTransform(doc)
         if self.material_name:
             doc.appendElement('assign_material slot="0" side="front" material="{0}"'.format(self.material_name))
@@ -800,7 +811,7 @@ class Geometry():
 class Assembly():
     def __init__(self, params, name='main_assembly', object_list=False, position_from_object=False):
         self.params = params
-        self.name = name
+        self.name = ms_commands.legalise(name)
         self.position_from_object = position_from_object
         self.light_objects = []
         self.geo_objects = []
@@ -926,7 +937,9 @@ class Assembly():
                     motion_samples = 2
                 sample_interval = 1.0/(motion_samples - 1)
 
-                doc.startElement('object name="{0}" model="mesh_object"'.format(geo.name))
+                file_name = ms_commands.legalise(geo.name)
+
+                doc.startElement('object name="{0}" model="mesh_object"'.format(file_name))
                 doc.startElement('parameters name="filename"')
                 #cmds.select(geo.name)
                 cmds.currentTime(cmds.currentTime(query=True)-1)
@@ -935,11 +948,16 @@ class Assembly():
                     new_time = start_time + (sample_interval * i)
                     cmds.currentTime(new_time)
                     cmds.refresh()
-                    output_file = os.path.join(self.params['outputDir'], self.params['geo_dir'], ('{0}.{1:03}.obj'.format(geo.name,i)))
+
+
+
+                    output_file = os.path.join(self.params['outputDir'], self.params['geo_dir'], ('{0}.{1:03}.obj'.format(file_name,i)))
+                    #output_file = os.path.join(self.params['outputDir'], self.params['geo_dir'], ('{0}.obj'.format(file_name)))
                     
                     ms_export_obj.export(geo.name, output_file)
 
-                    doc.appendParameter('{0:03}'.format(i), '{0}/{1}.{2:03}.obj'.format(self.params['geo_dir'],geo.name,i))
+                    doc.appendParameter('{0:03}'.format(i), '{0}/{1}.{2:03}.obj'.format(self.params['geo_dir'],file_name,i))
+                    #doc.appendParameter('{0:03}'.format(i), '{0}/{1}.obj'.format(self.params['geo_dir'],file_name))
                     
 
 
@@ -949,11 +967,15 @@ class Assembly():
                 #cmds.select(cl=True)
 
             else:
-                output_file = os.path.join(self.params['outputDir'], self.params['geo_dir'], (geo.name + '.obj'))
+
+                file_name = ms_commands.legalise(geo.name)
+
+                output_file = os.path.join(self.params['outputDir'], self.params['geo_dir'], (file_name + '.obj'))
                 ms_export_obj.export(geo.name, output_file)
+
                 #write xml
-                doc.startElement('object name="{0}" model="mesh_object"'.format(geo.name))
-                doc.appendParameter('filename', '{0}/{1}.obj'.format(self.params['geo_dir'], geo.name))
+                doc.startElement('object name="{0}" model="mesh_object"'.format(file_name))
+                doc.appendParameter('filename', '{0}/{1}'.format(self.params['geo_dir'], (file_name + '.obj')))
                 doc.endElement('object')
         
         #write lights
@@ -1019,6 +1041,8 @@ class Scene():
                         dest_dir = os.path.join(params['outputDir'], params['tex_dir'])
                         maya_texture_file = ms_commands.getFileTextureName(lat_long_connection)
                         texture_file = ms_commands.convertTexToExr(maya_texture_file, dest_dir, self.params['overwriteExistingExrs'])
+
+                        print '***', texture_file
 
                         self.addTexture(self.params['environment'] + '_latlong_edf_map', (os.path.join(params['tex_dir'], os.path.split(texture_file)[1])))
                         env_edf_params['exitance'] = self.params['environment'] + '_latlong_edf_map_inst'
@@ -1236,8 +1260,8 @@ def export(render_settings_node):
 
             #set up correct directories
             params['temp_dir'] = os.path.join('{0:05}'.format(int(current_frame)), 'temp')
-            params['geo_dir'] = os.path.join('{0:05}'.format(int(current_frame)), 'geo')
-
+            #params['geo_dir'] = os.path.join('{0:05}'.format(int(current_frame)), 'geo')
+            params['geo_dir'] = 'geo'
 
             # if not os.path.exists(os.path.join(params['outputDir'],params['temp_dir'])):
             #     os.makedirs(os.path.join(params['outputDir'],params['temp_dir']))
@@ -1287,6 +1311,7 @@ def export(render_settings_node):
         cmds.select(render_settings_node)
 
         print('export finished')
+        cmds.confirmDialog(message='Export finished', button='ok')
 
     else:
         cmds.error('error validating ui attributes ')

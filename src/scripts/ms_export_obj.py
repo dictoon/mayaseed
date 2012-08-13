@@ -72,7 +72,8 @@ def export(object_name, file_path, overwrite=True):
         #write the points to disk
         i=0
         while i < point_array.length():
-            file_object.write('v {0} {1} {2}\n'.format(point_array[i].x, point_array[i].y, point_array[i].z))
+            point = point_array[i]
+            file_object.write('v {0} {1} {2}\n'.format(point.x, point.y, point.z))
             i += 1
 
         file_object.write('\n')
@@ -94,7 +95,8 @@ def export(object_name, file_path, overwrite=True):
         #write normals to disk
         i = 0
         while i < normal_array.length():
-            file_object.write('vn {0} {1} {2}\n'.format(normal_array[i].x, normal_array[i].y, normal_array[i].z))
+            normal = normal_array[i]
+            file_object.write('vn {0} {1} {2}\n'.format(normal.x, normal.y, normal.z))
             i += 1
 
         file_object.write('\n')
