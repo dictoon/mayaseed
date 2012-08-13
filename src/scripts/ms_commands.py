@@ -173,7 +173,7 @@ def convertTexToExr(file_path, dest_dir, overwrite=True, pass_through=False):
             if not os.path.exists(dest_dir):
                 os.mkdir(dest_dir)
             p = subprocess.Popen([imf_copy_path, file_path, dest_file])
-            return dest_file
+        return dest_file
     else:
         print '# error: {0} does not exist'.format(file_path)
 
@@ -400,6 +400,53 @@ def getFileTextureName(file_node):
         maya_file_texture_name = (file_texture_name[0] + '.' + frame_number + '.' + file_texture_name[2])
     
     return maya_file_texture_name 
+
+
+#
+# export .obj file ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#
+
+# export obj acts as a wrapper function that aims to choose the best obj exporter, it will choose the C++ option if possible otherwise will fall bakc on the cross platform python version
+
+def export_obj(object_name, file_path, overwrite=True):
+
+
+    if not os.path.exists(os.path.split(file_path)[0])):
+        os.makedirs(os.path.split(file_path)[0])
+
+
+    if cmds.pluginInfo('ms_export_obj', query=True, r=True):
+
+        maya.mel.eval('ms_export_obj -mesh "' + object_name + '" -filePath "' + file_name + '"')
+
+    else:
+
+        ms_export_obj.export(object_name, file_path, overwrite)
+
+
+#
+# legalise file name -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#
+
+def legalise(path):
+
+    path = path.replace('\\', '_')
+    path = path.replace('/', '_')
+    path = path.replace(':', '_')
+    path = path.replace('*', '_')
+    path = path.replace('?', '_')
+    path = path.replace('"', '')
+    path = path.replace('<', '_')
+    path = path.replace('>', '_')
+    path = path.replace('|', '_')
+
+    return path
+
+
+
+
+
+
 
 
 
