@@ -19,6 +19,11 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //THE SOFTWARE.
 
+
+#if defined __APPLE__
+#include <maya/OpenMayaMac.h>
+#endif
+
 #include <maya/MIOStream.h>
 #include <maya/MSimple.h>
 #include <maya/MGlobal.h>
