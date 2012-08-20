@@ -413,16 +413,16 @@ def getFileTextureName(file_node):
 def export_obj(object_name, file_path, overwrite=True):
 
 
-    if not os.path.exists(os.path.split(file_path)[0])):
+    if not os.path.exists(os.path.split(file_path)[0]):
         os.makedirs(os.path.split(file_path)[0])
 
 
     if cmds.pluginInfo('ms_export_obj', query=True, r=True):
 
-        maya.mel.eval('ms_export_obj -mesh "' + object_name + '" -filePath "' + file_name + '"')
+        maya.mel.eval('ms_export_obj -mesh "' + object_name + '" -filePath "' + file_path + '"')
 
     else:
-        
+
         import ms_export_obj
         ms_export_obj.export(object_name, file_path, overwrite)
 
