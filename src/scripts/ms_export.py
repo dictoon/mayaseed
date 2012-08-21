@@ -80,12 +80,12 @@ def export(ms_rendersettings_node):
             read_end_time = time.time()
             print 'read maya scene in', (read_end_time - frame_start_time), 'seconds'
 
-            appleseed_scene_object = ms_export_translate(params, maya_scene_data)
+            appleseed_object_heirarchy = ms_export_translate.translate(params, maya_scene_data)
 
             translate_end_time = time.time()
             print 'translated scene in', (translate_end_time - read_end_time), 'seconds'
 
-            appleseed_scene_object.write(ms_params['output_path'])
+            ms_export_write.write(params, appleseed_object_heirarchy)
 
             write_end_time = time.time()
             print 'file written to disk in', (write_end_time - translate_end_time), 'seconds'
