@@ -43,7 +43,7 @@ class MTransform():
         self.child_meshs = []
         self.child_transforms = []
         self.child_lights = []
-        self.child_cameras = []
+        #self.child_cameras = []
 
 
         for child in cmds.listRelatives(self.name):
@@ -55,13 +55,16 @@ class MTransform():
             		self.child_transforms.append(MTransform(, self.params, self, child))
             	elif nodeType == 'pointLight' or 'spotLight':
             		self.child_lights.append(MLight(self.params, self, child))
-                elif nodeType == 'camera':
-                    if not cmds.getAttr(child + '.orthographic'):
-                        self.child_cameras.append(MCam(self.params, self, child))
+
+                # still deciding how cameras shoud be handled...
+
+                # elif nodeType == 'camera':
+                #     if not cmds.getAttr(child + '.orthographic'):
+                #         self.child_cameras.append(MCam(self.params, self, child))
 
 
     def addTransformSample(self):
-        self.matrix.append(cmds.xform(self.transform_name, query=True, matrix=True)])
+        self.matrix.append(cmds.xform(self.transform_name, query=True, matrix=True))
 
         for child in self.child_transforms:
         	child.addTransformSample()
@@ -109,14 +112,18 @@ class MGeo():
 
 # MCam **********************************************************************************************************************************************************************************************
 
+# although maya cameras exist in the maya node graph they are not instantiated like this in the read process
+# this is because appleseed places them outside of the assembly heirarchy and because if this they must have a world space matrix, this also allows for easy seperation of camera and transformation blur
+
 class MCam():
-    def __init__(self, params, parent=False, cam_name):
+    def __init__(self, params, cam_name):
         self.params = params
-        self.parent = parent
         self.name = cam_name
+        self.transform_name = cmds.listRelatives(self.name, ap=True)[0]
         self.safe_name = legalise(cam_name)        
         self.focal_length = float(cmds.getAttr(cam_name + '.focalength')) / 1000
         self.f_stop = cmds.getAttr(self.name + '.fStop')
+        self.matrix = [cmds.xform(self.transform_name, query=True, ws=True, matrix=True)]
 
         maya_resolution_aspect = float(params['output_res_width'])/float(params['output_res_height'])
         maya_film_aspect = cmds.getAttr(cam + '.horizontalFilmAperture') / cmds.getAttr(cam + '.verticalFilmAperture')
@@ -128,7 +135,8 @@ class MCam():
             self.film_height = float(cmds.getAttr(self.name + '.verticalFilmAperture')) * inch_to_meter
             self.film_width = self.film_height * maya_resolution_aspect 
 
-
+    def addTransformSample(self):
+        self.matrix.append(cmds.xform(self.transform_name, query=True, ws=True, matrix=True))
 
 # MLight *******************************************************************************************************************************************************************************************
 
@@ -137,7 +145,7 @@ class MLight():
         self.params = params
         self.parent = parent
         self.name = light_name
-        self.safe_name = legalise(transform_name)
+        self.safe_name = legalise(self.name)
 
         self.color = cmds.getAttr(light_name + '.color')
         self.multiplier = cmds.getAttr(self.name+'.intensity')
@@ -151,7 +159,7 @@ class MLight():
             self.model = 'spotLight'
 
 
-# MAsM  aterial *****************************************************************************************************************************************************************************************
+# MAsMaterial *****************************************************************************************************************************************************************************************
 
 class MAsMaterial():
 	def __init__(self, params, parent=False, material_name):
@@ -314,7 +322,10 @@ class MColor():
 
 # the get() function is the entry point for this script, starts the process of creating a object model of the maya scene
 
-def get(params):
+def read(params):
+    #get the camera
+    maya_camera = MCam(params['output_camera'])
+
     #the maya scene is stored as a list of root transforms that contain mesh's/geometry/lights as children
     maya_root_transforms = []
     start_time = cmds.currentTime(query=True)
@@ -353,7 +364,7 @@ def get(params):
     cmds.currentTime(start_time)
 
 
-    return (maya_geo, maya_lights, maya_camera)
+    return {'root_transforms' : maya_root_transforms, 'camera' : maya_camera}
 
 
 
