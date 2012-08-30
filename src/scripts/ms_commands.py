@@ -161,7 +161,7 @@ def convertConnectionToImage(shader, attribute, dest_file, resolution=1024, pass
 # convert texture to exr ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 
-def exportImage(file_path, dest_dir, overwrite=True, pass_through=False):
+def convertTexToExr(file_path, dest_dir, overwrite=True, pass_through=False):
     if os.path.exists(file_path):
         dest_file = os.path.join(dest_dir, os.path.splitext(os.path.split(file_path)[1])[0] + '.exr')
         if (overwrite == False) and (os.path.exists(dest_file)):
@@ -181,7 +181,7 @@ def exportImage(file_path, dest_dir, overwrite=True, pass_through=False):
 # check if an object is exportable ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 
-def isExportable(node_name):
+def shapeIsExportable(node_name):
     
     #check the node exists
     if not cmds.objExists(node_name):
@@ -194,6 +194,13 @@ def isExportable(node_name):
     #check visibility flag
     if not cmds.getAttr(node_name+'.visibility'):
         return False
+
+        
+    #check to see if its an intermediate mesh
+
+    if cmds.attributeQuery('intermediateObject', node=node_name, exists=True):
+        if cmds.getAttr(node_name+'.intermediateObject'):
+            return False
         
     #is it in a hidden display layer
     if (cmds.attributeQuery('overrideEnabled', node=node_name, exists=True) and cmds.getAttr(node_name+'.overrideEnabled')):
@@ -203,15 +210,6 @@ def isExportable(node_name):
     #has it got a parent and is it visible
     if cmds.listRelatives(node_name, parent=True):
         if not shapeIsExportable(cmds.listRelatives(node_name, parent=True)[0]):
-            return False
-
-    if cmds.nodeType(node_name) == 'mesh':
-        #check to see if its an intermediate mesh
-        if cmds.attributeQuery('intermediateObject', node=node_name, exists=True):
-            if cmds.getAttr(node_name+'.intermediateObject'):
-                return False
-    elif cmds.nodeType(node_name) == 'spotLight' or 'pointLight':
-        if cmds.getAttr(node_name + '.color')[0] == (0.0, 0.0, 0.0):
             return False
 
     return True
@@ -413,19 +411,17 @@ def getFileTextureName(file_node):
 def export_obj(object_name, file_path, overwrite=True):
 
 
-    if not os.path.exists(os.path.split(file_path)[0]):
+    if not os.path.exists(os.path.split(file_path)[0])):
         os.makedirs(os.path.split(file_path)[0])
 
 
     if cmds.pluginInfo('ms_export_obj', query=True, r=True):
 
-        maya.mel.eval('ms_export_obj -mesh "' + object_name + '" -filePath "' + file_path + '"')
+        maya.mel.eval('ms_export_obj -mesh "' + object_name + '" -filePath "' + file_name + '"')
 
     else:
 
-        import ms_export_obj
         ms_export_obj.export(object_name, file_path, overwrite)
-
 
 
 #
