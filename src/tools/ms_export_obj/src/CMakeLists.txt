@@ -1,0 +1,15 @@
+
+cmake_minimum_required (VERSION 2.6)
+
+project(ms_export_obj)
+	
+include_directories("/Applications/Autodesk/maya2012/devkit/include")
+include_directories("/Applications/Autodesk/maya2012/devkit/include/maya")
+
+link_directories("/Applications/Autodesk/maya2012/Maya.app/Contents/MacOS")
+
+add_definitions(-DMAC_PLUGIN -D_BOOL -DREQUIRE_IOSTREAM)
+
+add_library(ms_export_obj SHARED ms_export_obj.cpp)
+
+target_link_libraries(ms_export_obj Foundation OpenMaya)

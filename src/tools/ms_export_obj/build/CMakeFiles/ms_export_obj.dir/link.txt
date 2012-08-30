@@ -1,0 +1,1 @@
+/usr/bin/c++   -shared   -o libms_export_obj.dylib -install_name /projects/Mayaseed/src/tools/ms_export_obj/build/libms_export_obj.dylib CMakeFiles/ms_export_obj.dir/ms_export_obj.cpp.o -L/Applications/Autodesk/maya2012/Maya.app/Contents/MacOS -lFoundation -lOpenMaya 

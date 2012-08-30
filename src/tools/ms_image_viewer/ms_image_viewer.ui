@@ -1,0 +1,784 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>949</width>
+    <height>856</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Mayaseed Image Viewer</string>
+  </property>
+  <property name="autoFillBackground">
+   <bool>false</bool>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">#toolbar{
+	background-color: #2b2b2b;
+}
+
+#viewport_frame{
+	background-color: #000;
+}
+
+#image_frame{
+	border: 1px solid #555;
+}
+
+QFrame{
+	border: none;
+}
+
+#A_label{
+	background-color: #f00;
+}
+
+#B_label{
+	background-color: #0f0;
+}
+
+QPushButton{
+	padding: 5px 10px 5px 10px;
+	border-radius: 2px;
+	border-top: 1px solid #555;
+	border-bottom: 1px solid #222;
+	border-right: 1px solid #222;
+	border-left: 1px solid #222;
+	background-color: #333;
+
+}
+
+QPushButton:pressed{
+	border-top: 1px solid #222;
+	border-bottom: 1px solid #353535;
+	background-color: #282828;
+	color: #ddd;
+}
+
+#A_grp QRadioButton{
+	color: #555;
+	background-color: #333;
+	border-top-right-radius: 2px;
+	border-top: 1px solid #555;
+	border-right: 1px solid #222;
+}
+
+#A_grp QRadioButton:checked{
+	color: #fff;
+}
+
+#B_grp QRadioButton{
+	color: #555;
+	background-color: #333;
+	border-bottom-right-radius: 2px;
+	border-top: 1px solid #222;
+	border-right: 1px solid #222;
+	border-bottom: 1px solid #222;
+
+}
+
+#B_grp QRadioButton:checked{
+	color: #fff;
+}
+</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <property name="margin">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="QFrame" name="viewer_pane">
+      <property name="frameShape">
+       <enum>QFrame::NoFrame</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <property name="margin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QFrame" name="toolbar">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>50</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>50</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true"/>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Plain</enum>
+         </property>
+         <property name="lineWidth">
+          <number>1</number>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <property name="spacing">
+           <number>5</number>
+          </property>
+          <property name="margin">
+           <number>5</number>
+          </property>
+          <item>
+           <widget class="QFrame" name="frame_buffers">
+            <property name="minimumSize">
+             <size>
+              <width>600</width>
+              <height>40</height>
+             </size>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::NoFrame</enum>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Raised</enum>
+            </property>
+            <property name="lineWidth">
+             <number>0</number>
+            </property>
+            <widget class="QPushButton" name="R_button">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>0</y>
+               <width>40</width>
+               <height>40</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <family>Arial</family>
+               <pointsize>20</pointsize>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>R</string>
+             </property>
+             <property name="checkable">
+              <bool>false</bool>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="F_button">
+             <property name="geometry">
+              <rect>
+               <x>80</x>
+               <y>0</y>
+               <width>40</width>
+               <height>40</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <family>Arial</family>
+               <pointsize>20</pointsize>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true"/>
+             </property>
+             <property name="text">
+              <string>F</string>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="M3_button">
+             <property name="geometry">
+              <rect>
+               <x>290</x>
+               <y>0</y>
+               <width>40</width>
+               <height>40</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <family>Arial</family>
+               <pointsize>20</pointsize>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>3</string>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="M1_button">
+             <property name="geometry">
+              <rect>
+               <x>150</x>
+               <y>0</y>
+               <width>40</width>
+               <height>40</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <family>Arial</family>
+               <pointsize>20</pointsize>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>1</string>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="M2_button">
+             <property name="geometry">
+              <rect>
+               <x>220</x>
+               <y>0</y>
+               <width>40</width>
+               <height>40</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <family>Arial</family>
+               <pointsize>20</pointsize>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>2</string>
+             </property>
+            </widget>
+            <widget class="QGroupBox" name="A_grp">
+             <property name="geometry">
+              <rect>
+               <x>20</x>
+               <y>0</y>
+               <width>411</width>
+               <height>20</height>
+              </rect>
+             </property>
+             <property name="lineWidth" stdset="0">
+              <number>0</number>
+             </property>
+             <widget class="QRadioButton" name="M3_A_radio">
+              <property name="geometry">
+               <rect>
+                <x>290</x>
+                <y>0</y>
+                <width>41</width>
+                <height>20</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string> A</string>
+              </property>
+              <attribute name="buttonGroup">
+               <string>A_button_grp</string>
+              </attribute>
+             </widget>
+             <widget class="QRadioButton" name="R_A_radio">
+              <property name="geometry">
+               <rect>
+                <x>10</x>
+                <y>0</y>
+                <width>41</width>
+                <height>20</height>
+               </rect>
+              </property>
+              <property name="autoFillBackground">
+               <bool>false</bool>
+              </property>
+              <property name="styleSheet">
+               <string notr="true"/>
+              </property>
+              <property name="text">
+               <string> A</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+              <attribute name="buttonGroup">
+               <string>A_button_grp</string>
+              </attribute>
+             </widget>
+             <widget class="QRadioButton" name="F_A_radio">
+              <property name="geometry">
+               <rect>
+                <x>80</x>
+                <y>0</y>
+                <width>41</width>
+                <height>20</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string> A</string>
+              </property>
+              <attribute name="buttonGroup">
+               <string>A_button_grp</string>
+              </attribute>
+             </widget>
+             <widget class="QRadioButton" name="M2_A_radio">
+              <property name="geometry">
+               <rect>
+                <x>220</x>
+                <y>0</y>
+                <width>41</width>
+                <height>20</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string> A</string>
+              </property>
+              <attribute name="buttonGroup">
+               <string>A_button_grp</string>
+              </attribute>
+             </widget>
+             <widget class="QRadioButton" name="M1_A_radio">
+              <property name="geometry">
+               <rect>
+                <x>150</x>
+                <y>0</y>
+                <width>41</width>
+                <height>20</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string> A</string>
+              </property>
+              <attribute name="buttonGroup">
+               <string>A_button_grp</string>
+              </attribute>
+             </widget>
+             <zorder>F_A_radio</zorder>
+             <zorder>R_A_radio</zorder>
+             <zorder>M3_A_radio</zorder>
+             <zorder>M2_A_radio</zorder>
+             <zorder>M1_A_radio</zorder>
+            </widget>
+            <widget class="QGroupBox" name="B_grp">
+             <property name="geometry">
+              <rect>
+               <x>20</x>
+               <y>20</y>
+               <width>411</width>
+               <height>21</height>
+              </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true"/>
+             </property>
+             <property name="lineWidth" stdset="0">
+              <number>0</number>
+             </property>
+             <widget class="QRadioButton" name="M3_B_radio">
+              <property name="geometry">
+               <rect>
+                <x>290</x>
+                <y>0</y>
+                <width>41</width>
+                <height>20</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string> B</string>
+              </property>
+              <attribute name="buttonGroup">
+               <string>B_button_grp</string>
+              </attribute>
+             </widget>
+             <widget class="QRadioButton" name="R_B_radio">
+              <property name="geometry">
+               <rect>
+                <x>10</x>
+                <y>0</y>
+                <width>41</width>
+                <height>20</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string> B</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+              <attribute name="buttonGroup">
+               <string>B_button_grp</string>
+              </attribute>
+             </widget>
+             <widget class="QRadioButton" name="M1_B_radio">
+              <property name="geometry">
+               <rect>
+                <x>150</x>
+                <y>0</y>
+                <width>41</width>
+                <height>20</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string> B</string>
+              </property>
+              <attribute name="buttonGroup">
+               <string>B_button_grp</string>
+              </attribute>
+             </widget>
+             <widget class="QRadioButton" name="F_B_radio">
+              <property name="geometry">
+               <rect>
+                <x>80</x>
+                <y>0</y>
+                <width>41</width>
+                <height>20</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string> B</string>
+              </property>
+              <attribute name="buttonGroup">
+               <string>B_button_grp</string>
+              </attribute>
+             </widget>
+             <widget class="QRadioButton" name="M2_B_radio">
+              <property name="geometry">
+               <rect>
+                <x>220</x>
+                <y>0</y>
+                <width>41</width>
+                <height>20</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string> B</string>
+              </property>
+              <attribute name="buttonGroup">
+               <string>B_button_grp</string>
+              </attribute>
+             </widget>
+             <zorder>M3_B_radio</zorder>
+             <zorder>R_B_radio</zorder>
+             <zorder>F_B_radio</zorder>
+             <zorder>M1_B_radio</zorder>
+             <zorder>M2_B_radio</zorder>
+            </widget>
+            <widget class="QPushButton" name="load_button">
+             <property name="geometry">
+              <rect>
+               <x>360</x>
+               <y>0</y>
+               <width>81</width>
+               <height>20</height>
+              </rect>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>20</height>
+              </size>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>10</pointsize>
+              </font>
+             </property>
+             <property name="autoFillBackground">
+              <bool>false</bool>
+             </property>
+             <property name="styleSheet">
+              <string notr="true"/>
+             </property>
+             <property name="text">
+              <string>load image</string>
+             </property>
+            </widget>
+            <widget class="QSlider" name="AB_slider">
+             <property name="geometry">
+              <rect>
+               <x>450</x>
+               <y>10</y>
+               <width>150</width>
+               <height>20</height>
+              </rect>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>150</width>
+               <height>30</height>
+              </size>
+             </property>
+             <property name="styleSheet">
+              <string notr="true"/>
+             </property>
+             <property name="minimum">
+              <number>0</number>
+             </property>
+             <property name="maximum">
+              <number>100</number>
+             </property>
+             <property name="singleStep">
+              <number>1</number>
+             </property>
+             <property name="value">
+              <number>100</number>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="invertedAppearance">
+              <bool>false</bool>
+             </property>
+             <property name="invertedControls">
+              <bool>false</bool>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="save_button">
+             <property name="geometry">
+              <rect>
+               <x>360</x>
+               <y>20</y>
+               <width>81</width>
+               <height>20</height>
+              </rect>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>20</height>
+              </size>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>10</pointsize>
+              </font>
+             </property>
+             <property name="autoFillBackground">
+              <bool>false</bool>
+             </property>
+             <property name="styleSheet">
+              <string notr="true"/>
+             </property>
+             <property name="text">
+              <string>save image</string>
+             </property>
+            </widget>
+            <zorder>A_grp</zorder>
+            <zorder>B_grp</zorder>
+            <zorder>F_button</zorder>
+            <zorder>M3_button</zorder>
+            <zorder>M1_button</zorder>
+            <zorder>M2_button</zorder>
+            <zorder>R_button</zorder>
+            <zorder>load_button</zorder>
+            <zorder>AB_slider</zorder>
+            <zorder>save_button</zorder>
+            <zorder>R_A_radio</zorder>
+            <zorder>M1_A_radio</zorder>
+            <zorder>M3_A_radio</zorder>
+            <zorder>F_A_radio</zorder>
+            <zorder>M2_A_radio</zorder>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QFrame" name="viewport_frame">
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <widget class="QFrame" name="image_frame">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>20</y>
+            <width>580</width>
+            <height>400</height>
+           </rect>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
+          </property>
+          <widget class="QFrame" name="A_frame">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>50</width>
+             <height>421</height>
+            </rect>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>50</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+           <widget class="QLabel" name="A_label">
+            <property name="geometry">
+             <rect>
+              <x>0</x>
+              <y>0</y>
+              <width>580</width>
+              <height>400</height>
+             </rect>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+              <horstretch>1</horstretch>
+              <verstretch>1</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>10</width>
+              <height>10</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>99999</width>
+              <height>99999</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true"/>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </widget>
+          <widget class="QFrame" name="B_frame">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>591</width>
+             <height>411</height>
+            </rect>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+           <widget class="QLabel" name="B_label">
+            <property name="geometry">
+             <rect>
+              <x>0</x>
+              <y>0</y>
+              <width>580</width>
+              <height>400</height>
+             </rect>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+              <horstretch>1</horstretch>
+              <verstretch>1</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>10</width>
+              <height>10</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>99999</width>
+              <height>99999</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true"/>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </widget>
+          <zorder>B_frame</zorder>
+          <zorder>A_frame</zorder>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources>
+  <include location="src/images.qrc"/>
+ </resources>
+ <connections/>
+ <buttongroups>
+  <buttongroup name="A_button_grp"/>
+  <buttongroup name="B_button_grp"/>
+ </buttongroups>
+</ui>
