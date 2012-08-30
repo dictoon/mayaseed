@@ -25,20 +25,11 @@ global proc AEms_appleseed_materialTemplate( string $nodeName )
 
 	editorTemplate -beginLayout "Main Attributes" -collapse 0;
 		editorTemplate -addControl "render_layer";
-		editorTemplate -addControl "BSDF_front_color";
-		editorTemplate -addControl "EDF_front_color";
-		editorTemplate -addControl "surface_shader_front_color";
-		editorTemplate -addControl "normal_map_front_color";
-
-		editorTemplate -addControl "duplcated_front_attributes_on_back";
-
-		editorTemplate -addControl "BSDF_front_color";
-		editorTemplate -addControl "EDF_front_color";
-		editorTemplate -addControl "surface_shader_front_color";
-		editorTemplate -addControl "normal_map_front_color";
-
+		editorTemplate -addControl "BSDF_color";
+		editorTemplate -addControl "EDF_color";
+		editorTemplate -addControl "surface_shader_color";
 		editorTemplate -addControl "alpha_map_color";
-
+		editorTemplate -addControl "normal_map_color";
 	editorTemplate -endLayout;
 
 
