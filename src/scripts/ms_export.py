@@ -310,7 +310,8 @@ class Texture():
     def __init__(self, name, file_name, color_space='srgb'):
         self.name = name
         
-        dir_name, file = ms_commands.legalise(os.path.split(file_name))
+        dir_name = ms_commands.legalise(os.path.split(file_name)[0])
+        file = ms_commands.legalise(os.path.split(file_name)[1])
 
         file = ms_commands.legalise(file)
 
@@ -835,7 +836,7 @@ class Assembly():
                     light_transform = cmds.listRelatives(object, ad=True, ap=True)[0]
                     if not (light_transform in self.light_objects):
                         light_object = Light(self.params, cmds.listRelatives(object, ad=True, ap=True)[0])
-                        light_object.model = 'spotLight'
+                        light_object.model = 'spot_light'
                         light_object.inner_angle = cmds.getAttr(object + '.coneAngle')
                         light_object.outer_angle = cmds.getAttr(object + '.coneAngle') + cmds.getAttr(object + '.penumbraAngle')
                         self.light_objects.append(light_object)

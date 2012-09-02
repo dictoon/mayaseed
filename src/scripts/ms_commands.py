@@ -21,7 +21,7 @@
 
 
 import maya.cmds as cmds
-import maya.mel
+import maya.mel as mel
 import maya.utils as mu
 import os
 import sys
@@ -140,6 +140,11 @@ def normalizeRGB(color):
 #
 
 def convertConnectionToImage(shader, attribute, dest_file, resolution=1024, pass_through=False):
+    
+    dest_dir = os.path.split(dest_file)[0]
+    if not os.path.exists(dest_dir):
+        os.makedirs(dest_dir)
+
     if not cmds.objExists(shader+'.'+attribute):
         print 'error converting texture, no object named {0} exists'.format(shader+'.'+attribute)
     else:
@@ -169,7 +174,19 @@ def convertTexToExr(file_path, dest_dir, overwrite=True, pass_through=False):
         elif pass_through == True:
             print '# {0}: skipping conversion'.format(dest_file)
         else:
-            imf_copy_path = os.path.join(os.path.split(sys.path[0])[0], 'bin', 'imf_copy')
+            
+            maya_version = mel.eval('getApplicationVersionAsFloat()')
+            imf_copy_path = ""
+
+            if maya_version >= 2013.0:
+                imf_copy_path = os.path.join(os.path.split(os.path.split(os.path.split(sys.path[0])[0])[0])[0],'mentalray', 'bin', 'imf_copy')
+            else:
+                imf_copy_path = os.path.join(os.path.split(sys.path[0])[0], 'bin', 'imf_copy')
+
+            print '**********' , imf_copy_path
+
+
+
             if not os.path.exists(dest_dir):
                 os.mkdir(dest_dir)
             p = subprocess.Popen([imf_copy_path, file_path, dest_file])
@@ -411,13 +428,13 @@ def getFileTextureName(file_node):
 def export_obj(object_name, file_path, overwrite=True):
 
 
-    if not os.path.exists(os.path.split(file_path)[0])):
+    if not os.path.exists(os.path.split(file_path)[0]):
         os.makedirs(os.path.split(file_path)[0])
 
 
     if cmds.pluginInfo('ms_export_obj', query=True, r=True):
 
-        maya.mel.eval('ms_export_obj -mesh "' + object_name + '" -filePath "' + file_name + '"')
+        mel.eval('ms_export_obj -mesh "' + object_name + '" -filePath "' + file_name + '"')
 
     else:
 
