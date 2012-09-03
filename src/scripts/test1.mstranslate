@@ -1,0 +1,19 @@
+
+<ms_translation_def name="test1">
+
+    <bsdf model="ashikhmin_brdf">
+        <attr src="Diffuse"   dest="Glossy_Reflectance">
+        <attr src="Out_Color" dest="Glossy_Reflectance">
+    </bsdf>
+
+    <edf model="diffuse_edf">
+        <attr src="Out_Glow_Color" dest="Exitance">
+    </edf>
+
+    <surface_shader model="physical_surface_shader"/>
+
+    <alpha_map src="Transparrency">
+
+    <normal_map/>
+
+</ms_translation_def>
