@@ -781,7 +781,17 @@ class Geometry():
                     self.textures = self.material_node.textures
                     self.material_name = self.material_node.name
             else: 
-                cmds.warning('no appleseed material connected to ' + self.name)
+
+                if cmds.objExists(shader'.ms_shader_translation'):
+
+                    
+                    #custom translation code goes here
+
+                else:
+                    cmds.warning('no appleseed material or shader translation connected to ' + self.name)
+
+
+
         else:
             cmds.warning(self.name + ' has no shading engine connected')
 

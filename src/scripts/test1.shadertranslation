@@ -1,0 +1,17 @@
+<shader_translation>
+
+    <bsdf model="ashikhmin_bsdf">
+        <glossy_reflectance src="diffuse">
+    </bdsf>
+
+    <edf model="diffuse">
+        <exitance src="out_glow_color">
+    </edf>
+
+    <surface_shader model="physical"/>
+
+    <alpha_map src="transparency">
+
+    <normal_map src=None>
+
+</shader_translation>
