@@ -132,9 +132,9 @@ MStatus ms_export_obj::doIt( const MArgList& args)
         out_file << "f ";
         
         //create values to store temporary poly info
-        int vert_count = iter_polys.polygonVertexCount();
+        unsigned int vert_count = iter_polys.polygonVertexCount();
         
-        for (int i=0; i < vert_count; i++)
+        for (unsigned int i=0; i < vert_count; i++)
         {
             int uv_index;
             iter_polys.getUVIndex(i, uv_index);
