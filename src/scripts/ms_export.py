@@ -33,30 +33,27 @@ import ms_export_obj
 
 inch_to_meter = 0.02539999983236
 
-
-#****************************************************************************************************************************************************************************************************
-# utilitiy functions & classes **********************************************************************************************************************************************************************
-#****************************************************************************************************************************************************************************************************
-
+#--------------------------------------------------------------------------------------------------
+# Utility classes & functions.
+#--------------------------------------------------------------------------------------------------
 
 #
-# writeXml class --
+# WriteXml class.
 #
 
-class WriteXml(): #(file_path)
-    spaces_per_indentation_level = 4    
-    def __init__(self, f_path):
-        self.file_path = f_path
+class WriteXml():
+    spaces_per_indentation_level = 4
+
+    def __init__(self, file_path):
         self.indentation_level = 0
         self.file_object = None
         try:
-            self.file_object = open(self.file_path, 'w') #open file for editing
-
+            self.file_object = open(file_path, 'w')
         except IOError:
-            cmds.error('IO error: file not accesable')
-            raise RuntimeError('IO error: file not accesable')
-            return
-        
+            error_msg = 'IO error: failed to open {0} for writing.'.format(file_path)
+            cmds.error(error_msg)
+            raise RuntimeError(error_msg)
+
     def startElement(self,str):
         self.file_object.write(((self.indentation_level * self.spaces_per_indentation_level) * ' ') + "<" + str + '>\n')
         self.indentation_level += 1
@@ -71,10 +68,9 @@ class WriteXml(): #(file_path)
     def appendParameter(self, name, value):
         self.file_object.write(((self.indentation_level * self.spaces_per_indentation_level) * ' ') + '<parameter name="{0}" value="{1}" />\n'.format(name, value))
 
-        
     def appendLine(self, str):
         self.file_object.write(((self.indentation_level * self.spaces_per_indentation_level) * ' ') + str + '\n')
-        
+
     def close(self):
         self.file_object.close() #close file
 
