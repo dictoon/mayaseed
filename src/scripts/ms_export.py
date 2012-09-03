@@ -1167,7 +1167,7 @@ class Configurations():
                 engine = 'pt'
             else:
                 engine = 'drt'
-            doc.appendParameter('lighting_engine,', engine)
+            doc.appendParameter('lighting_engine', engine)
             doc.appendParameter('min_samples', self.params['customFinalConfigMaxSamples'])
             doc.appendParameter('max_samples', self.params['customFinalConfigMaxSamples'])
             
