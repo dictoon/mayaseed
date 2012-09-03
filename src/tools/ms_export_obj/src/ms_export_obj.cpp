@@ -60,7 +60,7 @@ MStatus ms_export_obj::doIt( const MArgList& args)
     
     //get the args
     
-    for (int i = 0; i < args.length(); i++)
+    for (unsigned int i = 0; i < args.length(); i++)
     {
         MGlobal::displayInfo(args.asString(i));
         if (args.asString(i) == "-mesh")
@@ -98,7 +98,7 @@ MStatus ms_export_obj::doIt( const MArgList& args)
     MPointArray point_array;
     mesh.getPoints(point_array);
     
-    for (int i=0; i < point_array.length(); i++)
+    for (unsigned int i=0; i < point_array.length(); i++)
     {
         MPoint point(point_array[i]);
         out_file << "v " << point.x << " " << point.y << " " << point.z << "\n";
@@ -109,7 +109,7 @@ MStatus ms_export_obj::doIt( const MArgList& args)
     MFloatArray v_array;
     mesh.getUVs(u_array, v_array);
     
-    for (int i=0; i < u_array.length(); i++)
+    for (unsigned int i=0; i < u_array.length(); i++)
     {
         out_file << "vt " << u_array[i] << " " << v_array[i] << "\n";
     }
@@ -117,7 +117,7 @@ MStatus ms_export_obj::doIt( const MArgList& args)
     MFloatVectorArray normal_array;
     mesh.getNormals(normal_array, MSpace::kTransform);
     //write normals
-    for (int i=0; i < normal_array.length(); i++)
+    for (unsigned int i=0; i < normal_array.length(); i++)
     {
         out_file << "vn " << normal_array[i].x << " " << normal_array[i].y <<  " " << normal_array[i].z << "\n";
     }
