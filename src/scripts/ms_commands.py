@@ -111,7 +111,8 @@ class msInfoDial():
         cmds.setParent('..')
         cmds.text('')
         cmds.showWindow(window)
-        
+
+
 #
 # clamp RGB values ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
@@ -134,6 +135,7 @@ def normalizeRGB(color):
     B = B / M
 
     return (R,G,B,M)
+
 
 #
 # convert shader connection to image ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -230,7 +232,7 @@ def shapeIsExportable(node_name):
             return False
 
     return True
-    
+
 
 #
 # check is object has shader connected ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -270,8 +272,6 @@ def getEntityDefs(xml_file_path, list=False):
             self.type = 'entity'
             self.default_value = ''
             self.entity_types = []
-
-
 
     file = open(xml_file_path,'r')
     data = file.read()
@@ -343,12 +343,12 @@ def getEntityDefs(xml_file_path, list=False):
                 print''
             print'\n'
     return nodes
-        
-        
+
+
 #
-# addd color attribute to node ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-#             
-        
+# add color attribute to node ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#
+
 def addColorAttr(node_name, attribute_name, default_value=(0,0,0)):
     cmds.addAttr(node_name, longName=attribute_name, usedAsColor=True, attributeType='float3' )
     cmds.addAttr(node_name, longName=(attribute_name + '_R'), attributeType='float', parent=attribute_name )
@@ -356,7 +356,6 @@ def addColorAttr(node_name, attribute_name, default_value=(0,0,0)):
     cmds.addAttr(node_name, longName=(attribute_name + '_B'), attributeType='float', parent=attribute_name )
 
     cmds.setAttr((node_name + '.' + attribute_name), default_value[0], default_value[1], default_value[2])
-
 
 
 #
@@ -398,6 +397,7 @@ def createShadingNode(model, entity_defs_obj=False):
                      cmds.addAttr(shading_node_name, longName=attr_key, dt="string")
                      cmds.setAttr((shading_node_name + '.' + attr_key), entity_defs[entity_key].attributes[attr_key].default_value, type="string")
 
+
 #
 # get file texture node file name with correct frame numbr  ------------------------------------------------------------------------------------------------------------------------------------------
 # 
@@ -423,21 +423,18 @@ def getFileTextureName(file_node):
 # export .obj file ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 
-# export obj acts as a wrapper function that aims to choose the best obj exporter, it will choose the C++ option if possible otherwise will fall bakc on the cross platform python version
+# This function is a wrapper that aims to choose the best obj exporter. It will choose
+# the C++ option if possible, otherwise it will fall back to the cross platform Python version.
 
 def export_obj(object_name, file_path, overwrite=True):
+    directory = os.path.split(file_path)[0]
 
-
-    if not os.path.exists(os.path.split(file_path)[0]):
-        os.makedirs(os.path.split(file_path)[0])
-
+    if not os.path.exists(directory):
+        os.makedirs(directory)
 
     if cmds.pluginInfo('ms_export_obj', query=True, r=True):
-
         mel.eval('ms_export_obj -mesh "' + object_name + '" -filePath "' + file_name + '"')
-
     else:
-
         ms_export_obj.export(object_name, file_path, overwrite)
 
 
@@ -446,7 +443,6 @@ def export_obj(object_name, file_path, overwrite=True):
 #
 
 def legalise(path):
-
     path = path.replace('\\', '_')
     path = path.replace('/', '_')
     path = path.replace(':', '_')
@@ -456,21 +452,4 @@ def legalise(path):
     path = path.replace('<', '_')
     path = path.replace('>', '_')
     path = path.replace('|', '_')
-
     return path
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
