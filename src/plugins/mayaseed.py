@@ -682,8 +682,6 @@ def uninitializePlugin(obj):
     except:
         sys.stderr.write( "Failed to unregister node: %s\n" % ms_renderSettings_nodeTypeName )
     
-    #delete menu
     ms_menu.deleteMenu()
-    
 
 
