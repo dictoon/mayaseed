@@ -959,12 +959,12 @@ class Assembly():
 
 
                     output_file = os.path.join(self.params['outputDir'], self.params['geo_dir'], ('{0}.{1:03}.obj'.format(file_name,i)))
-                    #output_file = os.path.join(self.params['outputDir'], self.params['geo_dir'], ('{0}.obj'.format(file_name)))
                     
-                    ms_export_obj.export(geo.name, output_file)
+                    #ms_export_obj.export(geo.name, output_file)
+
+                    export_obj(geo.name, output_file, overwrite=True)
 
                     doc.appendParameter('{0:03}'.format(i), '{0}/{1}.{2:03}.obj'.format(self.params['geo_dir'],file_name,i))
-                    #doc.appendParameter('{0:03}'.format(i), '{0}/{1}.obj'.format(self.params['geo_dir'],file_name))
                     
 
 
@@ -978,7 +978,8 @@ class Assembly():
                 file_name = ms_commands.legalise(geo.name)
 
                 output_file = os.path.join(self.params['outputDir'], self.params['geo_dir'], (file_name + '.obj'))
-                ms_export_obj.export(geo.name, output_file)
+                #ms_export_obj.export(geo.name, output_file)
+                export_obj(geo.name, output_file)
 
                 #write xml
                 doc.startElement('object name="{0}" model="mesh_object"'.format(file_name))
