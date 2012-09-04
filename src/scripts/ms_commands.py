@@ -397,6 +397,8 @@ def createShadingNode(model, entity_defs_obj=False):
                      cmds.addAttr(shading_node_name, longName=attr_key, dt="string")
                      cmds.setAttr((shading_node_name + '.' + attr_key), entity_defs[entity_key].attributes[attr_key].default_value, type="string")
 
+    return shading_node_name
+
 
 #
 # get file texture node file name with correct frame numbr  ------------------------------------------------------------------------------------------------------------------------------------------
