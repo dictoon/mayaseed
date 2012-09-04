@@ -434,7 +434,7 @@ def export_obj(object_name, file_path, overwrite=True):
 
     if cmds.pluginInfo('ms_export_obj', query=True, r=True):
 
-        mel.eval('ms_export_obj -mesh "' + object_name + '" -filePath "' + file_name + '"')
+        mel.eval('ms_export_obj -mesh "' + object_name + '" -filePath "' + file_path + '"')
         print 'exporitng with c++'
 
     else:
