@@ -580,49 +580,52 @@ class ms_environment(OpenMayaMPx.MPxLocatorNode):
         glFT.glEnd()
 
         glFT.glDisable(OpenMayaRender.MGL_BLEND)
-        
-        view.endGL()
 
+        view.endGL()
 
 def ms_environment_nodeCreator():
     return OpenMayaMPx.asMPxPtr(ms_environment())
  
 def ms_environment_nodeInitializer():
-    #environment type
+    # environment type
     model_enumAttr = OpenMaya.MFnEnumAttribute()
     ms_environment.model = model_enumAttr.create("model", "model")
     model_enumAttr.addField("Constant Environment", 0)
     model_enumAttr.addField("Gradient Environment", 1)
     model_enumAttr.addField("Latitude Longitude Map", 2)
     model_enumAttr.addField("Mirrorball Map", 3)
-    #model_enumAttr.setDefault(0)
-    #constant exitance
+
+    # constant exitance
     constant_exitance_nAttr = OpenMaya.MFnNumericAttribute()
-    ms_environment.constant_exitance = constant_exitance_nAttr.createColor( "constant_exitance", "const_exitance")
-    constant_exitance_nAttr.setDefault(0.5,0.5,0.5)
+    ms_environment.constant_exitance = constant_exitance_nAttr.createColor("constant_exitance", "const_exitance")
+    constant_exitance_nAttr.setDefault(0.5, 0.5, 0.5)
     constant_exitance_nAttr.setKeyable(True)
-    #gradient horizon exitance
+
+    # gradient horizon exitance
     gradient_horizon_exitance_nAttr = OpenMaya.MFnNumericAttribute()
-    ms_environment.gradient_horizon_exitance = gradient_horizon_exitance_nAttr.createColor( "gradient_horizon_exitance", "grad_horizon_exitance")
-    gradient_horizon_exitance_nAttr.setDefault(0.5,0.5,0.5)
+    ms_environment.gradient_horizon_exitance = gradient_horizon_exitance_nAttr.createColor("gradient_horizon_exitance", "grad_horizon_exitance")
+    gradient_horizon_exitance_nAttr.setDefault(0.5, 0.5, 0.5)
     gradient_horizon_exitance_nAttr.setKeyable(True)
-    #gradient zenith exitance
+
+    # gradient zenith exitance
     gradient_zenith_exitance_nAttr = OpenMaya.MFnNumericAttribute()
-    ms_environment.gradient_zenith_exitance = gradient_zenith_exitance_nAttr.createColor( "gradient_zenith_exitance", "grad_zenith_exitance")
-    gradient_zenith_exitance_nAttr.setDefault(0.5,0.5,0.5)
+    ms_environment.gradient_zenith_exitance = gradient_zenith_exitance_nAttr.createColor("gradient_zenith_exitance", "grad_zenith_exitance")
+    gradient_zenith_exitance_nAttr.setDefault(0.5, 0.5, 0.5)
     gradient_zenith_exitance_nAttr.setKeyable(True)
-    #latitude longitude exitance
+
+    # latitude longitude exitance
     latitude_longitude_exitance_nAttr = OpenMaya.MFnNumericAttribute()
-    ms_environment.latitude_longitude_exitance = latitude_longitude_exitance_nAttr.createColor( "latitude_longitude_exitance", "lat_long_exitance")
-    latitude_longitude_exitance_nAttr.setDefault(0.5,0.5,0.5)
+    ms_environment.latitude_longitude_exitance = latitude_longitude_exitance_nAttr.createColor("latitude_longitude_exitance", "lat_long_exitance")
+    latitude_longitude_exitance_nAttr.setDefault(0.5, 0.5, 0.5)
     latitude_longitude_exitance_nAttr.setKeyable(True)
-    #mirror ball exitance
+
+    # mirror ball exitance
     mirror_ball_exitance_nAttr = OpenMaya.MFnNumericAttribute()
-    ms_environment.mirror_ball_exitance = mirror_ball_exitance_nAttr.createColor( "mirror_ball_exitance", "mball_exitance")
-    mirror_ball_exitance_nAttr.setDefault(0.5,0.5,0.5)
+    ms_environment.mirror_ball_exitance = mirror_ball_exitance_nAttr.createColor("mirror_ball_exitance", "mball_exitance")
+    mirror_ball_exitance_nAttr.setDefault(0.5, 0.5, 0.5)
     mirror_ball_exitance_nAttr.setKeyable(True)
 
-    # add attribute
+    # add attributes
     try:
         ms_environment.addAttribute( ms_environment.model )
         ms_environment.addAttribute( ms_environment.constant_exitance )
@@ -633,7 +636,6 @@ def ms_environment_nodeInitializer():
     except:
         sys.stderr.write( "Failed to create attributes of %s node", kPluginNodeTypeName )
 
-    return OpenMaya.MStatus.kSuccess
  
 #****************************************************************************************************************************************************************************************************
 # initialize nodes node *****************************************************************************************************************************************************************************
@@ -670,18 +672,16 @@ def initializePlugin(obj):
 
 
 def uninitializePlugin(obj):
-    #deregister nodes
     plugin = OpenMayaMPx.MFnPlugin(obj)
+
     try:
         plugin.deregisterNode(ms_environment_nodeTypeId)
     except:
-        sys.stderr.write( "Failed to deregister node: %s" % ms_environment_nodeTypeName)
+        sys.stderr.write("Failed to deregister node: %s" % ms_environment_nodeTypeName)
 
     try:
-        plugin.deregisterNode( ms_renderSettings_nodeTypeId )
+        plugin.deregisterNode(ms_renderSettings_nodeTypeId)
     except:
-        sys.stderr.write( "Failed to unregister node: %s\n" % ms_renderSettings_nodeTypeName )
+        sys.stderr.write("Failed to deregister node: %s\n" % ms_renderSettings_nodeTypeName)
     
     ms_menu.deleteMenu()
-
-

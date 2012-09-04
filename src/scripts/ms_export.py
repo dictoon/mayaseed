@@ -19,7 +19,6 @@
 # THE SOFTWARE.
 
 
- 
 import maya.cmds as cmds
 import maya.mel
 import maya.utils as mu
@@ -33,13 +32,10 @@ import ms_export_obj
 
 inch_to_meter = 0.02539999983236
 
-#--------------------------------------------------------------------------------------------------
-# Utility classes & functions.
-#--------------------------------------------------------------------------------------------------
 
-#
+#--------------------------------------------------------------------------------------------------
 # WriteXml class.
-#
+#--------------------------------------------------------------------------------------------------
 
 class WriteXml():
     spaces_per_indentation_level = 4
@@ -75,13 +71,11 @@ class WriteXml():
         self.file_object.close() #close file
 
 
-#
-# writeTransform function --
-#
+#--------------------------------------------------------------------------------------------------
+# writeTransform function.
+#--------------------------------------------------------------------------------------------------
 
 def writeTransform(doc, scale = 1, object=False, motion=False, motion_samples=2):
-
-
     if motion:
         start_time = cmds.currentTime(query=True)
 
@@ -119,8 +113,6 @@ def writeTransform(doc, scale = 1, object=False, motion=False, motion_samples=2)
         cmds.currentTime(start_time)
         cmds.select(cl=True)
 
-
-
     else:
 
         transform = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
@@ -141,9 +133,9 @@ def writeTransform(doc, scale = 1, object=False, motion=False, motion_samples=2)
         doc.endElement('transform')
 
 
-#
-# load params function
-#
+#--------------------------------------------------------------------------------------------------
+# getMayaParams function.
+#--------------------------------------------------------------------------------------------------
 
 def getMayaParams(render_settings_node):
     print('getting params from ui')
@@ -260,18 +252,9 @@ def getMayaParams(render_settings_node):
     return params
 
 
-
-
-
-
-
-#****************************************************************************************************************************************************************************************************
-# entity classes ************************************************************************************************************************************************************************************
-#****************************************************************************************************************************************************************************************************
-
-#
-# color object ---
-#
+#--------------------------------------------------------------------------------------------------
+# Color class.
+#--------------------------------------------------------------------------------------------------
 
 class Color():
     def __init__(self, name, color, multiplier):
@@ -298,9 +281,10 @@ class Color():
         doc.endElement('alpha')
         doc.endElement('color')
 
-#
-# texture class --
-#
+
+#--------------------------------------------------------------------------------------------------
+# Texture class.
+#--------------------------------------------------------------------------------------------------
 
 class Texture():
     def __init__(self, name, file_name, color_space='srgb'):
@@ -309,29 +293,28 @@ class Texture():
         dir_name = ms_commands.legalise(os.path.split(file_name)[0])
         file = ms_commands.legalise(os.path.split(file_name)[1])
 
-        file = ms_commands.legalise(file)
-
         self.file_name = os.path.join(dir_name, file)
 
         self.color_space = color_space
+
     def writeXMLObject(self, doc):
         print('writing texture object {0}'.format(self.name))
         doc.startElement('texture name="{0}" model="disk_texture_2d"'.format(self.name))
         doc.appendParameter('color_space',self.color_space)
         doc.appendParameter('filename',self.file_name)
-
         doc.endElement('texture')
+
     def writeXMLInstance(self, doc):
         print('writing texture instance {0}_inst'.format(self.name))
         doc.startElement('texture_instance name="{0}_inst" texture="{0}"'.format(self.name, self.name))
         doc.appendParameter('addressing_mode', 'clamp')
         doc.appendParameter('filtering_mode', 'bilinear')
-
         doc.endElement('texture_instance')
 
-#
-# light class --
-#
+
+#--------------------------------------------------------------------------------------------------
+# Light class.
+#--------------------------------------------------------------------------------------------------
 
 class Light():
     def __init__(self, params, name, model='point_light'):
@@ -344,26 +327,27 @@ class Light():
         self.decay = cmds.getAttr(self.name+'.decayRate')
         self.inner_angle = None
         self.outer_angle = None
+
     def writeXML(self, doc):
         print('writing light: {0}'.format(self.name))
         doc.startElement('light name="{0}" model="{1}"'.format(self.name, self.model))
 
-        #add spot light attribs if they exist
+        # add spot light attribs if they exist
         if self.model == 'spot_light':
             doc.appendParameter('inner_angle', self.inner_angle)
             doc.appendParameter('outer_angle', self.outer_angle)
 
         doc.appendParameter('exitance', self.color_name)
 
-
         writeTransform(doc, self.params['scene_scale'], self.name, self.params['exportTransformationBlur'], self.params['motionSamples'])
         doc.endElement('light')
 
-#
-# material class --
-#
 
-class Material(): #object transform name
+#--------------------------------------------------------------------------------------------------
+# Material class.
+#--------------------------------------------------------------------------------------------------
+
+class Material():
     def __init__(self, params, maya_node):
         self.name = maya_node
         self.params = params
@@ -455,10 +439,9 @@ class Material(): #object transform name
         doc.endElement('material')
 
 
-
-#
-# sahding node class --
-#
+#--------------------------------------------------------------------------------------------------
+# ShadingNode class.
+#--------------------------------------------------------------------------------------------------
 
 class ShadingNode():
     def __init__(self, params, name, attributes=False, node_type=False, model=False):
@@ -504,7 +487,7 @@ class ShadingNode():
                     if connection:
                         connected_node = connection[0]
 
-                    #if tehre is a node connected
+                    #if there is a node connected
                     if connected_node:
 
                         #if the node is an appleseed shading node
@@ -565,8 +548,6 @@ class ShadingNode():
                 #add attribute to dict
                 self.attributes[attribute_key] = attribute_value    
 
-
-
     def getChildren(self):
         return self.child_shading_nodes
 
@@ -574,7 +555,7 @@ class ShadingNode():
         print('writing shading node {0}'.format(self.name))
         doc.startElement('{0} name="{1}" model="{2}"'.format(self.type, self.name, self.model))
 
-        #add the relivent parameters
+        #add the relevant parameters
         for attribute_key in self.attributes.keys():
             #only output the attribute if it has a value
             if self.attributes[attribute_key]:
@@ -582,15 +563,17 @@ class ShadingNode():
 
         doc.endElement(self.type)
 
-#
-# bsdf class --
-#
+
+#--------------------------------------------------------------------------------------------------
+# Bsdf class.
+#--------------------------------------------------------------------------------------------------
 
 class Bsdf():
     def __init__(self, name, model, bsdf_params):
         self.name = name
         self.model = model
         self.bsdf_params = bsdf_params
+
     def writeXML(self, doc):
         print('writing bsdf {0}'.format(self.name))
         doc.startElement('bsdf name="{0}" model="{1}"'.format(self.name, self.model))
@@ -598,15 +581,17 @@ class Bsdf():
             doc.appendParameter(param, self.bsdf_params[param])
         doc.endElement('bsdf')
 
-#
-# edf class --
-#
+
+#--------------------------------------------------------------------------------------------------
+# Edf class.
+#--------------------------------------------------------------------------------------------------
 
 class Edf():
     def __init__(self, name, model, edf_params):
         self.name = name
         self.model = model
         self.edf_params = edf_params
+
     def writeXML(self, doc):
         print('writing bsdf {0}'.format(self.name))
         doc.startElement('edf name="{0}" model="{1}"'.format(self.name, self.model))
@@ -614,9 +599,10 @@ class Edf():
             doc.appendParameter(param, self.edf_params[param])
         doc.endElement('edf')
 
-#
-# surface shader class --
-#
+
+#--------------------------------------------------------------------------------------------------
+# SurfaceShader class.
+#--------------------------------------------------------------------------------------------------
 
 class SurfaceShader():
     def __init__(self, name, model, surface_shader_params=None):
@@ -632,11 +618,11 @@ class SurfaceShader():
         doc.endElement('surface_shader')
 
 
-#
-# camera class --
-#
+#--------------------------------------------------------------------------------------------------
+# Camera class.
+#--------------------------------------------------------------------------------------------------
 
-class Camera(): #(camera_name)
+class Camera():
     def __init__(self, params, cam):
         self.params = params
         if self.params['sceneCameraDefaultThinLens'] or cmds.getAttr(cam+'.depthOfField'):
@@ -658,8 +644,6 @@ class Camera(): #(camera_name)
         else:
             self.film_height = float(cmds.getAttr(self.name + '.verticalFilmAperture')) * inch_to_meter
             self.film_width = self.film_height * maya_resolution_aspect 
-
-
 
         self.focal_length = float(cmds.getAttr(self.name+'.focalLength')) / 1000
         # transpose camera matrix -> XXX0, YYY0, ZZZ0, XYZ1
@@ -686,9 +670,9 @@ class Camera(): #(camera_name)
         doc.endElement('camera')
 
 
-#
-# environment class --
-#
+#--------------------------------------------------------------------------------------------------
+# Environment class.
+#--------------------------------------------------------------------------------------------------
 
 class Environment():
     def __init__(self, params, name, shader, edf):
@@ -696,6 +680,7 @@ class Environment():
         self.name = name
         self.environment_shader = shader
         self.environment_edf = edf
+
     def writeXML(self, doc):
         print('writing environment: ' + self.name)
         doc.startElement('environment name="{0}" model="generic_environment"'.format(self.name))
@@ -704,29 +689,33 @@ class Environment():
 
         doc.endElement('environment')
 
-#
-# environment shader class --
-#
+
+#--------------------------------------------------------------------------------------------------
+# EnvironmentShader class.
+#--------------------------------------------------------------------------------------------------
 
 class EnvironmentShader():
     def __init__(self, name, edf):
         self.name = name
         self.edf = edf
+
     def writeXML(self, doc):
         print('writing environment shader: ' + self.name)
         doc.startElement('environment_shader name="{0}" model="edf_environment_shader"'.format(self.name))
         doc.appendParameter('environment_edf', self.edf)
         doc.endElement('environment_shader')
 
-#
-# environment edf class --
-#
+
+#--------------------------------------------------------------------------------------------------
+# EnvironmentEdf class.
+#--------------------------------------------------------------------------------------------------
 
 class EnvironmentEdf():
     def __init__(self, name, model, edf_params):
         self.name = name
         self.model = model
         self.edf_params = edf_params
+
     def writeXML(self, doc):
         print('writing environment edf: ' + self.name)
         doc.startElement('environment_edf name="{0}" model="{1}"'.format(self.name, self.model))
@@ -734,9 +723,10 @@ class EnvironmentEdf():
             doc.appendParameter(param, self.edf_params[param])
         doc.endElement('environment_edf')
 
-#
-# geometry class --
-#
+
+#--------------------------------------------------------------------------------------------------
+# Geometry class.
+#--------------------------------------------------------------------------------------------------
 
 class Geometry():
     def __init__(self, params, name, output_file, assembly='main_assembly'):
@@ -744,8 +734,7 @@ class Geometry():
         self.name = name
         self.safe_name = ms_commands.legalise(name)
 
-        #get name in heirarchy
-        self.heirarchy_name = name
+        self.hierarchy_name = name
         self.material_name = ''
         self.material_node = False
         self.shading_nodes = []
@@ -755,7 +744,7 @@ class Geometry():
         current_object = name
         while cmds.listRelatives(current_object, parent=True):
             current_object = cmds.listRelatives(current_object, parent=True)[0]
-            self.heirarchy_name = current_object + ' ' + self.heirarchy_name
+            self.hierarchy_name = current_object + ' ' + self.hierarchy_name
         self.output_file = output_file
         self.assembly = assembly
         
@@ -777,16 +766,10 @@ class Geometry():
                     self.textures = self.material_node.textures
                     self.material_name = self.material_node.name
             else: 
-
                 if cmds.objExists(shader + '.ms_shader_translation'):
-
-                    
                     pass
-
                 else:
                     cmds.warning('no appleseed material or shader translation connected to ' + self.name)
-
-
 
         else:
             cmds.warning(self.name + ' has no shading engine connected')
@@ -811,9 +794,11 @@ class Geometry():
             if self.params['matDoubleShade']:
                 doc.appendElement('assign_material slot="0" side="back" material="{0}"'.format(self.material_name))
         doc.endElement('object_instance')
-#
-# assembly object --
-#
+
+
+#--------------------------------------------------------------------------------------------------
+# Assembly class.
+#--------------------------------------------------------------------------------------------------
 
 class Assembly():
     def __init__(self, params, name='main_assembly', object_list=False, position_from_object=False):
@@ -930,56 +915,44 @@ class Assembly():
         for material in self.material_objects:
             material.writeXML(doc)
 
-
-        #export and write .obj object
+        # export and write objects
         for geo in self.geo_objects:
-            #export geo
-            if  self.params['exportDeformationBlur']:
+            file_name = ms_commands.legalise(geo.name)
 
-                #store the star time of the export
+            doc.startElement('object name="{0}" model="mesh_object"'.format(file_name))
+
+            if  self.params['exportDeformationBlur']:
+                # store the start time of the export
                 start_time = cmds.currentTime(query=True)
                 motion_samples = self.params['motionSamples']
                 if motion_samples < 2:
-                    cmds.warning('Motion samples is set too low, must be atleast 2, using 2')
+                    cmds.warning('Motion samples is set too low, must be at least 2. Using 2.')
                     motion_samples = 2
-                sample_interval = 1.0/(motion_samples - 1)
+                sample_interval = 1.0 / (motion_samples - 1)
 
-                file_name = ms_commands.legalise(geo.name)
-
-                doc.startElement('object name="{0}" model="mesh_object"'.format(file_name))
                 doc.startElement('parameters name="filename"')
-                #cmds.select(geo.name)
-                cmds.currentTime(cmds.currentTime(query=True)-1)
+                cmds.currentTime(cmds.currentTime(query=True) - 1)
+
                 for i in range(motion_samples):
                     print "exporting frame {0}".format((start_time + (sample_interval * i)))
-                    new_time = start_time + (sample_interval * i)
-                    cmds.currentTime(new_time)
+
+                    cmds.currentTime(start_time + (sample_interval * i))
                     cmds.refresh()
 
                     output_file = os.path.join(self.params['outputDir'], self.params['geo_dir'], ('{0}.{1:03}.obj'.format(file_name,i)))
-                    
                     ms_commands.export_obj(geo.name, output_file, overwrite=True)
 
                     doc.appendParameter('{0:03}'.format(i), '{0}/{1}.{2:03}.obj'.format(self.params['geo_dir'],file_name,i))
-                    
-
 
                 doc.endElement('parameters')
-                doc.endElement('object')
                 cmds.currentTime(start_time)
-                #cmds.select(cl=True)
-
             else:
-
-                file_name = ms_commands.legalise(geo.name)
-
-                output_file = os.path.join(self.params['outputDir'], self.params['geo_dir'], (file_name + '.obj'))
+                output_file = os.path.join(self.params['outputDir'], self.params['geo_dir'], file_name + '.obj')
                 ms_commands.export_obj(geo.name, output_file)
 
-                #write xml
-                doc.startElement('object name="{0}" model="mesh_object"'.format(file_name))
-                doc.appendParameter('filename', '{0}/{1}'.format(self.params['geo_dir'], (file_name + '.obj')))
-                doc.endElement('object')
+                doc.appendParameter('filename', os.path.join(self.params['geo_dir'], file_name + '.obj'))
+
+            doc.endElement('object')
         
         #write lights
         for light_object in self.light_objects:
@@ -999,9 +972,10 @@ class Assembly():
             writeTransform(doc, self.params['scene_scale'], self.position_from_object)
         doc.endElement('assembly_instance')
 
-#
-# scene class --
-#
+
+#--------------------------------------------------------------------------------------------------
+# Scene class.
+#--------------------------------------------------------------------------------------------------
 
 class Scene():
     def __init__(self,params):
@@ -1105,7 +1079,7 @@ class Scene():
         for tex in self.texture_objects:
             self.texture_objects[tex].writeXMLInstance(doc)
         
-        #if tehre is an environment write it
+        #if there is an environment write it
         if self.environment:
             self.environment_edf.writeXML(doc)
             self.environment_shader.writeXML(doc)
@@ -1118,28 +1092,28 @@ class Scene():
             if ms_commands.shapeIsExportable(geo):
                 # add first connected transform to the list
                 geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
-                geo_assembly = Assembly(self.params, (geo_transform + '_assebly'), [geo], geo_transform)
-                geo_assembly.writeXML(doc)        
+                geo_assembly = Assembly(self.params, (geo_transform + '_assembly'), [geo], geo_transform)
+                geo_assembly.writeXML(doc)
 
         #get maya lights
         light_list = cmds.ls(lt=True, v=True)
         for light in light_list:
                 light_transform = cmds.listRelatives(light, ad=True, ap=True)[0]
-                light_assembly = Assembly(self.params, (light_transform + '_assebly'), [light], light_transform)
+                light_assembly = Assembly(self.params, (light_transform + '_assembly'), [light], light_transform)
                 light_assembly.writeXML(doc)    
 
 
         doc.endElement('scene')
 
 
-
-#
-# output class --
-#
+#--------------------------------------------------------------------------------------------------
+# Output class.
+#--------------------------------------------------------------------------------------------------
 
 class Output():
     def __init__(self, params):
         self.params = params
+
     def writeXML(self, doc):
         doc.startElement('output')
         doc.startElement('frame name="beauty"')
@@ -1149,14 +1123,16 @@ class Output():
         doc.endElement('frame')
         doc.endElement('output')
 
-#
-# configurations class --
-#
+
+#--------------------------------------------------------------------------------------------------
+# Configurations class.
+#--------------------------------------------------------------------------------------------------
 
 class Configurations():
     def __init__(self, params):
         self.params = params
-    def writeXML(self,doc):
+
+    def writeXML(self, doc):
         print('writing configurations')
         doc.startElement("configurations")
         #add base custom interactive config
@@ -1168,12 +1144,11 @@ class Configurations():
             print('writing custom final config')
             doc.startElement('configuration name="final" base="base_final"')
 
-            engine = ''
             if self.params['customFinalConfigEngine'] == "Path Tracing":
                 engine = 'pt'
             else:
                 engine = 'drt'
-            doc.appendParameter('lighting_engine,', engine)
+            doc.appendParameter('lighting_engine', engine)
             doc.appendParameter('min_samples', self.params['customFinalConfigMaxSamples'])
             doc.appendParameter('max_samples', self.params['customFinalConfigMaxSamples'])
             
@@ -1225,17 +1200,18 @@ class Configurations():
             doc.appendParameter('min_samples', self.params['gtrMinSamples'])
             doc.appendParameter('sampler', self.params['gtrSampler'])
             doc.endElement('parameters')
+
             doc.endElement("configuration")
 
         else:# otherwise add default configurations
             print('writing default final config')
             doc.appendElement('configuration name="final" base="base_final"')
         doc.endElement('configurations')
-	
 
-#****************************************************************************************************************************************************************************************************
-# export function ***********************************************************************************************************************************************************************************
-#****************************************************************************************************************************************************************************************************
+
+#--------------------------------------------------------------------------------------------------
+# Main export function.
+#--------------------------------------------------------------------------------------------------
 
 def export(render_settings_node):
     params = getMayaParams(render_settings_node)
@@ -1307,7 +1283,7 @@ def export(render_settings_node):
 
         current_frame += 1
 
-        #once the first frame has exported textures set exportTetures to false to prevent future frames from exporting
+        # only export textures for the first frame
         if not params['animatedTextures']:
             params['skipTextures'] = True
 
