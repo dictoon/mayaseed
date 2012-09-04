@@ -59,7 +59,7 @@ def ms_renderSettings_nodeInitializer():
 
     #export file settings -------------------------------------
     #output directory attribute
-    output_dir_string = OpenMaya.MFnStringData().create("/")
+    output_dir_string = OpenMaya.MFnStringData().create("")
     output_dir_Attr = OpenMaya.MFnTypedAttribute()
     ms_renderSettings.output_dir =  output_dir_Attr.create("output_directory", "out_dir", OpenMaya.MFnData.kString, output_dir_string)   
     #output file attribute

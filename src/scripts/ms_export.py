@@ -781,7 +781,7 @@ class Geometry():
                 if cmds.objExists(shader'.ms_shader_translation'):
 
                     
-                    #custom translation code goes here
+                    pass
 
                 else:
                     cmds.warning('no appleseed material or shader translation connected to ' + self.name)
