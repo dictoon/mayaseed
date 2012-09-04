@@ -778,7 +778,7 @@ class Geometry():
                     self.material_name = self.material_node.name
             else: 
 
-                if cmds.objExists(shader'.ms_shader_translation'):
+                if cmds.objExists(shader + '.ms_shader_translation'):
 
                     
                     pass
