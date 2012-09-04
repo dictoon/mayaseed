@@ -766,16 +766,10 @@ class Geometry():
                     self.textures = self.material_node.textures
                     self.material_name = self.material_node.name
             else: 
-
                 if cmds.objExists(shader + '.ms_shader_translation'):
-
-                    
                     pass
-
                 else:
                     cmds.warning('no appleseed material or shader translation connected to ' + self.name)
-
-
 
         else:
             cmds.warning(self.name + ' has no shading engine connected')
@@ -921,55 +915,44 @@ class Assembly():
         for material in self.material_objects:
             material.writeXML(doc)
 
-        #export and write .obj object
+        # export and write objects
         for geo in self.geo_objects:
-            #export geo
-            if  self.params['exportDeformationBlur']:
+            file_name = ms_commands.legalise(geo.name)
 
-                #store the star time of the export
+            doc.startElement('object name="{0}" model="mesh_object"'.format(file_name))
+
+            if  self.params['exportDeformationBlur']:
+                # store the start time of the export
                 start_time = cmds.currentTime(query=True)
                 motion_samples = self.params['motionSamples']
                 if motion_samples < 2:
-                    cmds.warning('Motion samples is set too low, must be atleast 2, using 2')
+                    cmds.warning('Motion samples is set too low, must be at least 2. Using 2.')
                     motion_samples = 2
-                sample_interval = 1.0/(motion_samples - 1)
+                sample_interval = 1.0 / (motion_samples - 1)
 
-                file_name = ms_commands.legalise(geo.name)
-
-                doc.startElement('object name="{0}" model="mesh_object"'.format(file_name))
                 doc.startElement('parameters name="filename"')
-                #cmds.select(geo.name)
-                cmds.currentTime(cmds.currentTime(query=True)-1)
+                cmds.currentTime(cmds.currentTime(query=True) - 1)
+
                 for i in range(motion_samples):
                     print "exporting frame {0}".format((start_time + (sample_interval * i)))
-                    new_time = start_time + (sample_interval * i)
-                    cmds.currentTime(new_time)
+
+                    cmds.currentTime(start_time + (sample_interval * i))
                     cmds.refresh()
 
                     output_file = os.path.join(self.params['outputDir'], self.params['geo_dir'], ('{0}.{1:03}.obj'.format(file_name,i)))
-                    
                     ms_commands.export_obj(geo.name, output_file, overwrite=True)
 
                     doc.appendParameter('{0:03}'.format(i), '{0}/{1}.{2:03}.obj'.format(self.params['geo_dir'],file_name,i))
-                    
-
 
                 doc.endElement('parameters')
-                doc.endElement('object')
                 cmds.currentTime(start_time)
-                #cmds.select(cl=True)
-
             else:
-
-                file_name = ms_commands.legalise(geo.name)
-
-                output_file = os.path.join(self.params['outputDir'], self.params['geo_dir'], (file_name + '.obj'))
+                output_file = os.path.join(self.params['outputDir'], self.params['geo_dir'], file_name + '.obj')
                 ms_commands.export_obj(geo.name, output_file)
 
-                #write xml
-                doc.startElement('object name="{0}" model="mesh_object"'.format(file_name))
-                doc.appendParameter('filename', '{0}/{1}'.format(self.params['geo_dir'], (file_name + '.obj')))
-                doc.endElement('object')
+                doc.appendParameter('filename', os.path.join(self.params['geo_dir'], file_name + '.obj'))
+
+            doc.endElement('object')
         
         #write lights
         for light_object in self.light_objects:
@@ -1109,14 +1092,14 @@ class Scene():
             if ms_commands.shapeIsExportable(geo):
                 # add first connected transform to the list
                 geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
-                geo_assembly = Assembly(self.params, (geo_transform + '_assebly'), [geo], geo_transform)
+                geo_assembly = Assembly(self.params, (geo_transform + '_assembly'), [geo], geo_transform)
                 geo_assembly.writeXML(doc)
 
         #get maya lights
         light_list = cmds.ls(lt=True, v=True)
         for light in light_list:
                 light_transform = cmds.listRelatives(light, ad=True, ap=True)[0]
-                light_assembly = Assembly(self.params, (light_transform + '_assebly'), [light], light_transform)
+                light_assembly = Assembly(self.params, (light_transform + '_assembly'), [light], light_transform)
                 light_assembly.writeXML(doc)    
 
 
