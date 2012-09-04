@@ -51,15 +51,10 @@ MStatus ms_export_obj::doIt(const MArgList& args)
     MString file_path;
     for (unsigned int i = 0; i < args.length(); i++)
     {
-        MGlobal::displayInfo(args.asString(i));
         if (args.asString(i) == "-mesh")
-        {
             mesh_name = args.asString(i+1);
-        }
         else if (args.asString(i) == "-filePath")
-        {
             file_path = args.asString(i+1);
-        }
     }
 
     MString display_info;
