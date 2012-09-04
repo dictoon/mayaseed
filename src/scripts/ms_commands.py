@@ -433,7 +433,8 @@ def export_obj(object_name, file_path, overwrite=True):
         os.makedirs(directory)
 
     if cmds.pluginInfo('ms_export_obj', query=True, r=True):
-        mel.eval('ms_export_obj -mesh "' + object_name + '" -filePath "' + file_path + '"')
+        safe_file_path = file_path.replace('\\', '\\\\')
+        mel.eval('ms_export_obj -mesh "{0}" -filePath "{1}"'.format(object_name, safe_file_path))
     else:
         ms_export_obj.export(object_name, file_path, overwrite)
 
