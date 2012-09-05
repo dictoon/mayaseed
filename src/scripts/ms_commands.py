@@ -456,3 +456,93 @@ def legalise(path):
     path = path.replace('>', '_')
     path = path.replace('|', '_')
     return path
+
+#
+# list objects by shader -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#
+
+def listObjectsByShader(shader):
+    shading_engine = cmds.listConnections(shader, type='shadingEngine')[0]
+    return cmds.listConnections(shading_engine, type='mesh')
+
+#
+# get connected node -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#
+
+def getConnectedNode(connection):
+    connections = cmds.listConnections(connection)
+    
+    if connections:
+        return connections[0]
+    else: 
+        return None
+
+
+#
+# convert shader -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#
+
+def convertMaterial()
+
+    materials = cmds.ls(sl=True, mat=True)
+
+
+    if materials:
+        
+        for material in materials:
+
+            if cmds.nodeType(material) == 'phong' or 'blinn':
+
+                print '// converting shader', material
+               
+                new_material_node = cmds.shadingNode('ms_appleseed_material', asShader=True, name=(material + '_translation')) 
+                
+                color_connection = getConnectedNode(material + '.color')
+                specular_color_connection = getConnectedNode(material + '.specularColor')
+                transparency_connection = getConnectedNode(material + '.transparency')
+                # bump_connection = getConnectedNode(material + '.bumpMapping')
+
+                bsdf = ms_commands.createShadingNode('ashikhmin_brdf')
+                cmds.connectAttr((brdf + '.outColor'), (new_material_node + '.BSDF_color'))
+                
+                # edf = ms_commands.createShadingNode('diffuse_edf')
+                # cmds.connectAttr((edf + '.outColor'), (new_material_node + '.EDF_color'))
+                
+                surface_shader = ms_commands.createShadingNode('physical_surface_shader')
+                cmds.connectAttr((surface_shader + '.outColor'), (new_material_node + '.surface_shader_color'))
+                
+                
+                # connect & set attributes
+                color_value = cmds.getAttr(material + '.outColor')[0]
+                cmds.setAttr((bsdf + '.diffuse_reflectance'), color_value[0], color_value[1], color_value[2], type='float3')            
+                if color_connection: 
+                    cmds.connectAttr((color_connection + '.outColor'), (bsdf + '.diffuse_reflectance'))
+
+                color_value = cmds.getAttr(material + '.specularColor')[0]
+                cmds.setAttr((bsdf + '.glossy_reflectance'), color_value[0], color_value[1], color_value[2], type='float3')             
+                if specular_color_connection:
+                    cmds.connectAttr((specular_color_connection + '.outColor'), (bsdf + '.glossy_reflectance'))
+
+                color_value = cmds.getAttr(material + '.transparency')[0]
+                cmds.setAttr((new_material_node + '.alpha_map_color'), color_value[0], color_value[1], color_value[2], type='float3')  
+                if transparency_connection:
+                    cmds.connectAttr((transparency_connection + '.outColor'), (new_material_node + '.alpha_map_color'))
+
+                # assign shader to new objects
+                
+                cmds.select(clear=True)
+                for object in listObjectsByShader(material):
+                    cmds.select(object, r=True)
+                    cmds.hyperShade(assign=new_material_node)
+                
+
+    else:
+        cmds.warning('no shaders selected') 
+        
+        
+        
+    
+    
+    
+    
+
