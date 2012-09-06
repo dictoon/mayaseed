@@ -22,7 +22,7 @@
 //
 
 #if defined __APPLE__
-#include <maya/OpenMayaMac.h>
+    #include <maya/OpenMayaMac.h>
 #endif
 
 #include <maya/MIOStream.h>
@@ -40,21 +40,34 @@
 #include <maya/MString.h>
 #include <fstream>
 
+#if defined _WIN32
+    #if defined ms_export_obj_EXPORTS
+        #define DLLSYMBOL __declspec(dllexport)
+    #else
+        #define DLLSYMBOL __declspec(dllimport)
+    #endif
+#else
+    #define DLLSYMBOL
+#endif
+
 const MString Version("0.1.1");
+
+DLLSYMBOL MStatus initializePlugin(MObject _obj);
+DLLSYMBOL MStatus uninitializePlugin(MObject _obj);
 
 DeclareSimpleCommand(ms_export_obj, "mayaseed", Version.asChar());
 
 MStatus ms_export_obj::doIt(const MArgList& args)
 {
-    // Get the args.
+    // Retrieve the arguments.
     MString mesh_name;
     MString file_path;
     for (unsigned int i = 0; i < args.length(); i++)
     {
         if (args.asString(i) == "-mesh")
-            mesh_name = args.asString(i+1);
+            mesh_name = args.asString(i + 1);
         else if (args.asString(i) == "-filePath")
-            file_path = args.asString(i+1);
+            file_path = args.asString(i + 1);
     }
 
     MString display_info;
