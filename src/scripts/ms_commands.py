@@ -29,6 +29,7 @@ import inspect
 import subprocess
 from xml.dom.minidom import parseString
 import ms_export_obj
+import random
 
 
 #****************************************************************************************************************************************************************************************************
@@ -522,6 +523,9 @@ def convertMaterial():
                 print '// converting shader', material
                
                 new_material_node = cmds.shadingNode('ms_appleseed_material', asShader=True, name=(material + '_translation')) 
+
+                # set random hardware color
+                cmds.setAttr((new_material_node + '.hardware_color_in'), random.random(), random.random(), random.random(), type='float3')
                 
                 color_connection = getConnectedNode(material + '.color')
                 specular_color_connection = getConnectedNode(material + '.specularColor')
