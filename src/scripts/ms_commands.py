@@ -435,36 +435,32 @@ def createShadingNode(model, entity_defs_obj=False):
     return shading_node_name
 
 
-#
-# get file texture node file name with correct frame numbr  ------------------------------------------------------------------------------------------------------------------------------------------
-# 
-
+#--------------------------------------------------------------------------------------------------
+# Get file texture node file name with correct frame number.
+#--------------------------------------------------------------------------------------------------
 
 def getFileTextureName(file_node):
-    
     maya_file_texture_name = cmds.getAttr(file_node + '.fileTextureName')
     
     if cmds.getAttr(file_node + '.useFrameExtension'):
-        file_texture_name = maya_file_texture_name.split('.')        
+        file_texture_name = maya_file_texture_name.split('.')
         frame_ofset = cmds.getAttr(file_node + '.frameOffset')
         current_frame = cmds.currentTime(q=True)
         frame_padding = len(file_texture_name[1])
         frame_number = str(int(current_frame + frame_ofset)).zfill(5)
-        
-        maya_file_texture_name = (file_texture_name[0] + '.' + frame_number + '.' + file_texture_name[2])
-    
+        maya_file_texture_name = file_texture_name[0] + '.' + frame_number + '.' + file_texture_name[2]
+
     return maya_file_texture_name 
 
 
-#
-# export .obj file ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-#
-
-# This function is a wrapper for the C++ obj exporter
+#--------------------------------------------------------------------------------------------------
+# Export .obj file.
+# This function is a wrapper for the C++ obj exporter.
+#--------------------------------------------------------------------------------------------------
 
 def export_obj(object_name, file_path, overwrite=True):
-
     directory = os.path.split(file_path)[0]
+
     if not os.path.exists(directory):
         os.makedirs(directory)
 
@@ -472,9 +468,9 @@ def export_obj(object_name, file_path, overwrite=True):
     mel.eval('ms_export_obj -mesh "{0}" -filePath "{1}"'.format(object_name, safe_file_path))
 
 
-#
-# legalise file name -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-#
+#--------------------------------------------------------------------------------------------------
+# Legalize file name.
+#--------------------------------------------------------------------------------------------------
 
 def legalise(path):
     path = path.replace('\\', '_')
