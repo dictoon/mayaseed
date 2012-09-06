@@ -1228,7 +1228,6 @@ class Configurations():
 #--------------------------------------------------------------------------------------------------
 
 def export(render_settings_node):
-
     start_time = time.time()
 
     params = getMayaParams(render_settings_node)
@@ -1307,10 +1306,8 @@ def export(render_settings_node):
     cmds.currentTime(original_time)
     cmds.select(render_settings_node)
 
+    # Compute and report export time.
     export_time = time.time() - start_time
-
-    print 'export finished in', export_time, 'seconds'
-
-    cmds.confirmDialog(message=('Export finished in {0} seconds'.format(export_time)), button='ok')
-
-
+    export_message = "Export completed in {0:.1f} seconds.".format(export_time)
+    print export_message
+    cmds.confirmDialog(title="Export Completed", icon='information', message=export_message), button="OK")
