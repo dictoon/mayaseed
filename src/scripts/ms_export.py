@@ -1,15 +1,17 @@
-# Copyright (c) 2012 Jonathan Topf
 
+#
+# Copyright (c) 2012 Jonathan Topf
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -17,6 +19,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+#
 
 
 import maya.cmds as cmds
@@ -152,7 +155,7 @@ def getMayaParams(render_settings_node):
     params['fileName'] = cmds.getAttr(render_settings_node + '.output_file')
     params['convertShadingNodes'] = cmds.getAttr(render_settings_node + '.convert_shading_nodes_to_textures')
     params['convertTexturesToExr'] = cmds.getAttr(render_settings_node + '.convert_textures_to_exr')
-    params['overwriteExistingExrs'] = cmds.getAttr(render_settings_node + '.overwrite_existing_exrs')
+    params['overwriteExistingExrs'] = cmds.getAttr(render_settings_node + '.overwrite_existing_textures')
     params['fileName'] = cmds.getAttr(render_settings_node + '.output_file')
     params['exportCameraBlur'] = cmds.getAttr(render_settings_node + '.export_camera_blur')
     params['exportTransformationBlur'] = cmds.getAttr(render_settings_node + '.export_transformation_blur')

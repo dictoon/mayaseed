@@ -1,15 +1,17 @@
-# Copyright (c) 2012 Jonathan Topf
 
+#
+# Copyright (c) 2012 Jonathan Topf
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -17,6 +19,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+#
+
 
 import sys 
 import maya.OpenMaya as OpenMaya
@@ -34,15 +38,15 @@ sys.path.append(os.path.join(ROOT_DIRECTORY, 'graphics'))
 
 import ms_menu
 
-#****************************************************************************************************************************************************************************************************
-# ms_renderSettings node ****************************************************************************************************************************************************************************
-#****************************************************************************************************************************************************************************************************
+
+#--------------------------------------------------------------------------------------------------
+# ms_renderSettings node.
+#--------------------------------------------------------------------------------------------------
 
 ms_renderSettings_nodeTypeName = "ms_renderSettings"
 ms_renderSettings_nodeTypeId = OpenMaya.MTypeId(0x00333)
 
 class ms_renderSettings(OpenMayaMPx.MPxNode):
-
     def __init__(self):
         OpenMayaMPx.MPxNode.__init__(self)
 
@@ -50,7 +54,6 @@ def ms_renderSettings_nodeCreator():
     return OpenMayaMPx.asMPxPtr( ms_renderSettings() )
 
 def ms_renderSettings_nodeInitializer():
-
     #define attributes
     #export button --------------------------------------------
     export_button_string = OpenMaya.MFnStringData().create("/")
@@ -75,9 +78,9 @@ def ms_renderSettings_nodeInitializer():
     convert_shading_nodes_to_textures_nAttr = OpenMaya.MFnNumericAttribute()
     ms_renderSettings.convert_shading_nodes_to_textures = convert_shading_nodes_to_textures_nAttr.create("convert_shading_nodes_to_textures", "convert_shading_nodes", OpenMaya.MFnNumericData.kBoolean, True)
 
-    #overwrite existing exrs
-    overwrite_existing_exrs_nAttr = OpenMaya.MFnNumericAttribute()
-    ms_renderSettings.overwrite_existing_exrs = overwrite_existing_exrs_nAttr.create("overwrite_existing_exrs", "overwrite_exrs", OpenMaya.MFnNumericData.kBoolean, True)
+    # overwrite existing textures
+    overwrite_existing_textures_nAttr = OpenMaya.MFnNumericAttribute()
+    ms_renderSettings.overwrite_existing_textures = overwrite_existing_textures_nAttr.create("overwrite_existing_textures", "overwrite_exrs", OpenMaya.MFnNumericData.kBoolean, True)
 
     #export camera blur
     export_camera_blur_nAttr = OpenMaya.MFnNumericAttribute()
@@ -97,16 +100,15 @@ def ms_renderSettings_nodeInitializer():
     motion_samples_AttrInt.setHidden(False)
     motion_samples_AttrInt.setKeyable(True)
 
-
     #shutter open time
     shutter_open_AttrFloat = OpenMaya.MFnNumericAttribute()
-    ms_renderSettings.shutter_open = shutter_open_AttrFloat.create("shutter_open_time", "shutter_open", OpenMaya.MFnNumericData.kFloat, 0)
+    ms_renderSettings.shutter_open_time = shutter_open_AttrFloat.create("shutter_open_time", "shutter_open_time", OpenMaya.MFnNumericData.kFloat, 0)
     shutter_open_AttrFloat.setHidden(False)
     shutter_open_AttrFloat.setKeyable(True)
 
     #shutter close time
     shutter_close_AttrFloat = OpenMaya.MFnNumericAttribute()
-    ms_renderSettings.shutter_close = shutter_close_AttrFloat.create("shutter_close_time", "shutter_close", OpenMaya.MFnNumericData.kFloat, 1)
+    ms_renderSettings.shutter_close_time = shutter_close_AttrFloat.create("shutter_close_time", "shutter_close_time", OpenMaya.MFnNumericData.kFloat, 1)
     shutter_close_AttrFloat.setHidden(False)
     shutter_close_AttrFloat.setKeyable(True)
 
@@ -129,7 +131,6 @@ def ms_renderSettings_nodeInitializer():
     #export animated textures
     export_animated_textures_nAttr = OpenMaya.MFnNumericAttribute()
     ms_renderSettings.export_animated_textures = export_animated_textures_nAttr .create("export_animated_textures", "animated_textures", OpenMaya.MFnNumericData.kBoolean, False)
-
 
     #environent -----------------------------------------------
     #environment message
@@ -164,15 +165,14 @@ def ms_renderSettings_nodeInitializer():
 
     #resolution width samples
     width_AttrInt = OpenMaya.MFnNumericAttribute()
-    ms_renderSettings.width = width_AttrInt.create("resolution_width", "width", OpenMaya.MFnNumericData.kInt, 1280)
+    ms_renderSettings.width = width_AttrInt.create("frame_width", "width", OpenMaya.MFnNumericData.kInt, 1280)
     width_AttrInt.setHidden(False)
     width_AttrInt.setKeyable(True)
     #resolution height samples
     height_AttrInt = OpenMaya.MFnNumericAttribute()
-    ms_renderSettings.height = height_AttrInt.create("resolution_height", "height", OpenMaya.MFnNumericData.kInt, 720)
+    ms_renderSettings.height = height_AttrInt.create("frame_height", "height", OpenMaya.MFnNumericData.kInt, 720)
     height_AttrInt.setHidden(False)
     height_AttrInt.setKeyable(True)
-
 
     #custom final config
     export_custom_final_config_nAttr = OpenMaya.MFnNumericAttribute()
@@ -303,7 +303,6 @@ def ms_renderSettings_nodeInitializer():
     gtr_max_samples_AttrInt.setHidden(False)
     gtr_max_samples_AttrInt.setKeyable(True)
 
-
     #max_contrast
     gtr_max_contrast_AttrFloat = OpenMaya.MFnNumericAttribute()
     ms_renderSettings.gtr_max_contrast = gtr_max_contrast_AttrFloat.create("gtr_max_contrast", "gtr_max_contrast", OpenMaya.MFnNumericData.kFloat, 0.004)
@@ -322,8 +321,6 @@ def ms_renderSettings_nodeInitializer():
     gtr_sampler_enumAttr.addField("uniform", 0)
     gtr_sampler_enumAttr.addField("adaptive", 1)
 
-
-
     # add attributes
     ms_renderSettings.addAttribute(ms_renderSettings.export_button)
 
@@ -331,13 +328,13 @@ def ms_renderSettings_nodeInitializer():
     ms_renderSettings.addAttribute(ms_renderSettings.output_file)
     ms_renderSettings.addAttribute(ms_renderSettings.convert_shading_nodes_to_textures)
     ms_renderSettings.addAttribute(ms_renderSettings.convert_textures_to_exr)
-    ms_renderSettings.addAttribute(ms_renderSettings.overwrite_existing_exrs)
+    ms_renderSettings.addAttribute(ms_renderSettings.overwrite_existing_textures)
     ms_renderSettings.addAttribute(ms_renderSettings.export_camera_blur)
     ms_renderSettings.addAttribute(ms_renderSettings.export_transformation_blur)
     ms_renderSettings.addAttribute(ms_renderSettings.export_deformation_blur)
     ms_renderSettings.addAttribute(ms_renderSettings.motion_samples)
-    ms_renderSettings.addAttribute(ms_renderSettings.shutter_open)
-    ms_renderSettings.addAttribute(ms_renderSettings.shutter_close)
+    ms_renderSettings.addAttribute(ms_renderSettings.shutter_open_time)
+    ms_renderSettings.addAttribute(ms_renderSettings.shutter_close_time)
     ms_renderSettings.addAttribute(ms_renderSettings.export_animation)
     ms_renderSettings.addAttribute(ms_renderSettings.start_frame)
     ms_renderSettings.addAttribute(ms_renderSettings.end_frame)
@@ -384,12 +381,9 @@ def ms_renderSettings_nodeInitializer():
     ms_renderSettings.addAttribute(ms_renderSettings.gtr_sampler)
 
 
-
-#****************************************************************************************************************************************************************************************************
-# ms_environment node *******************************************************************************************************************************************************************************
-#****************************************************************************************************************************************************************************************************
-
-
+#--------------------------------------------------------------------------------------------------
+# ms_environment node.
+#--------------------------------------------------------------------------------------------------
 
 ms_environment_nodeTypeName = "ms_environment"
 ms_environment_nodeTypeId = OpenMaya.MTypeId(0x10211)
@@ -399,11 +393,9 @@ glFT = glRenderer.glFunctionTable()
 
 class ms_environment(OpenMayaMPx.MPxLocatorNode):
     def __init__(self):
-
         OpenMayaMPx.MPxLocatorNode.__init__(self)
 
     def draw(self, view, path, style, status):
-
         view.beginGL()
 
         glFT.glEnable(OpenMayaRender.MGL_BLEND)
@@ -636,40 +628,33 @@ def ms_environment_nodeInitializer():
     except:
         sys.stderr.write( "Failed to create attributes of %s node", kPluginNodeTypeName )
 
- 
-#****************************************************************************************************************************************************************************************************
-# initialize nodes node *****************************************************************************************************************************************************************************
-#****************************************************************************************************************************************************************************************************
+
+#--------------------------------------------------------------------------------------------------
+# ms_environment node.
+#--------------------------------------------------------------------------------------------------
 
 def initializePlugin(obj):
-    #register nodes
     plugin = OpenMayaMPx.MFnPlugin(obj)
+
     try:
         plugin.registerNode(ms_environment_nodeTypeName, ms_environment_nodeTypeId, ms_environment_nodeCreator, ms_environment_nodeInitializer, OpenMayaMPx.MPxNode.kLocatorNode)
     except:
-        sys.stderr.write( "Failed to register node: %s" % ms_environment_nodeTypeName)
-    
+        sys.stderr.write("Failed to register node: %s" % ms_environment_nodeTypeName)
+
     try:
-        plugin.registerNode( ms_renderSettings_nodeTypeName, ms_renderSettings_nodeTypeId, ms_renderSettings_nodeCreator, ms_renderSettings_nodeInitializer )
+        plugin.registerNode(ms_renderSettings_nodeTypeName, ms_renderSettings_nodeTypeId, ms_renderSettings_nodeCreator, ms_renderSettings_nodeInitializer)
     except:
-        sys.stderr.write( "Failed to register command: %s\n" % ms_renderSettings_nodeTypeName )
-    
+        sys.stderr.write("Failed to register node: %s\n" % ms_renderSettings_nodeTypeName)
 
-    
-    #load objExport plugin if its not loaded yet
+    # load objExport plugin if its not loaded yet
     try:
-
         if not cmds.pluginInfo('objExport', query=True, loaded=True):
             cmds.loadPlugin('objExport')
     except: 
         print 'objExport plugin could not be loaded, cannot load mayaseed'
 
-
-
-    #create menu
     ms_menu.createMenu()
     ms_menu.buildMenu()
-
 
 def uninitializePlugin(obj):
     plugin = OpenMayaMPx.MFnPlugin(obj)
