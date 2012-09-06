@@ -474,17 +474,17 @@ def export_obj(object_name, file_path, overwrite=True):
 # Legalize file name.
 #--------------------------------------------------------------------------------------------------
 
-def legalise(path):
-    path = path.replace('\\', '_')
-    path = path.replace('/', '_')
-    path = path.replace(':', '_')
-    path = path.replace('*', '_')
-    path = path.replace('?', '_')
-    path = path.replace('"', '')
-    path = path.replace('<', '_')
-    path = path.replace('>', '_')
-    path = path.replace('|', '_')
-    return path
+def legalizeFilename(filename):
+    filename = filename.replace('\\', '_')
+    filename = filename.replace('/', '_')
+    filename = filename.replace(':', '_')
+    filename = filename.replace('*', '_')
+    filename = filename.replace('?', '_')
+    filename = filename.replace('"', '')
+    filename = filename.replace('<', '_')
+    filename = filename.replace('>', '_')
+    filename = filename.replace('|', '_')
+    return filename
 
 #
 # list objects by shader -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
