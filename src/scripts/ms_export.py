@@ -20,7 +20,7 @@
 
 
 import maya.cmds as cmds
-import maya.mel
+import maya.mel as mel 
 import maya.utils as mu
 import os
 import time
@@ -29,6 +29,7 @@ import subprocess
 import sys
 import ms_commands
 import ms_export_obj
+import time
 
 inch_to_meter = 0.02539999983236
 
@@ -249,6 +250,14 @@ def getMayaParams(render_settings_node):
     else:
         params['gtrSampler'] = 'adaptive'
 
+    # select obj exporter
+    if cmds.pluginInfo(('ms_export_obj_' + str(int(mel.eval('getApplicationVersionAsFloat()')))), query=True, r=True):
+        params['obj_exporter'] = ms_commands.export_obj
+    else:
+        cmds.warning('no compiled obj exporter present, exporting using python obj exporter')
+        params['obj_exporter'] = ms_export_obj.export
+
+
     return params
 
 
@@ -397,12 +406,12 @@ class Material():
             if cmds.nodeType(alpha_map_connection[0]) == 'file':
                 #create texture node and 
                     #work out texture path
-                    maya_texture_file = ms_commands.getFileTextureName(alpha_map_connection)
+                    maya_texture_file = ms_commands.getFileTextureName(alpha_map_connection[0])
                     output_dir = os.path.join(params['outputDir'], params['tex_dir'])
                     texture = ms_commands.convertTexToExr(maya_texture_file, output_dir, overwrite=self.params['overwriteExistingExrs'], pass_through=False)
 
                     texture_node = Texture((self.name + '_alpha_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
-                    self.alpha_map = texture_node.name
+                    self.alpha_map = texture_node.name + '_inst'
                     self.textures = self.textures + [texture_node]
 
 
@@ -411,12 +420,12 @@ class Material():
             if cmds.nodeType(normal_map_connection[0]) == 'file':
                 #create texture node and 
                     #work out texture path
-                    maya_texture_file = ms_commands.getFileTextureName(normal_map_connection)
+                    maya_texture_file = ms_commands.getFileTextureName(normal_map_connection[0])
                     output_dir = os.path.join(params['outputDir'], params['tex_dir'])
                     texture = ms_commands.convertTexToExr(maya_texture_file, output_dir, overwrite=self.params['overwriteExistingExrs'], pass_through=False)
 
                     texture_node = Texture((self.name + '_alpha_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
-                    self.normal_map = texture_node.name
+                    self.normal_map = texture_node.name + '_inst'
                     self.textures = self.textures + [texture_node]
 
 
@@ -505,8 +514,6 @@ class ShadingNode():
                             output_dir = os.path.join(params['outputDir'], params['tex_dir'])
 
                             texture = ms_commands.convertTexToExr(maya_texture_file, output_dir, overwrite=self.params['overwriteExistingExrs'], pass_through=False)
-
-                            print '****', texture
 
                             texture_node = Texture((connected_node + '_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
                             attribute_value = (texture_node.name + '_inst')
@@ -941,7 +948,7 @@ class Assembly():
                     cmds.refresh()
 
                     output_file = os.path.join(self.params['outputDir'], self.params['geo_dir'], ('{0}.{1:03}.obj'.format(file_name,i)))
-                    ms_commands.export_obj(geo.name, output_file, overwrite=True)
+                    self.params['obj_exporter'](geo.name, output_file, overwrite=True)
 
                     doc.appendParameter('{0:03}'.format(i), '{0}/{1}.{2:03}.obj'.format(self.params['geo_dir'],file_name,i))
 
@@ -949,7 +956,7 @@ class Assembly():
                 cmds.currentTime(start_time)
             else:
                 output_file = os.path.join(self.params['outputDir'], self.params['geo_dir'], file_name + '.obj')
-                ms_commands.export_obj(geo.name, output_file)
+                self.params['obj_exporter'](geo.name, output_file)
 
                 doc.appendParameter('filename', os.path.join(self.params['geo_dir'], file_name + '.obj'))
 
@@ -1215,6 +1222,9 @@ class Configurations():
 #--------------------------------------------------------------------------------------------------
 
 def export(render_settings_node):
+
+    start_time = time.time()
+
     params = getMayaParams(render_settings_node)
 
     if params['exportAnimation']:
@@ -1291,5 +1301,10 @@ def export(render_settings_node):
     cmds.currentTime(original_time)
     cmds.select(render_settings_node)
 
-    print('export finished')
-    cmds.confirmDialog(message='Export finished', button='ok')
+    export_time = time.time() - start_time
+
+    print 'export finished in', export_time, 'seconds'
+
+    cmds.confirmDialog(message=('Export finished in {0} seconds'.format(export_time)), button='ok')
+
+
