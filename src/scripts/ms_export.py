@@ -796,7 +796,13 @@ class Geometry():
     def writeXMLInstance(self, doc):
         print('writing object instance: '+ self.name)
         doc.startElement('object_instance name="{0}.0_inst" object="{1}.0"'.format(self.safe_name, self.safe_name))
-        writeTransform(doc)
+
+        if self.params['exportTransformationBlur']:
+            writeTransform(doc, self.params['scene_scale'], self.name, self.params['exportTransformationBlur'])
+        else:
+            # write 0 transform as the assembly will handle that
+            writeTransform(doc)
+
         if self.material_name:
             doc.appendElement('assign_material slot="0" side="front" material="{0}"'.format(self.material_name))
             if self.params['matDoubleShade']:
@@ -1097,22 +1103,25 @@ class Scene():
             self.environment.writeXML(doc)
 
         #export assemblies
-        #get maya geometry
-        shape_list = cmds.ls(g=True, v=True) 
-        for geo in shape_list:
-            if ms_commands.shapeIsExportable(geo):
-                # add first connected transform to the list
-                geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
-                geo_assembly = Assembly(self.params, (geo_transform + '_assembly'), [geo], geo_transform)
-                geo_assembly.writeXML(doc)
-
-        #get maya lights
+        shape_list = cmds.ls(g=True, v=True)
         light_list = cmds.ls(lt=True, v=True)
-        for light in light_list:
-                light_transform = cmds.listRelatives(light, ad=True, ap=True)[0]
-                light_assembly = Assembly(self.params, (light_transform + '_assembly'), [light], light_transform)
-                light_assembly.writeXML(doc)    
 
+        if self.params['exportTransformationBlur']:
+            for geo in shape_list:
+                if ms_commands.shapeIsExportable(geo):
+                    # add first connected transform to the list
+                    geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
+                    geo_assembly = Assembly(self.params, (geo_transform + '_assembly'), [geo], geo_transform)
+                    geo_assembly.writeXML(doc)
+
+
+            for light in light_list:
+                    light_transform = cmds.listRelatives(light, ad=True, ap=True)[0]
+                    light_assembly = Assembly(self.params, (light_transform + '_assembly'), [light], light_transform)
+                    light_assembly.writeXML(doc)
+        else:
+            assembly = Assembly(self.params, 'light_assembly', (light_list + shape_list))
+            assembly.writeXML(doc)
 
         doc.endElement('scene')
 
