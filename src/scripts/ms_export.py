@@ -1310,4 +1310,4 @@ def export(render_settings_node):
     export_time = time.time() - start_time
     export_message = "Export completed in {0:.1f} seconds.".format(export_time)
     print export_message
-    cmds.confirmDialog(title="Export Completed", icon='information', message=export_message), button="OK")
+    cmds.confirmDialog(title="Export Completed", icon='information', message=export_message, button="OK")
