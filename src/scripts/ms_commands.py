@@ -169,26 +169,26 @@ def convertConnectionToImage(shader, attribute, dest_file, resolution=1024, pass
 # convert texture to exr ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 
+def findPathToImfCopy():
+    maya_path = os.path.split(sys.path[0])[0]
+    maya_version = mel.eval('getApplicationVersionAsFloat()')
+
+    if maya_version >= 2013.0:
+        return os.path.join(maya_path, 'mentalray', 'bin', 'imf_copy')
+    else:
+        return os.path.join(maya_path, 'bin', 'imf_copy')
+
 def convertTexToExr(file_path, dest_dir, overwrite=True, pass_through=False):
     if os.path.exists(file_path):
         dest_file = os.path.join(dest_dir, os.path.splitext(os.path.split(file_path)[1])[0] + '.exr')
-        if (overwrite == False) and (os.path.exists(dest_file)):
+        if not overwrite and os.path.exists(dest_file):
             print '# {0} exists, skipping conversion'.format(dest_file)
         elif pass_through == True:
             print '# {0}: skipping conversion'.format(dest_file)
         else:
-            
-            maya_version = mel.eval('getApplicationVersionAsFloat()')
-            imf_copy_path = ""
-
-            if maya_version >= 2013.0:
-                imf_copy_path = os.path.join(os.path.split(os.path.split(os.path.split(sys.path[0])[0])[0])[0],'mentalray', 'bin', 'imf_copy')
-            else:
-                imf_copy_path = os.path.join(os.path.split(sys.path[0])[0], 'bin', 'imf_copy')
-
             if not os.path.exists(dest_dir):
                 os.mkdir(dest_dir)
-            p = subprocess.Popen([imf_copy_path, file_path, dest_file])
+            p = subprocess.Popen([findPathToImfCopy(), file_path, dest_file])
         return dest_file
     else:
         print '# error: {0} does not exist'.format(file_path)
@@ -530,15 +530,6 @@ def convertMaterial():
                 for object in listObjectsByShader(material):
                     cmds.select(object, r=True)
                     cmds.hyperShade(assign=new_material_node)
-                
 
     else:
         cmds.warning('no shaders selected') 
-        
-        
-        
-    
-    
-    
-    
-
