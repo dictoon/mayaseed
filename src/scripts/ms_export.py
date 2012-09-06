@@ -296,7 +296,7 @@ class Color():
 #--------------------------------------------------------------------------------------------------
 
 class Texture():
-    def __init__(self, name, file_name, color_space='srgb'):
+    def __init__(self, name, file_name, color_space='srgb', alpha_as_luminance=False):
         self.name = name
         
         dir_name = ms_commands.legalise(os.path.split(file_name)[0])
@@ -305,6 +305,11 @@ class Texture():
         self.file_name = os.path.join(dir_name, file)
 
         self.color_space = color_space
+
+        if alpha_as_luminance:
+            self.alpha_mode = 'luminance'
+        else:
+            self.alpha_mode = 'alpha_channel'
 
     def writeXMLObject(self, doc):
         print('writing texture object {0}'.format(self.name))
@@ -318,6 +323,7 @@ class Texture():
         doc.startElement('texture_instance name="{0}_inst" texture="{0}"'.format(self.name, self.name))
         doc.appendParameter('addressing_mode', 'clamp')
         doc.appendParameter('filtering_mode', 'bilinear')
+        doc.appendParameter('alpha_mode', self.alpha_mode)
         doc.endElement('texture_instance')
 
 
@@ -408,7 +414,7 @@ class Material():
                 maya_texture_file = ms_commands.getFileTextureName(alpha_map_connection[0])
                 output_dir = os.path.join(params['outputDir'], params['tex_dir'])
                 texture = ms_commands.convertTexToExr(maya_texture_file, output_dir, overwrite=self.params['overwriteExistingExrs'], pass_through=False)
-                texture_node = Texture((self.name + '_alpha_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
+                texture_node = Texture((self.name + '_alpha_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb', alpha_as_luminance=True)
                 self.alpha_map = texture_node.name + '_inst'
                 self.textures = self.textures + [texture_node]
 
