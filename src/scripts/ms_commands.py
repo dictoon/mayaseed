@@ -163,39 +163,76 @@ def convertConnectionToImage(shader, attribute, dest_file, resolution=1024, pass
             cmds.convertSolidTx(connection[0] ,connected_object ,fileImageName=dest_file, antiAlias=True, bm=3, fts=True, sp=True, alpha=True, doubleSided=True, resolutionX=resolution, resolutionY=resolution)
         
         return dest_file
-  
 
-#
-# convert texture to exr ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-#
+
+#--------------------------------------------------------------------------------------------------
+# Convert textures to OpenEXR format.
+#--------------------------------------------------------------------------------------------------
 
 def findPathToImfCopy():
-    maya_path = os.path.split(sys.path[0])[0]
-    maya_version = mel.eval('getApplicationVersionAsFloat()')
+    #
+    # Values of maya_base_path:
+    #
+    #                   Maya 2012                           Maya 2013
+    #   --------------------------------------------------------------------------
+    #   Mac OS X        maya2012/Maya.app/Contents          maya2013/Maya.app/Contents
+    #   Windows         Maya2012                            Maya2013
+    #   Linux           ?                                   ?
+    #
+    # Locations of imf_copy:
+    #
+    #                   Maya 2012                           Maya 2013
+    #   --------------------------------------------------------------------------
+    #   Mac OS X        maya2012/Maya.app/Contents/bin      maya2013/mentalray/bin
+    #   Windows         Maya2012\bin                        Maya2013\mentalray\bin
+    #   Linux           ?                                   ?
+    #
 
-    if maya_version >= 2013.0:
-        return os.path.join(maya_path, 'mentalray', 'bin', 'imf_copy')
+    maya_base_path = os.path.split(sys.path[0])[0]
+    imf_copy_path = None
+
+    if mel.eval('getApplicationVersionAsFloat()') >= 2013.0:
+        if sys.platform == 'darwin':
+            imf_copy_path = os.path.join(maya_base_path, '..', '..', 'mentalray', 'bin')
+        elif sys.platform == 'win32':
+            imf_copy_path = os.path.join(maya_base_path, 'mentalray', 'bin')
     else:
-        return os.path.join(maya_path, 'bin', 'imf_copy')
+        imf_copy_path = os.path.join(maya_base_path, 'bin')
+
+    return None if imf_copy_path is None else os.path.join(imf_copy_path, 'imf_copy')
 
 def convertTexToExr(file_path, dest_dir, overwrite=True, pass_through=False):
-    if os.path.exists(file_path):
-        dest_file = os.path.join(dest_dir, os.path.splitext(os.path.split(file_path)[1])[0] + '.exr')
-        if not overwrite and os.path.exists(dest_file):
-            print '# {0} exists, skipping conversion'.format(dest_file)
-        elif pass_through == True:
-            print '# {0}: skipping conversion'.format(dest_file)
-        else:
-            if not os.path.exists(dest_dir):
-                os.mkdir(dest_dir)
-            p = subprocess.Popen([findPathToImfCopy(), file_path, dest_file])
-        return dest_file
-    else:
-        print '# error: {0} does not exist'.format(file_path)
+    dest_file = os.path.join(dest_dir, os.path.splitext(os.path.split(file_path)[1])[0] + '.exr')
 
-#
-# check if an object is exportable ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-#
+    if not os.path.exists(file_path):
+        print "# error: {0} does not exist".format(file_path)
+        return dest_file
+
+    if pass_through:
+        print "# skipping conversion of {0}".format(file_path)
+        return dest_file
+
+    if os.path.exists(dest_file) and not overwrite:
+        print "# {0} already exists, skipping conversion".format(dest_file)
+        return dest_file
+
+    imf_copy_path = findPathToImfCopy()
+
+    if imf_copy_path is None:
+        print "# error: cannot convert {0}, imf_copy utility not found".format(file_path)
+        return dest_file
+
+    if not os.path.exists(dest_dir):
+        os.mkdir(dest_dir)
+
+    p = subprocess.Popen([imf_copy_path, file_path, dest_file])
+
+    return dest_file
+
+
+#--------------------------------------------------------------------------------------------------
+# Check if an object is exportable.
+#--------------------------------------------------------------------------------------------------
 
 def shapeIsExportable(node_name):
     
