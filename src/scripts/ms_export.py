@@ -365,7 +365,7 @@ class Material():
         bsdf_connection = cmds.listConnections(self.name + '.BSDF_color')
         if bsdf_connection:
             if cmds.nodeType(bsdf_connection[0]) == 'ms_appleseed_shading_node':
-                #create shading node object
+                # create shading node object
                 shading_node = ShadingNode(self.params, bsdf_connection[0])
                 self.bsdf = shading_node.name
                 self.child_shading_nodes = self.child_shading_nodes + [shading_node] + shading_node.getChildren()
@@ -375,7 +375,7 @@ class Material():
         edf_connection = cmds.listConnections(self.name + '.EDF_color')
         if edf_connection:
             if cmds.nodeType(edf_connection[0]) == 'ms_appleseed_shading_node':
-                #create shading node object
+                # create shading node object
                 shading_node = ShadingNode(self.params, edf_connection[0])
                 self.edf = shading_node.name
                 self.child_shading_nodes = self.child_shading_nodes + [shading_node] + shading_node.getChildren()
@@ -385,7 +385,7 @@ class Material():
         surface_shader_connection = cmds.listConnections(self.name + '.surface_shader_color')
         if surface_shader_connection:
             if cmds.nodeType(surface_shader_connection[0]) == 'ms_appleseed_shading_node':
-                #create shading node object
+                # create shading node object
                 shading_node = ShadingNode(self.params, surface_shader_connection[0])
                 self.surface_shader = shading_node.name
                 self.child_shading_nodes = self.child_shading_nodes + [shading_node] + shading_node.getChildren()
@@ -395,16 +395,14 @@ class Material():
         alpha_map_connection = cmds.listConnections(self.name + '.alpha_map_color')
         if alpha_map_connection:
             if cmds.nodeType(alpha_map_connection[0]) == 'file':
-                #create texture node and 
-                    #work out texture path
-                    maya_texture_file = ms_commands.getFileTextureName(alpha_map_connection)
-                    output_dir = os.path.join(params['outputDir'], params['tex_dir'])
-                    texture = ms_commands.convertTexToExr(maya_texture_file, output_dir, overwrite=self.params['overwriteExistingExrs'], pass_through=False)
+                # create texture node and work out texture path
+                maya_texture_file = ms_commands.getFileTextureName(alpha_map_connection)
+                output_dir = os.path.join(params['outputDir'], params['tex_dir'])
+                texture = ms_commands.convertTexToExr(maya_texture_file, output_dir, overwrite=self.params['overwriteExistingExrs'], pass_through=False)
 
-                    texture_node = Texture((self.name + '_alpha_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
-                    self.alpha_map = texture_node.name
-                    self.textures = self.textures + [texture_node]
-
+                texture_node = Texture((self.name + '_alpha_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
+                self.alpha_map = texture_node.name
+                self.textures = self.textures + [texture_node]
 
         normal_map_connection = cmds.listConnections(self.name + '.normal_map_color')
         if normal_map_connection:
