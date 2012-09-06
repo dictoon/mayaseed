@@ -28,6 +28,7 @@ import sys
 import inspect
 import subprocess
 from xml.dom.minidom import parseString
+import ms_export_obj
 
 
 #****************************************************************************************************************************************************************************************************
@@ -184,10 +185,6 @@ def convertTexToExr(file_path, dest_dir, overwrite=True, pass_through=False):
                 imf_copy_path = os.path.join(os.path.split(os.path.split(os.path.split(sys.path[0])[0])[0])[0],'mentalray', 'bin', 'imf_copy')
             else:
                 imf_copy_path = os.path.join(os.path.split(sys.path[0])[0], 'bin', 'imf_copy')
-
-            print '**********' , imf_copy_path
-
-
 
             if not os.path.exists(dest_dir):
                 os.mkdir(dest_dir)
@@ -425,20 +422,16 @@ def getFileTextureName(file_node):
 # export .obj file ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 
-# This function is a wrapper that aims to choose the best obj exporter. It will choose
-# the C++ option if possible, otherwise it will fall back to the cross platform Python version.
+# This function is a wrapper for the C++ obj exporter
 
 def export_obj(object_name, file_path, overwrite=True):
-    directory = os.path.split(file_path)[0]
 
+    directory = os.path.split(file_path)[0]
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-    if cmds.pluginInfo('ms_export_obj', query=True, r=True):
-        safe_file_path = file_path.replace('\\', '\\\\')
-        mel.eval('ms_export_obj -mesh "{0}" -filePath "{1}"'.format(object_name, safe_file_path))
-    else:
-        ms_export_obj.export(object_name, file_path, overwrite)
+    safe_file_path = file_path.replace('\\', '\\\\')
+    mel.eval('ms_export_obj -mesh "{0}" -filePath "{1}"'.format(object_name, safe_file_path))
 
 
 #
@@ -482,7 +475,7 @@ def getConnectedNode(connection):
 # convert shader -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 
-def convertMaterial()
+def convertMaterial():
 
     materials = cmds.ls(sl=True, mat=True)
 
@@ -502,13 +495,13 @@ def convertMaterial()
                 transparency_connection = getConnectedNode(material + '.transparency')
                 # bump_connection = getConnectedNode(material + '.bumpMapping')
 
-                bsdf = ms_commands.createShadingNode('ashikhmin_brdf')
-                cmds.connectAttr((brdf + '.outColor'), (new_material_node + '.BSDF_color'))
+                bsdf = createShadingNode('ashikhmin_brdf')
+                cmds.connectAttr((bsdf + '.outColor'), (new_material_node + '.BSDF_color'))
                 
-                # edf = ms_commands.createShadingNode('diffuse_edf')
+                # edf = createShadingNode('diffuse_edf')
                 # cmds.connectAttr((edf + '.outColor'), (new_material_node + '.EDF_color'))
                 
-                surface_shader = ms_commands.createShadingNode('physical_surface_shader')
+                surface_shader = createShadingNode('physical_surface_shader')
                 cmds.connectAttr((surface_shader + '.outColor'), (new_material_node + '.surface_shader_color'))
                 
                 
@@ -516,16 +509,19 @@ def convertMaterial()
                 color_value = cmds.getAttr(material + '.outColor')[0]
                 cmds.setAttr((bsdf + '.diffuse_reflectance'), color_value[0], color_value[1], color_value[2], type='float3')            
                 if color_connection: 
+                    print 'connecting', color_connection, 'out_color to', bsdf, 'diffuse_reflectance'
                     cmds.connectAttr((color_connection + '.outColor'), (bsdf + '.diffuse_reflectance'))
 
                 color_value = cmds.getAttr(material + '.specularColor')[0]
                 cmds.setAttr((bsdf + '.glossy_reflectance'), color_value[0], color_value[1], color_value[2], type='float3')             
                 if specular_color_connection:
+                    print 'connecting', specular_color_connection, 'specular_color to', bsdf, 'glossy_reflectance'
                     cmds.connectAttr((specular_color_connection + '.outColor'), (bsdf + '.glossy_reflectance'))
 
                 color_value = cmds.getAttr(material + '.transparency')[0]
                 cmds.setAttr((new_material_node + '.alpha_map_color'), color_value[0], color_value[1], color_value[2], type='float3')  
                 if transparency_connection:
+                    print 'connecting', transparency_connection, 'out_color to', new_material_node, 'alpha_map_color'
                     cmds.connectAttr((transparency_connection + '.outColor'), (new_material_node + '.alpha_map_color'))
 
                 # assign shader to new objects
