@@ -813,13 +813,15 @@ class Assembly():
         self.color_objects = []
         self.texture_objects = []
 
-        #add shape nodes as geo objects
+        # add shape nodes as geo objects
         if object_list:
             for object in object_list:
                 if cmds.nodeType(object) == 'mesh':
                     geo_transform = cmds.listRelatives(object, ad=True, ap=True)[0]
                     if not (geo_transform in self.geo_objects):
-                        self.geo_objects.append(Geometry(self.params, geo_transform, (self.params['geo_dir']+self.name+'.obj'), self.name))
+                        geo_filename = self.name + '.obj'
+                        geo_filepath = os.path.join(self.params['geo_dir'], geo_filename)
+                        self.geo_objects.append(Geometry(self.params, geo_transform, geo_filepath, self.name))
                 elif cmds.nodeType(object) == 'pointLight':
                     light_transform = cmds.listRelatives(object, ad=True, ap=True)[0]
                     if not (light_transform in self.light_objects):
@@ -833,12 +835,12 @@ class Assembly():
                         light_object.outer_angle = cmds.getAttr(object + '.coneAngle') + cmds.getAttr(object + '.penumbraAngle')
                         self.light_objects.append(light_object)
 
-        #add light colors to list
+        # add light colors to list
         for light_object in self.light_objects:
             light_color_object = Color(light_object.color_name, light_object.color, light_object.multiplier)
             self.color_objects.append(light_color_object)
 
-        #populate material, shading_node and color list
+        # populate material, shading node and color list
         for geo in self.geo_objects:
             if geo.getMaterial():
                 self.material_objects = self.material_objects + [geo.getMaterial()]
@@ -848,8 +850,9 @@ class Assembly():
             self.color_objects = self.color_objects + geo.colors
             self.texture_objects = self.texture_objects + geo.textures
 
-        #uniquify lists of materials, shadig_nodes ,colors and textures by turning them into dicts
-        #materials
+        # uniquify lists of materials, shading nodes, colors and textures by turning them into dictionaries.
+
+        # materials
         unsorted_materials = self.material_objects
         self.material_objects = dict()
         for material in unsorted_materials:
@@ -857,7 +860,7 @@ class Assembly():
                 self.material_objects[material.name] = material
         self.material_objects = self.material_objects.values()
 
-        #shading_nodes
+        # shading nodes
         unsorted_shading_nodes = self.shading_node_objects
         self.shading_node_objects = dict()
         for shading_node in unsorted_shading_nodes:
@@ -865,7 +868,7 @@ class Assembly():
                 self.shading_node_objects[shading_node.name] = shading_node
         self.shading_node_objects = self.shading_node_objects.values()
 
-        #colors
+        # colors
         unsorted_colors = self.color_objects
         self.color_objects = dict()
         for color in unsorted_colors:
@@ -873,7 +876,7 @@ class Assembly():
                 self.color_objects[color.name] = color
         self.color_objects = self.color_objects.values()
 
-        #textures
+        # textures
         unsorted_textures = self.texture_objects
         self.texture_objects = dict()
         for texture in unsorted_textures:
@@ -881,38 +884,38 @@ class Assembly():
                 self.texture_objects[texture.name] = texture
         self.texture_objects = self.texture_objects.values()
 
-
     def writeXML(self, doc):
         print('writing assembly: {0}'.format(self.name))
         doc.startElement('assembly name="{0}"'.format(self.name))
 
-        #write colors
+        # write colors
         for col in self.color_objects:
             col.writeXML(doc)
 
-        #write texture objects
+        # write texture objects
         for tex in self.texture_objects:
             tex.writeXMLObject(doc)
-        #write texture instances
+
+        # write texture instances
         for tex in self.texture_objects:
             tex.writeXMLInstance(doc)
 
-        #write bsdfs
+        # write bsdfs
         for shading_node in self.shading_node_objects:
             if shading_node.type == 'bsdf':
                 shading_node.writeXML(doc)
 
-        #write edfs
+        # write edfs
         for shading_node in self.shading_node_objects:
             if shading_node.type == 'edf':
                 shading_node.writeXML(doc)
 
-        #write surface_shaders
+        # write surface shaders
         for shading_node in self.shading_node_objects:
             if shading_node.type == 'surface_shader':
                 shading_node.writeXML(doc)
 
-        #write materials
+        # write materials
         for material in self.material_objects:
             material.writeXML(doc)
 
@@ -954,19 +957,19 @@ class Assembly():
                 doc.appendParameter('filename', os.path.join(self.params['geo_dir'], file_name + '.obj'))
 
             doc.endElement('object')
-        
-        #write lights
+
+        # write lights
         for light_object in self.light_objects:
            light_object.writeXML(doc)
-        
-        #write geo object instances
+
+        # write geo object instances
         for geo in self.geo_objects:
             geo.writeXMLInstance(doc)
-        
+
         doc.endElement('assembly')
         doc.startElement('assembly_instance name="{0}_inst" assembly="{1}"'.format(self.name, self.name))
-        
-        #if transformation blur is set output the transform with motion from the position_from_object variable
+
+        # if transformation blur is set output the transform with motion from the position_from_object variable
         if self.params['exportTransformationBlur']:
             writeTransform(doc, self.params['scene_scale'], self.position_from_object, True, self.params['motionSamples'])
         else:
