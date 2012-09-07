@@ -34,22 +34,19 @@ import ms_export_obj
 import random
 
 
-#****************************************************************************************************************************************************************************************************
-# constant vars *************************************************************************************************************************************************************************************
-#****************************************************************************************************************************************************************************************************
+#--------------------------------------------------------------------------------------------------
+# Constants.
+#--------------------------------------------------------------------------------------------------
 
 MAYASEED_VERSION = '0.1.7'
 MAYASEED_URL = 'https://github.com/jonathantopf/mayaseed'
 APPLESEED_URL = 'http://appleseedhq.net/'
 ROOT_DIRECTORY = os.path.split((os.path.dirname(inspect.getfile(inspect.currentframe()))))[0]
 
-#****************************************************************************************************************************************************************************************************
-# utilitiy functions & classes **********************************************************************************************************************************************************************
-#****************************************************************************************************************************************************************************************************
 
-#
-# addMsShadingAttribs function ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-#    
+#--------------------------------------------------------------------------------------------------
+# addShadingAttribs function.
+#--------------------------------------------------------------------------------------------------
 
 def addShadingAttribs():
     shaderName = False
@@ -67,9 +64,10 @@ def addShadingAttribs():
         else:
             print '# {0} already has Mayaseed shader attributes'.format(shaderName)
 
-#
-# removeMsShadingAttribs function -------------------------------------------------------------------------------------------------------------------------------------------------------------------
-#  
+
+#--------------------------------------------------------------------------------------------------
+# removeShadingAttribs function.
+#--------------------------------------------------------------------------------------------------
 
 def removeShadingAttribs():
     shaderName = ''
@@ -87,9 +85,10 @@ def removeShadingAttribs():
         else:
             print '# {0} has no Mayaseed shader attributes to remove'.format(shaderName)
 
-#
-# show info dialogue -------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# 
+
+#--------------------------------------------------------------------------------------------------
+# Show About dialog.
+#--------------------------------------------------------------------------------------------------
 
 class msInfoDial():
     def __init__(self):
@@ -101,7 +100,7 @@ class msInfoDial():
         cmds.text('', width=30)
         cmds.image(image=os.path.join(ROOT_DIRECTORY, 'graphics', 'mayaseed_graphic.png'))
         cmds.setParent('..')
-        cmds.text('version: ' + MAYASEED_VERSION)
+        cmds.text('Version: ' + MAYASEED_VERSION)
         cmds.text(open(os.path.join(ROOT_DIRECTORY, 'scripts', 'about.txt'),'r').read(), width=500, wordWrap=True, al='left')
         cmds.rowLayout(numberOfColumns=4)
         cmds.button( label='Mayaseed website', command=('import webbrowser\nwebbrowser.open_new_tab("http://www.jonathantopf.com/mayaseed/")'))
@@ -117,9 +116,9 @@ class msInfoDial():
         cmds.showWindow(window)
 
 
-#
-# clamp RGB values ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-#
+#--------------------------------------------------------------------------------------------------
+# Normalize an RGB color.
+#--------------------------------------------------------------------------------------------------
 
 def normalizeRGB(color):
     R = color[0]
@@ -138,12 +137,12 @@ def normalizeRGB(color):
     G = G / M
     B = B / M
 
-    return (R,G,B,M)
+    return (R, G, B, M)
 
 
-#
-# convert shader connection to image ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-#
+#--------------------------------------------------------------------------------------------------
+# Convert shader connection to image.
+#--------------------------------------------------------------------------------------------------
 
 def convertConnectionToImage(shader, attribute, dest_file, resolution=1024, pass_through=False):
     
@@ -238,32 +237,29 @@ def convertTexToExr(file_path, dest_dir, overwrite=True, pass_through=False):
 #--------------------------------------------------------------------------------------------------
 
 def shapeIsExportable(node_name):
-    
-    #check the node exists
+    # check if the node exists
     if not cmds.objExists(node_name):
         return False
-    
-    #check if the node has a visibility attribute meaning ita a dag node
+
+    # check if the node has a visibility attribute meaning it's a DAG node
     if not cmds.attributeQuery('visibility', node=node_name, exists=True):
         return False
-    
-    #check visibility flag
-    if not cmds.getAttr(node_name+'.visibility'):
+
+    # check visibility flag
+    if not cmds.getAttr(node_name + '.visibility'):
         return False
 
-        
-    #check to see if its an intermediate mesh
-
+    # check to see if it's an intermediate mesh
     if cmds.attributeQuery('intermediateObject', node=node_name, exists=True):
-        if cmds.getAttr(node_name+'.intermediateObject'):
+        if cmds.getAttr(node_name + '.intermediateObject'):
             return False
-        
-    #is it in a hidden display layer
-    if (cmds.attributeQuery('overrideEnabled', node=node_name, exists=True) and cmds.getAttr(node_name+'.overrideEnabled')):
-        if not cmds.getAttr(node_name+'.overrideVisibility'):
+
+    # check if it is a hidden display layer
+    if cmds.attributeQuery('overrideEnabled', node=node_name, exists=True) and cmds.getAttr(node_name + '.overrideEnabled'):
+        if not cmds.getAttr(node_name + '.overrideVisibility'):
             return False
-    
-    #has it got a parent and is it visible
+
+    # has it got a parent and is it visible?
     if cmds.listRelatives(node_name, parent=True):
         if not shapeIsExportable(cmds.listRelatives(node_name, parent=True)[0]):
             return False
@@ -271,20 +267,19 @@ def shapeIsExportable(node_name):
     return True
 
 
-#
-# check is object has shader connected ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-#
+#--------------------------------------------------------------------------------------------------
+# Check if an object has a shader connected.
+#--------------------------------------------------------------------------------------------------
 
 def hasShaderConnected(node_name):
-
-    #check that the shape has a shader connected
+    # check that the shape has a shader connected
     if not cmds.listConnections(node_name, t='shadingEngine'):
         return False
 
-    else:
-        shadingEngine = cmds.listConnections(node_name, t='shadingEngine')[0]
-        if not cmds.connectionInfo((shadingEngine + '.surfaceShader'),sourceFromDestination=True).split('.')[0]:
-            return False
+    shadingEngine = cmds.listConnections(node_name, t='shadingEngine')[0]
+    if not cmds.connectionInfo(shadingEngine + '.surfaceShader', sourceFromDestination=True).split('.')[0]:
+        return False
+
     return True
 
 
@@ -293,7 +288,6 @@ def hasShaderConnected(node_name):
 #
 
 def getEntityDefs(xml_file_path, list=False):
-
     nodes = dict()
 
     class Node():
@@ -316,7 +310,6 @@ def getEntityDefs(xml_file_path, list=False):
 
     dom = parseString(data)
 
-
     for entity in dom.getElementsByTagName('entity'):
         
         #create new dict entry to store the node info
@@ -332,7 +325,7 @@ def getEntityDefs(xml_file_path, list=False):
                 for param in child.childNodes:
                     if not param.nodeName == '#text': 
                         
-                        #node is a parameter with single value               
+                        #node is a parameter with single value
                         if param.nodeName == 'parameter':
                             
                             #get attribute type
@@ -345,7 +338,7 @@ def getEntityDefs(xml_file_path, list=False):
                             elif param.getAttribute('name') == 'label':
                                 nodes[entity.getAttribute('model')].attributes[child.getAttribute('name')].label = param.getAttribute('value')
                                 
-                        #node is a parameter with multiple values          
+                        #node is a parameter with multiple values
                         elif param.nodeName == 'parameters':
                             
                             #if the node contains entity types we are interested
@@ -355,59 +348,51 @@ def getEntityDefs(xml_file_path, list=False):
                                         if node.nodeName == 'parameter':
                                             nodes[entity.getAttribute('model')].attributes[child.getAttribute('name')].entity_types.append(node.getAttribute('name'))
 
-
-
     if list:
-        #print out all the discovered nodes
+        print 'Found the following appleseed nodes:\n'
 
-        print 'Found the following appleseed nodes\n'
         for node_key in nodes.iterkeys():
             print '  ' + nodes[node_key].name
             
-            print '    type                      :' + nodes[node_key].type
-            print '    attributes                :'
+            print '    type                      : ' + nodes[node_key].type
+            print '    attributes                : '
 
-            
             for attr_key in nodes[node_key].attributes.iterkeys():
-                print '      name                    :' + nodes[node_key].attributes[attr_key].name
-                print '      type                    :' + nodes[node_key].attributes[attr_key].type
-                print '      label                   :' + nodes[node_key].attributes[attr_key].label
-                print '      default                 :' + nodes[node_key].attributes[attr_key].default_value
-                print '      allowed connections     :'
-                
+                print '      name                    : ' + nodes[node_key].attributes[attr_key].name
+                print '      type                    : ' + nodes[node_key].attributes[attr_key].type
+                print '      label                   : ' + nodes[node_key].attributes[attr_key].label
+                print '      default                 : ' + nodes[node_key].attributes[attr_key].default_value
+                print '      allowed connections     : '
                 for entity_type in nodes[node_key].attributes[attr_key].entity_types:
                     print '        ' + entity_type
                 print''
+
             print'\n'
+
     return nodes
 
 
-#
-# add color attribute to node ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-#
+#--------------------------------------------------------------------------------------------------
+# Add color attribute to node.
+#--------------------------------------------------------------------------------------------------
 
 def addColorAttr(node_name, attribute_name, default_value=(0,0,0)):
-    cmds.addAttr(node_name, longName=attribute_name, usedAsColor=True, attributeType='float3' )
-    cmds.addAttr(node_name, longName=(attribute_name + '_R'), attributeType='float', parent=attribute_name )
-    cmds.addAttr(node_name, longName=(attribute_name + '_G'), attributeType='float', parent=attribute_name )
-    cmds.addAttr(node_name, longName=(attribute_name + '_B'), attributeType='float', parent=attribute_name )
+    cmds.addAttr(node_name, longName=attribute_name, usedAsColor=True, attributeType='float3')
+    cmds.addAttr(node_name, longName=(attribute_name + '_R'), attributeType='float', parent=attribute_name)
+    cmds.addAttr(node_name, longName=(attribute_name + '_G'), attributeType='float', parent=attribute_name)
+    cmds.addAttr(node_name, longName=(attribute_name + '_B'), attributeType='float', parent=attribute_name)
+    cmds.setAttr(node_name + '.' + attribute_name, default_value[0], default_value[1], default_value[2])
 
-    cmds.setAttr((node_name + '.' + attribute_name), default_value[0], default_value[1], default_value[2])
 
-
-#
-# cerate shading node ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# 
+#--------------------------------------------------------------------------------------------------
+# Create shading node.
+#--------------------------------------------------------------------------------------------------
 
 def createShadingNode(model, entity_defs_obj=False):
-    
-    entity_defs = ''
-
     if entity_defs_obj:
         entity_defs = entity_defs_obj
     else:
-       entity_defs = getEntityDefs(os.path.join(ROOT_DIRECTORY, 'scripts', 'appleseedEntityDefs.xml'))
-
+        entity_defs = getEntityDefs(os.path.join(ROOT_DIRECTORY, 'scripts', 'appleseedEntityDefs.xml'))
 
     shading_node_name = cmds.shadingNode('ms_appleseed_shading_node', asUtility=True)
 
@@ -474,101 +459,103 @@ def export_obj(object_name, file_path, overwrite=True):
 # Legalize file name.
 #--------------------------------------------------------------------------------------------------
 
-def legalise(path):
-    path = path.replace('\\', '_')
-    path = path.replace('/', '_')
-    path = path.replace(':', '_')
-    path = path.replace('*', '_')
-    path = path.replace('?', '_')
-    path = path.replace('"', '')
-    path = path.replace('<', '_')
-    path = path.replace('>', '_')
-    path = path.replace('|', '_')
-    return path
+def legalizeFilename(filename):
+    filename = filename.replace('\\', '_')
+    filename = filename.replace('/', '_')
+    filename = filename.replace(':', '_')
+    filename = filename.replace('*', '_')
+    filename = filename.replace('?', '_')
+    filename = filename.replace('"', '')
+    filename = filename.replace('<', '_')
+    filename = filename.replace('>', '_')
+    filename = filename.replace('|', '_')
+    return filename
 
-#
-# list objects by shader -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-#
+
+#--------------------------------------------------------------------------------------------------
+# List objects by shader.
+#--------------------------------------------------------------------------------------------------
 
 def listObjectsByShader(shader):
     shading_engine = cmds.listConnections(shader, type='shadingEngine')[0]
     return cmds.listConnections(shading_engine, type='mesh')
 
-#
-# get connected node -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-#
+
+#--------------------------------------------------------------------------------------------------
+# Get connected node.
+#--------------------------------------------------------------------------------------------------
 
 def getConnectedNode(connection):
     connections = cmds.listConnections(connection)
-    
-    if connections:
-        return connections[0]
-    else: 
-        return None
+    return None if connections is None else connections[0]
 
 
-#
-# convert shader -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-#
+#--------------------------------------------------------------------------------------------------
+# Material conversion.
+#--------------------------------------------------------------------------------------------------
 
-def convertMaterial():
-
+def convertSelectedMaterials():
     materials = cmds.ls(sl=True, mat=True)
 
+    if not materials:
+        cmds.warning('no materials selected') 
+        return
 
-    if materials:
-        
-        for material in materials:
+    for material in materials:
+        convertMaterial(material)
 
-            if cmds.nodeType(material) == 'phong' or 'blinn':
+def convertMaterial(material):
+    material_type = cmds.nodeType(material)
 
-                print '// converting shader', material
-               
-                new_material_node = cmds.shadingNode('ms_appleseed_material', asShader=True, name=(material + '_translation')) 
-
-                # set random hardware color
-                cmds.setAttr((new_material_node + '.hardware_color_in'), random.random(), random.random(), random.random(), type='float3')
-                
-                color_connection = getConnectedNode(material + '.color')
-                specular_color_connection = getConnectedNode(material + '.specularColor')
-                transparency_connection = getConnectedNode(material + '.transparency')
-                # bump_connection = getConnectedNode(material + '.bumpMapping')
-
-                bsdf = createShadingNode('ashikhmin_brdf')
-                cmds.connectAttr((bsdf + '.outColor'), (new_material_node + '.BSDF_color'))
-                
-                # edf = createShadingNode('diffuse_edf')
-                # cmds.connectAttr((edf + '.outColor'), (new_material_node + '.EDF_color'))
-                
-                surface_shader = createShadingNode('physical_surface_shader')
-                cmds.connectAttr((surface_shader + '.outColor'), (new_material_node + '.surface_shader_color'))
-                
-                
-                # connect & set attributes
-                color_value = cmds.getAttr(material + '.outColor')[0]
-                cmds.setAttr((bsdf + '.diffuse_reflectance'), color_value[0], color_value[1], color_value[2], type='float3')            
-                if color_connection: 
-                    print 'connecting', color_connection, 'out_color to', bsdf, 'diffuse_reflectance'
-                    cmds.connectAttr((color_connection + '.outColor'), (bsdf + '.diffuse_reflectance'))
-
-                color_value = cmds.getAttr(material + '.specularColor')[0]
-                cmds.setAttr((bsdf + '.glossy_reflectance'), color_value[0], color_value[1], color_value[2], type='float3')             
-                if specular_color_connection:
-                    print 'connecting', specular_color_connection, 'specular_color to', bsdf, 'glossy_reflectance'
-                    cmds.connectAttr((specular_color_connection + '.outColor'), (bsdf + '.glossy_reflectance'))
-
-                color_value = cmds.getAttr(material + '.transparency')[0]
-                cmds.setAttr((new_material_node + '.alpha_map_color'), color_value[0], color_value[1], color_value[2], type='float3')  
-                if transparency_connection:
-                    print 'connecting', transparency_connection, 'out_color to', new_material_node, 'alpha_map_color'
-                    cmds.connectAttr((transparency_connection + '.outColor'), (new_material_node + '.alpha_map_color'))
-
-                # assign shader to new objects
-                
-                cmds.select(clear=True)
-                for object in listObjectsByShader(material):
-                    cmds.select(object, r=True)
-                    cmds.hyperShade(assign=new_material_node)
-
+    if material_type == 'phong' or 'blinn':
+        convertPhongBlinnMaterial(material)
     else:
-        cmds.warning('no shaders selected') 
+        cmds.warning("don't know how to convert material of type '{0}'".format(material_type))
+
+def convertPhongBlinnMaterial(material):
+    print '// converting shader', material
+
+    new_material_node = cmds.shadingNode('ms_appleseed_material', asShader=True, name=(material + '_translation')) 
+
+    # set random hardware color
+    cmds.setAttr(new_material_node + '.hardware_color_in', random.random(), random.random(), random.random(), type='float3')
+
+    color_connection = getConnectedNode(material + '.color')
+    specular_color_connection = getConnectedNode(material + '.specularColor')
+    transparency_connection = getConnectedNode(material + '.transparency')
+    # bump_connection = getConnectedNode(material + '.bumpMapping')
+
+    bsdf = createShadingNode('ashikhmin_brdf')
+    cmds.connectAttr((bsdf + '.outColor'), (new_material_node + '.BSDF_color'))
+
+    # edf = createShadingNode('diffuse_edf')
+    # cmds.connectAttr((edf + '.outColor'), (new_material_node + '.EDF_color'))
+
+    surface_shader = createShadingNode('physical_surface_shader')
+    cmds.connectAttr((surface_shader + '.outColor'), (new_material_node + '.surface_shader_color'))
+
+    # connect & set attributes
+    color_value = cmds.getAttr(material + '.outColor')[0]
+    cmds.setAttr((bsdf + '.diffuse_reflectance'), color_value[0], color_value[1], color_value[2], type='float3')
+    if color_connection: 
+        print 'connecting', color_connection, 'out_color to', bsdf, 'diffuse_reflectance'
+        cmds.connectAttr((color_connection + '.outColor'), (bsdf + '.diffuse_reflectance'))
+
+    color_value = cmds.getAttr(material + '.specularColor')[0]
+    cmds.setAttr((bsdf + '.glossy_reflectance'), color_value[0], color_value[1], color_value[2], type='float3')
+    if specular_color_connection:
+        print 'connecting', specular_color_connection, 'specular_color to', bsdf, 'glossy_reflectance'
+        cmds.connectAttr((specular_color_connection + '.outColor'), (bsdf + '.glossy_reflectance'))
+
+    color_value = cmds.getAttr(material + '.transparency')[0]
+    cmds.setAttr((new_material_node + '.alpha_map_color'), color_value[0], color_value[1], color_value[2], type='float3')
+    if transparency_connection:
+        print 'connecting', transparency_connection, 'out_color to', new_material_node, 'alpha_map_color'
+        cmds.connectAttr((transparency_connection + '.outColor'), (new_material_node + '.alpha_map_color'))
+
+    # assign shader to new objects
+
+    cmds.select(clear=True)
+    for object in listObjectsByShader(material):
+        cmds.select(object, r=True)
+        cmds.hyperShade(assign=new_material_node)

@@ -302,8 +302,8 @@ class Texture():
     def __init__(self, name, file_name, color_space='srgb', alpha_as_luminance=False):
         self.name = name
         
-        dir_name = ms_commands.legalise(os.path.split(file_name)[0])
-        file = ms_commands.legalise(os.path.split(file_name)[1])
+        dir_name = ms_commands.legalizeFilename(os.path.split(file_name)[0])
+        file = ms_commands.legalizeFilename(os.path.split(file_name)[1])
 
         self.file_name = os.path.join(dir_name, file)
 
@@ -742,7 +742,7 @@ class Geometry():
     def __init__(self, params, name, output_file, assembly='main_assembly'):
         self.params = params
         self.name = name
-        self.safe_name = ms_commands.legalise(name)
+        self.safe_name = ms_commands.legalizeFilename(name)
 
         self.hierarchy_name = name
         self.material_name = ''
@@ -777,8 +777,8 @@ class Geometry():
                     self.material_name = self.material_node.name
             else: 
                 if cmds.objExists(shader + '.ms_shader_translation'):
+                    # custom shader translation code goes here
                     pass
-                    #custom shader translation code goes hierarchy_name
                 else:
                     cmds.warning('no appleseed material or shader translation connected to ' + self.name)
 
@@ -820,7 +820,7 @@ class Geometry():
 class Assembly():
     def __init__(self, params, name='main_assembly', object_list=False, position_from_object=False):
         self.params = params
-        self.name = ms_commands.legalise(name)
+        self.name = ms_commands.legalizeFilename(name)
         self.position_from_object = position_from_object
         self.light_objects = []
         self.geo_objects = []
@@ -937,7 +937,7 @@ class Assembly():
 
         # export and write objects
         for geo in self.geo_objects:
-            file_name = ms_commands.legalise(geo.name)
+            file_name = ms_commands.legalizeFilename(geo.name)
 
             doc.startElement('object name="{0}" model="mesh_object"'.format(file_name))
 
