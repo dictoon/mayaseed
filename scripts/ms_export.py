@@ -84,7 +84,7 @@ def writeTransform(doc, scale = 1, object=False, motion=False, motion_samples=2)
         start_time = cmds.currentTime(query=True)
 
         if motion_samples < 2:
-            print 'Motion samples is set too low, must be atleast 2, using 2'
+            print('Motion samples is set too low, must be atleast 2, using 2')
             motion_samples = 2
         sample_interval = 1.0/(motion_samples - 1)
 
@@ -143,13 +143,11 @@ def writeTransform(doc, scale = 1, object=False, motion=False, motion_samples=2)
 
 def getMayaParams(render_settings_node):
     print('getting params from ui')
-    #compile regular expression to check for non numeric characters
-    is_numeric = re.compile('^[0-9]+$')
-    
+
     params = {'error':False}
 
     params['entityDefs'] = ms_commands.getEntityDefs(os.path.join(ms_commands.ROOT_DIRECTORY, 'scripts', 'appleseedEntityDefs.xml'))
-    
+
     #main settings
     params['outputDir'] = cmds.getAttr(render_settings_node + '.output_directory')
     params['fileName'] = cmds.getAttr(render_settings_node + '.output_file')
@@ -301,11 +299,10 @@ class Color():
 class Texture():
     def __init__(self, name, file_name, color_space='srgb', alpha_as_luminance=False):
         self.name = name
-        
-        dir_name = ms_commands.legalizeFilename(os.path.split(file_name)[0])
-        file = ms_commands.legalizeFilename(os.path.split(file_name)[1])
 
-        self.file_name = os.path.join(dir_name, file)
+        directory = ms_commands.legalizeFilename(os.path.split(file_name)[0])
+        filename = ms_commands.legalizeFilename(os.path.split(file_name)[1])
+        self.filepath = os.path.join(directory, filename)
 
         self.color_space = color_space
 
@@ -317,8 +314,8 @@ class Texture():
     def writeXMLObject(self, doc):
         print('writing texture object {0}'.format(self.name))
         doc.startElement('texture name="{0}" model="disk_texture_2d"'.format(self.name))
-        doc.appendParameter('color_space',self.color_space)
-        doc.appendParameter('filename',self.file_name)
+        doc.appendParameter('color_space', self.color_space)
+        doc.appendParameter('filename', self.filepath)
         doc.endElement('texture')
 
     def writeXMLInstance(self, doc):
@@ -635,17 +632,17 @@ class SurfaceShader():
 class Camera():
     def __init__(self, params, cam):
         self.params = params
-        if self.params['sceneCameraDefaultThinLens'] or cmds.getAttr(cam+'.depthOfField'):
+        if self.params['sceneCameraDefaultThinLens'] or cmds.getAttr(cam + '.depthOfField'):
             self.model = 'thinlens_camera'
-            self.f_stop = cmds.getAttr(cam+'.fStop')
-            self.focal_distance = cmds.getAttr(cam+'.focusDistance')
+            self.f_stop = cmds.getAttr(cam + '.fStop')
+            self.focal_distance = cmds.getAttr(cam + '.focusDistance')
             self.diaphragm_blades = 0
             self.diaphragm_tilt_angle = 0.0
         else:
             self.model = 'pinhole_camera'
         self.name = cam
 
-        maya_resolution_aspect = float(params['outputResWidth'])/float(params['outputResHeight'])
+        maya_resolution_aspect = float(params['outputResWidth']) / float(params['outputResHeight'])
         maya_film_aspect = cmds.getAttr(cam + '.horizontalFilmAperture') / cmds.getAttr(cam + '.verticalFilmAperture')
 
         if maya_resolution_aspect > maya_film_aspect:
@@ -656,6 +653,7 @@ class Camera():
             self.film_width = self.film_height * maya_resolution_aspect 
 
         self.focal_length = float(cmds.getAttr(self.name+'.focalLength')) / 1000
+
         # transpose camera matrix -> XXX0, YYY0, ZZZ0, XYZ1
         m = cmds.xform(cam, query=True, ws=True, matrix=True)
         self.transform = [m[0],m[1],m[2],m[3]], [m[4],m[5],m[6],m[7]], [m[8],m[9],m[10],m[11]], [m[12],m[13],m[14],m[15]]
@@ -954,7 +952,7 @@ class Assembly():
                 cmds.currentTime(cmds.currentTime(query=True) - 1)
 
                 for i in range(motion_samples):
-                    print "exporting frame {0}".format((start_time + (sample_interval * i)))
+                    print("exporting frame {0}".format((start_time + (sample_interval * i))))
 
                     cmds.currentTime(start_time + (sample_interval * i))
                     cmds.refresh()
@@ -1039,15 +1037,12 @@ class Scene():
                         maya_texture_file = ms_commands.getFileTextureName(lat_long_connection)
                         texture_file = ms_commands.convertTexToExr(maya_texture_file, dest_dir, self.params['overwriteExistingExrs'])
 
-                        print '***', texture_file
-
                         self.addTexture(self.params['environment'] + '_latlong_edf_map', (os.path.join(params['tex_dir'], os.path.split(texture_file)[1])))
                         env_edf_params['exitance'] = self.params['environment'] + '_latlong_edf_map_inst'
                         env_edf_params['horizontal_shift'] = 0
                         env_edf_params['vertical_shift'] = 0
                 else:
                     cmds.error('no texture connected to {0}.latitude_longitude_exitance'.format(self.params['environment']))
-
 
             elif environment_edf_model_enum == 3:
                 mirrorball_edf_connection = cmds.connectionInfo((self.params['environment'] + '.mirror_ball_exitance'), sourceFromDestination=True).split('.')[0]
@@ -1081,49 +1076,48 @@ class Scene():
 
     def writeXML(self, doc):
         print('writing scene element')
+
         doc.startElement('scene')
 
-        #write current camera
+        # write current camera
         camera_instance = Camera(self.params, self.params['outputCamera'])
         camera_instance.writeXML(doc)   
-             
-        #write colors
+
+        # write colors
         for col in self.color_objects:
              self.color_objects[col].writeXML(doc)
-             
-        #write texture objects
+
+        # write texture objects
         for tex in self.texture_objects:
             self.texture_objects[tex].writeXMLObject(doc)
 
-        #write texture instances
+        # write texture instances
         for tex in self.texture_objects:
             self.texture_objects[tex].writeXMLInstance(doc)
         
-        #if there is an environment write it
+        # if there is an environment write it
         if self.environment:
             self.environment_edf.writeXML(doc)
             self.environment_shader.writeXML(doc)
             self.environment.writeXML(doc)
 
-        #export assemblies
+        # write assemblies
         shape_list = cmds.ls(g=True, v=True)
         light_list = cmds.ls(lt=True, v=True)
-
         if self.params['exportTransformationBlur']:
             for geo in shape_list:
                 if ms_commands.shapeIsExportable(geo):
                     # add first connected transform to the list
                     geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
-                    geo_assembly = Assembly(self.params, (geo_transform + '_assembly'), [geo], geo_transform)
+                    geo_assembly = Assembly(self.params, geo_transform + '_assembly', [geo], geo_transform)
                     geo_assembly.writeXML(doc)
-
 
             for light in light_list:
                     light_transform = cmds.listRelatives(light, ad=True, ap=True)[0]
-                    light_assembly = Assembly(self.params, (light_transform + '_assembly'), [light], light_transform)
+                    light_assembly = Assembly(self.params, light_transform + '_assembly', [light], light_transform)
                     light_assembly.writeXML(doc)
         else:
-            assembly = Assembly(self.params, 'light_assembly', (light_list + shape_list))
+            assembly = Assembly(self.params, "assembly", light_list + shape_list)
             assembly.writeXML(doc)
 
         doc.endElement('scene')
@@ -1318,5 +1312,5 @@ def export(render_settings_node):
     # Compute and report export time.
     export_time = time.time() - start_time
     export_message = "Export completed in {0:.1f} seconds.".format(export_time)
-    print export_message
+    print(export_message)
     cmds.confirmDialog(title="Export Completed", icon='information', message=export_message, button="OK")
