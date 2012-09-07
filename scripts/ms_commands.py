@@ -535,7 +535,7 @@ def convertPhongBlinnMaterial(material):
     cmds.connectAttr((surface_shader + '.outColor'), (new_material_node + '.surface_shader_color'))
 
     # connect & set attributes
-    color_value = cmds.getAttr(material + '.outColor')[0]
+    color_value = cmds.getAttr(material + '.color')[0]
     cmds.setAttr((bsdf + '.diffuse_reflectance'), color_value[0], color_value[1], color_value[2], type='float3')
     if color_connection: 
         print 'connecting', color_connection, 'out_color to', bsdf, 'diffuse_reflectance'
