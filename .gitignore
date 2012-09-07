@@ -2,7 +2,7 @@
 resources.qrc
 Graphic.psd
 mayaseed.pyc
-src/scripts/ms_export.pyc
+scripts/ms_export.pyc
 quaranteen/ms_environment.py
 quaranteen/ms_renderSettings.py
 releases/Mayaseed_0.1.2.zip
@@ -10,11 +10,11 @@ releases/Mayaseed_0.1.3.zip
 releases/Mayaseed_0.1.4.zip
 ROADMAP.txt
 screencast scropt.txt
-src/scripts/ms_commands.pyc
+scripts/ms_commands.pyc
 .gitignore
 ROADMAP.txt
 releases/Mayaseed_0.1.5.zip
 releases/Mayaseed_0.1.7.zip
 *.pyc
-src/scripts/ms_menu.pyc
-src/scripts/ms_menu.pyc
+scripts/ms_menu.pyc
+scripts/ms_menu.pyc
