@@ -519,7 +519,7 @@ class ShadingNode():
                             attribute_value = (texture_node.name + '_inst')
                             self.textures = self.textures + [texture_node]
 
-                        #if the node is unrecignised bake it
+                        # if the node is unrecognized, bake it
                         else:
                             if self.params['convertShadingNodes']:
                                 #convert texture and get path
@@ -530,30 +530,28 @@ class ShadingNode():
                                 attribute_value = (texture_node.name + '_inst')
                                 self.textures = self.textures + [texture_node]
 
-                    #no node is connecetd just use the color value
+                    # no node is connected, just use the color value
                     else:
-
-                        #if that color is grey interpret the R value as 1 dimentional value
+                        # if that color is gray interpret the R value as a 1-dimensional value
                         if (attribute_color[0] == attribute_color[1]) and (attribute_color[0] == attribute_color[2]):
                             attribute_value = str(attribute_color[0])
 
-                        #if its not black it must be a color so create a color node
+                        # if its not black it must be a color so create a color node
                         elif attribute_color != (0,0,0):
                             color_name = self.name + '_' + attribute_key + '_color'
-                            normalised_color = ms_commands.normalizeRGB(attribute_color)
-                            color = normalised_color[:3]
-                            color_node = Color(color_name, color, normalised_color[3])
+                            normalized_color = ms_commands.normalizeRGB(attribute_color)
+                            color_node = Color(color_name, normalized_color[:3], normalized_color[3])
                             attribute_value = color_node.name
                             self.colors = self.colors + [color_node]
 
                 elif params['entityDefs'][self.model].attributes[attribute_key].type == 'dropdown_list': 
                     pass
-                #the node must be a text entity
+                # the node must be a text entity
                 else:
                     attribute_value = str(cmds.getAttr(maya_attribute))
 
-                #add attribute to dict
-                self.attributes[attribute_key] = attribute_value    
+                # add attribute to dict
+                self.attributes[attribute_key] = attribute_value
 
     def getChildren(self):
         return self.child_shading_nodes
@@ -1151,10 +1149,11 @@ class Configurations():
 
     def writeXML(self, doc):
         print('writing configurations')
-        doc.startElement("configurations")
-        #add base custom interactive config
-        doc.appendElement('configuration name="interactive" base="base_interactive"')
 
+        doc.startElement("configurations")
+
+        # add base interactive config
+        doc.appendElement('configuration name="interactive" base="base_interactive"')
 
         #if 'customise final configuration' is set read customised values
         if self.params['customFinalConfigCheck']:
@@ -1223,6 +1222,7 @@ class Configurations():
         else:# otherwise add default configurations
             print('writing default final config')
             doc.appendElement('configuration name="final" base="base_final"')
+
         doc.endElement('configurations')
 
 
