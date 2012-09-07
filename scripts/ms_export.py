@@ -412,8 +412,7 @@ class Material():
             if cmds.nodeType(alpha_map_connection[0]) == 'file':
                 # create texture node and work out texture path
                 maya_texture_file = ms_commands.getFileTextureName(alpha_map_connection[0])
-                output_dir = os.path.join(params['outputDir'], params['tex_dir'])
-                texture = ms_commands.convertTexToExr(maya_texture_file, output_dir, overwrite=self.params['overwriteExistingExrs'], pass_through=False)
+                texture = ms_commands.convertTexToExr(maya_texture_file, params['absolute_tex_dir'], overwrite=self.params['overwriteExistingExrs'], pass_through=False)
                 texture_node = Texture((self.name + '_alpha_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb', alpha_as_luminance=True)
                 self.alpha_map = texture_node.name + '_inst'
                 self.textures = self.textures + [texture_node]
@@ -423,8 +422,7 @@ class Material():
             if cmds.nodeType(normal_map_connection[0]) == 'file':
                 # create texture node and work out texture path
                 maya_texture_file = ms_commands.getFileTextureName(normal_map_connection[0])
-                output_dir = os.path.join(params['outputDir'], params['tex_dir'])
-                texture = ms_commands.convertTexToExr(maya_texture_file, output_dir, overwrite=self.params['overwriteExistingExrs'], pass_through=False)
+                texture = ms_commands.convertTexToExr(maya_texture_file, params['absolute_tex_dir'], overwrite=self.params['overwriteExistingExrs'], pass_through=False)
                 texture_node = Texture((self.name + '_alpha_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
                 self.normal_map = texture_node.name + '_inst'
                 self.textures = self.textures + [texture_node]
@@ -509,12 +507,8 @@ class ShadingNode():
 
                         #else if its a maya texture node
                         elif cmds.nodeType(connected_node) == 'file':
-                            #work out texture path
                             maya_texture_file = ms_commands.getFileTextureName(connected_node)
-                            output_dir = os.path.join(params['outputDir'], params['tex_dir'])
-
-                            texture = ms_commands.convertTexToExr(maya_texture_file, output_dir, overwrite=self.params['overwriteExistingExrs'], pass_through=False)
-
+                            texture = ms_commands.convertTexToExr(maya_texture_file, params['absolute_tex_dir'], overwrite=self.params['overwriteExistingExrs'], pass_through=False)
                             texture_node = Texture((connected_node + '_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
                             attribute_value = (texture_node.name + '_inst')
                             self.textures = self.textures + [texture_node]
@@ -525,7 +519,6 @@ class ShadingNode():
                                 #convert texture and get path
                                 output_texture = os.path.join(params['tex_dir'], (connected_node + '.exr'))
                                 texture = convertConnectionToImage(self.name, self.attribute_key, output_texture, resolution=1024)
-
                                 texture_node = Texture((connected_node + '_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
                                 attribute_value = (texture_node.name + '_inst')
                                 self.textures = self.textures + [texture_node]
@@ -955,7 +948,7 @@ class Assembly():
                     cmds.currentTime(start_time + (sample_interval * i))
                     cmds.refresh()
 
-                    output_file = os.path.join(self.params['outputDir'], self.params['geo_dir'], ('{0}.{1:03}.obj'.format(file_name,i)))
+                    output_file = os.path.join(self.params['absolute_geo_dir'], ('{0}.{1:03}.obj'.format(file_name,i)))
                     self.params['obj_exporter'](geo.name, output_file, overwrite=True)
 
                     doc.appendParameter('{0:03}'.format(i), '{0}/{1}.{2:03}.obj'.format(self.params['geo_dir'],file_name,i))
@@ -963,7 +956,7 @@ class Assembly():
                 doc.endElement('parameters')
                 cmds.currentTime(start_time)
             else:
-                output_file = os.path.join(self.params['outputDir'], self.params['geo_dir'], file_name + '.obj')
+                output_file = os.path.join(self.params['absolute_geo_dir'], file_name + '.obj')
                 self.params['obj_exporter'](geo.name, output_file)
 
                 doc.appendParameter('filename', os.path.join(self.params['geo_dir'], file_name + '.obj'))
@@ -1031,9 +1024,8 @@ class Scene():
                 environment_edf_model = 'latlong_map_environment_edf'
                 if lat_long_connection:
                     if cmds.nodeType(lat_long_connection) == 'file':
-                        dest_dir = os.path.join(params['outputDir'], params['tex_dir'])
                         maya_texture_file = ms_commands.getFileTextureName(lat_long_connection)
-                        texture_file = ms_commands.convertTexToExr(maya_texture_file, dest_dir, self.params['overwriteExistingExrs'])
+                        texture_file = ms_commands.convertTexToExr(maya_texture_file, params['absolute_tex_dir'], self.params['overwriteExistingExrs'])
 
                         self.addTexture(self.params['environment'] + '_latlong_edf_map', (os.path.join(params['tex_dir'], os.path.split(texture_file)[1])))
                         env_edf_params['exitance'] = self.params['environment'] + '_latlong_edf_map_inst'
@@ -1047,9 +1039,8 @@ class Scene():
                 environment_edf_model = 'mirrorball_map_environment_edf'
                 if mirrorball_edf_connection:
                     if cmds.nodeType(mirrorball_edf_connection) == 'file':
-                        dest_dir = os.path.join(params['outputDir'], params['tex_dir'])
                         maya_texture_name = ms_commands.getFileTextureName(mirrorball_edf_connection)
-                        texture_file = ms_commands.convertTexToExr(maya_texture_name, dest_dir, self.params['overwriteExistingExrs'])
+                        texture_file = ms_commands.convertTexToExr(maya_texture_name, params['absolute_tex_dir'], self.params['overwriteExistingExrs'])
                         self.addTexture(self.params['environment'] + '_mirrorball_map_environment_edf', (os.path.join(params['tex_dir'], os.path.split(texture_file)[1])))
                         env_edf_params['exitance'] = self.params['environment'] + '_mirrorball_map_environment_edf_inst'
                 else:
@@ -1230,6 +1221,10 @@ class Configurations():
 # Main export function.
 #--------------------------------------------------------------------------------------------------
 
+def safe_make_dirs(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
 def export(render_settings_node):
     start_time = time.time()
 
@@ -1253,33 +1248,38 @@ def export(render_settings_node):
 
     # loop through frames and perform export
     while (current_frame  <= end_frame):
-        frame_name = '{0:04}'.format(int(current_frame))
-
         cmds.currentTime(current_frame)
 
-        # set up correct directories
-        params['temp_dir'] = os.path.join(frame_name, 'temp')
-        params['geo_dir'] = 'geo'
+        frame_name = '{0:04}'.format(int(current_frame))
 
-        if not os.path.exists(os.path.join(params['outputDir'], params['geo_dir'])):
-            os.makedirs(os.path.join(params['outputDir'], params['geo_dir']))
+        # compute the base output directory
+        scene_filepath = cmds.file(q=True, sceneName=True)
+        scene_basename = os.path.splitext(os.path.basename(scene_filepath))[0]
+        project_directory = cmds.workspace(q=True, rd=True)
+        params['outputDir'] = params['outputDir'].replace("<ProjectDir>", project_directory)
+        params['outputDir'] = os.path.join(params['outputDir'], scene_basename)
 
-        params['tex_dir'] = 'textures'
-        params['skipTextures'] = False
-
-        if params['animatedTextures']:
-            # set textures directory as child of the root directory
-            params['tex_dir'] = os.path.join(frame_name, 'textures')
-            textures_directory = os.path.join(params['outputDir'], params['tex_dir'])
-        else:
-            # set textures directory as child of frame directory
-            textures_directory = os.path.join(params['outputDir'], params['tex_dir'])
-
-        if not os.path.exists(textures_directory):
-            os.makedirs(textures_directory)
-
-        filename = params['fileName'].replace("#", frame_name)
+        # compute the output file path
+        filename = params['fileName']
+        filename = filename.replace("<FileName>", scene_basename)
+        filename = filename.replace("#", frame_name)
         filepath = os.path.join(params['outputDir'], filename)
+
+        # directory for geometry
+        params['geo_dir'] = 'geometry'
+        params['absolute_geo_dir'] = os.path.join(params['outputDir'], params['geo_dir'])
+
+        # directory for textures
+        params['tex_dir'] = 'textures'
+        if params['animatedTextures']:
+            params['tex_dir'] = os.path.join(frame_name, params['tex_dir'])
+        params['absolute_tex_dir'] = os.path.join(params['outputDir'], params['tex_dir'])
+
+        # create directories if they don't exist yet
+        safe_make_dirs(params['absolute_geo_dir'])
+        safe_make_dirs(params['absolute_tex_dir'])
+
+        params['skipTextures'] = False
 
         print('beginning export')
         print('opening output file {0}'.format(filepath))

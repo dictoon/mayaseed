@@ -51,24 +51,24 @@ class ms_renderSettings(OpenMayaMPx.MPxNode):
         OpenMayaMPx.MPxNode.__init__(self)
 
 def ms_renderSettings_nodeCreator():
-    return OpenMayaMPx.asMPxPtr( ms_renderSettings() )
+    return OpenMayaMPx.asMPxPtr(ms_renderSettings())
 
 def ms_renderSettings_nodeInitializer():
     #define attributes
     #export button --------------------------------------------
     export_button_string = OpenMaya.MFnStringData().create("/")
     export_button_string_Attr = OpenMaya.MFnTypedAttribute()
-    ms_renderSettings.export_button =  export_button_string_Attr.create("export", "export", OpenMaya.MFnData.kString, export_button_string) 
+    ms_renderSettings.export_button = export_button_string_Attr.create("export", "export", OpenMaya.MFnData.kString, export_button_string)
 
-    #export file settings -------------------------------------
-    #output directory attribute
-    output_dir_string = OpenMaya.MFnStringData().create("")
+    # output directory
+    output_dir_string = OpenMaya.MFnStringData().create(os.path.join("<ProjectDir>", "Mayaseed"))
     output_dir_Attr = OpenMaya.MFnTypedAttribute()
-    ms_renderSettings.output_dir =  output_dir_Attr.create("output_directory", "out_dir", OpenMaya.MFnData.kString, output_dir_string)   
-    #output file attribute
-    output_file_string = OpenMaya.MFnStringData().create("file_name.#.appleseed")
+    ms_renderSettings.output_dir = output_dir_Attr.create("output_directory", "out_dir", OpenMaya.MFnData.kString, output_dir_string)
+    
+    # output file
+    output_file_string = OpenMaya.MFnStringData().create("<FileName>.#.appleseed")
     output_file_Attr = OpenMaya.MFnTypedAttribute()
-    ms_renderSettings.output_file =  output_file_Attr.create("output_file", "out_file", OpenMaya.MFnData.kString, output_file_string)  
+    ms_renderSettings.output_file = output_file_Attr.create("output_file", "out_file", OpenMaya.MFnData.kString, output_file_string)  
 
     #convert textures to exr
     convert_textures_to_exr_nAttr = OpenMaya.MFnNumericAttribute()
