@@ -804,7 +804,7 @@ class Geometry():
             # write 0 transform as the assembly will handle that
             writeTransform(doc)
         else:
-            writeTransform(doc, self.params['scene_scale'], self.name, self.params['exportTransformationBlur'])
+            writeTransform(doc, self.params['scene_scale'], self.name)
 
         if self.material_name:
             doc.appendElement('assign_material slot="0" side="front" material="{0}"'.format(self.material_name))
