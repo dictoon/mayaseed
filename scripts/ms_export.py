@@ -801,10 +801,10 @@ class Geometry():
         doc.startElement('object_instance name="{0}.0_inst" object="{1}.0"'.format(self.safe_name, self.safe_name))
 
         if self.params['exportTransformationBlur']:
-            writeTransform(doc, self.params['scene_scale'], self.name, self.params['exportTransformationBlur'])
-        else:
             # write 0 transform as the assembly will handle that
             writeTransform(doc)
+        else:
+            writeTransform(doc, self.params['scene_scale'], self.name, self.params['exportTransformationBlur'])
 
         if self.material_name:
             doc.appendElement('assign_material slot="0" side="front" material="{0}"'.format(self.material_name))
