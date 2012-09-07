@@ -989,7 +989,7 @@ class Assembly():
         if self.params['exportTransformationBlur']:
             writeTransform(doc, self.params['scene_scale'], self.position_from_object, True, self.params['motionSamples'])
         else:
-            writeTransform(doc, self.params['scene_scale'], self.position_from_object)
+            writeTransform(doc, self.params['scene_scale'])
         doc.endElement('assembly_instance')
 
 
