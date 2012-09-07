@@ -1123,7 +1123,7 @@ class Scene():
                     light_assembly = Assembly(self.params, (light_transform + '_assembly'), [light], light_transform)
                     light_assembly.writeXML(doc)
         else:
-            assembly = Assembly(self.params, 'light_assembly', (light_list + shape_list))
+            assembly = Assembly(self.params, 'main_assembly', (light_list + shape_list))
             assembly.writeXML(doc)
 
         doc.endElement('scene')
