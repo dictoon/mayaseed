@@ -81,11 +81,6 @@ def buildMenu():
             command = 'import ms_commands\nms_commands.createShadingNode("' + entity_key + '")'
             cmds.menuItem(label=entity_key, parent='menu_create_surface_shader', command=command)
 
-    # Add/remove Shader Translation
-    cmds.menuItem(divider=True, parent='ms_menu')
-    cmds.menuItem(label='Add Custom Shader Translation', parent='ms_menu', command='import ms_commands\nms_commands.addShadingAttribs()')
-    cmds.menuItem(label='Remove Custom Shader Translation', parent='ms_menu', command='import ms_commands\nms_commands.removeShadingAttribs()')
-
     # Export
     cmds.menuItem(divider=True, parent='ms_menu')
     cmds.menuItem('menu_export', subMenu=True, label='Export', to=True, parent='ms_menu')
