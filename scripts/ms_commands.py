@@ -507,7 +507,7 @@ def convertSelectedMaterials():
 def convertMaterial(material):
     material_type = cmds.nodeType(material)
 
-    if material_type == 'phong' or 'blinn':
+    if material_type == 'phong' or material_type == 'blinn':
         convertPhongBlinnMaterial(material)
     else:
         cmds.warning("don't know how to convert material of type '{0}'".format(material_type))
@@ -556,6 +556,9 @@ def convertPhongBlinnMaterial(material):
     # assign shader to new objects
 
     cmds.select(clear=True)
-    for object in listObjectsByShader(material):
-        cmds.select(object, r=True)
-        cmds.hyperShade(assign=new_material_node)
+
+    objects = listObjectsByShader(material)
+    if objects is not None:
+        for object in objects:
+            cmds.select(object, r=True)
+            cmds.hyperShade(assign=new_material_node)
