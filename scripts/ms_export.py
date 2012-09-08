@@ -747,32 +747,28 @@ class Geometry():
         self.output_file = output_file
         self.assembly = assembly
         
-        #get material name
-
-        #find shape name
+        # get material name
         shape_node = cmds.listRelatives(self.name, shapes=True)[0]
-        #if there is a shader connected
         shading_engine = cmds.listConnections(shape_node, t='shadingEngine')
         if shading_engine:
             connected_shaders = cmds.listConnections(shading_engine[0] + ".surfaceShader")
             if connected_shaders:
-                #if its an appleseed material
                 shader = connected_shaders[0]
                 if cmds.nodeType(shader) == 'ms_appleseed_material':
+                    # this is an appleseed material
                     self.material_node = Material(self.params, shader)
                     self.shading_nodes = self.material_node.getShadingNodes()
                     self.colors = self.material_node.colors
                     self.textures = self.material_node.textures
                     self.material_name = self.material_node.name
-            else: 
-                if cmds.objExists(shader + '.ms_shader_translation'):
-                    # custom shader translation code goes here
-                    pass
-                else:
-                    cmds.warning('no appleseed material or shader translation connected to ' + self.name)
-
+                else: 
+                    if cmds.objExists(shader + '.ms_shader_translation'):
+                        # custom shader translation code goes here
+                        pass
+                    else:
+                        cmds.warning("no appleseed material or shader translation connected to {0}".format(self.name))
         else:
-            cmds.warning(self.name + ' has no shading engine connected')
+            cmds.warning("no shading engine connected to {0}".format(self.name))
 
         # transpose matrix -> XXX0, YYY0, ZZZ0, XYZ1
         m = cmds.xform(name, query=True, ws=True, matrix=True)
@@ -850,7 +846,7 @@ class Assembly():
             if geo.getMaterial():
                 self.material_objects = self.material_objects + [geo.getMaterial()]
             else:
-                cmds.warning('no material connected to: ' + geo.name)
+                cmds.warning("no material connected to {0}".format(geo.name))
             self.shading_node_objects = self.shading_node_objects + geo.getShadingNodes()
             self.color_objects = self.color_objects + geo.colors
             self.texture_objects = self.texture_objects + geo.textures

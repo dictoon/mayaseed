@@ -538,53 +538,51 @@ def convertPhongBlinnMaterial(material):
     # bump_connection = getConnectedNode(material + '.bumpMapping')
 
     bsdf = createShadingNode('ashikhmin_brdf')
-    cmds.connectAttr((bsdf + '.outColor'), (new_material_node + '.BSDF_color'))
+    cmds.connectAttr(bsdf + '.outColor', new_material_node + '.BSDF_color')
 
     # edf = createShadingNode('diffuse_edf')
-    # cmds.connectAttr((edf + '.outColor'), (new_material_node + '.EDF_color'))
+    # cmds.connectAttr(edf + '.outColor', new_material_node + '.EDF_color')
 
     surface_shader = createShadingNode('physical_surface_shader')
-    cmds.connectAttr((surface_shader + '.outColor'), (new_material_node + '.surface_shader_color'))
+    cmds.connectAttr(surface_shader + '.outColor', new_material_node + '.surface_shader_color')
 
-    # connect & set attributes
+    # diffuse
     color_value = cmds.getAttr(material + '.color')[0]
-    cmds.setAttr((bsdf + '.diffuse_reflectance'), color_value[0], color_value[1], color_value[2], type='float3')
+    cmds.setAttr(bsdf + '.diffuse_reflectance', color_value[0], color_value[1], color_value[2], type='float3')
     if color_connection: 
-        print 'connecting', color_connection, 'out_color to', bsdf, 'diffuse_reflectance'
-        cmds.connectAttr((color_connection + '.outColor'), (bsdf + '.diffuse_reflectance'))
+        print("connecting {0}.outColor to {1}.diffuse_reflectance".format(color_connection, bsdf))
+        cmds.connectAttr(color_connection + '.outColor', bsdf + '.diffuse_reflectance')
 
+    # glossy
     color_value = cmds.getAttr(material + '.specularColor')[0]
-    cmds.setAttr((bsdf + '.glossy_reflectance'), color_value[0], color_value[1], color_value[2], type='float3')
+    cmds.setAttr(bsdf + '.glossy_reflectance', color_value[0], color_value[1], color_value[2], type='float3')
     if specular_color_connection:
-        print 'connecting', specular_color_connection, 'specular_color to', bsdf, 'glossy_reflectance'
-        cmds.connectAttr((specular_color_connection + '.outColor'), (bsdf + '.glossy_reflectance'))
+        print("connecting {0}.outColor to {1}.glossy_reflectance".format(specular_color_connection, bsdf))
+        cmds.connectAttr(specular_color_connection + '.outColor', bsdf + '.glossy_reflectance')
 
+    # transparency
     color_value = cmds.getAttr(material + '.transparency')[0]
-    cmds.setAttr((new_material_node + '.alpha_map_color'), color_value[0], color_value[1], color_value[2], type='float3')
+    cmds.setAttr(new_material_node + '.alpha_map_color', color_value[0], color_value[1], color_value[2], type='float3')
     if transparency_connection:
-        print 'connecting', transparency_connection, 'out_color to', new_material_node, 'alpha_map_color'
-        cmds.connectAttr((transparency_connection + '.outColor'), (new_material_node + '.alpha_map_color'))
+        print("connecting {0}.outColor to {1}.alpha_map_color".format(transparency_connection, new_material_node))
+        cmds.connectAttr(transparency_connection + '.outColor', new_material_node + '.alpha_map_color')
 
-    # set glossiness
-
+    # shininess
     shininess = 0
     material_type = cmds.nodeType(material)
     if material_type == 'phong':
-        # 100 .. 2 -> 1000 ..0
-        shininess = (cmds.getAttr(material  + '.cosinePower') - 2) * 10
+        # 2..100 -> 0..1000
+        shininess = (cmds.getAttr(material + '.cosinePower') - 2.0) / 98.0 * 1000.0
     elif material_type == 'blinn':
-        # 0 .. 1 -> 1000 .. 0
-        shininess = 1000 * (1 - cmds.getAttr(material  + '.eccentricity'))
-
-    cmds.setAttr((bsdf + '.shininess_u'), shininess, shininess, shininess, type='float3')
-    cmds.setAttr((bsdf + '.shininess_v'), shininess, shininess, shininess, type='float3')
+        # 0..1 -> 1000..0
+        shininess = 1000.0 * (1.0 - cmds.getAttr(material + '.eccentricity'))
+    cmds.setAttr(bsdf + '.shininess_u', shininess, shininess, shininess, type='float3')
+    cmds.setAttr(bsdf + '.shininess_v', shininess, shininess, shininess, type='float3')
 
     # assign shader to new objects
-
-    cmds.select(clear=True)
-
     objects = listObjectsByShader(material)
     if objects is not None:
+        cmds.select(clear=True)
         for object in objects:
             cmds.select(object, r=True)
             cmds.hyperShade(assign=new_material_node)
