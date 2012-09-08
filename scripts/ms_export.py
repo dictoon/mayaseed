@@ -84,7 +84,7 @@ def writeTransform(doc, scale = 1, object=False, motion=False, motion_samples=2)
         start_time = cmds.currentTime(query=True)
 
         if motion_samples < 2:
-            print 'Motion samples is set too low, must be atleast 2, using 2'
+            print('Motion samples is set too low, must be atleast 2, using 2')
             motion_samples = 2
         sample_interval = 1.0/(motion_samples - 1)
 
@@ -143,13 +143,11 @@ def writeTransform(doc, scale = 1, object=False, motion=False, motion_samples=2)
 
 def getMayaParams(render_settings_node):
     print('getting params from ui')
-    #compile regular expression to check for non numeric characters
-    is_numeric = re.compile('^[0-9]+$')
-    
+
     params = {'error':False}
 
     params['entityDefs'] = ms_commands.getEntityDefs(os.path.join(ms_commands.ROOT_DIRECTORY, 'scripts', 'appleseedEntityDefs.xml'))
-    
+
     #main settings
     params['outputDir'] = cmds.getAttr(render_settings_node + '.output_directory')
     params['fileName'] = cmds.getAttr(render_settings_node + '.output_file')
@@ -301,11 +299,10 @@ class Color():
 class Texture():
     def __init__(self, name, file_name, color_space='srgb', alpha_as_luminance=False):
         self.name = name
-        
-        dir_name = ms_commands.legalizeFilename(os.path.split(file_name)[0])
-        file = ms_commands.legalizeFilename(os.path.split(file_name)[1])
 
-        self.file_name = os.path.join(dir_name, file)
+        directory = ms_commands.legalizeFilename(os.path.split(file_name)[0])
+        filename = ms_commands.legalizeFilename(os.path.split(file_name)[1])
+        self.filepath = os.path.join(directory, filename)
 
         self.color_space = color_space
 
@@ -317,8 +314,8 @@ class Texture():
     def writeXMLObject(self, doc):
         print('writing texture object {0}'.format(self.name))
         doc.startElement('texture name="{0}" model="disk_texture_2d"'.format(self.name))
-        doc.appendParameter('color_space',self.color_space)
-        doc.appendParameter('filename',self.file_name)
+        doc.appendParameter('color_space', self.color_space)
+        doc.appendParameter('filename', self.filepath)
         doc.endElement('texture')
 
     def writeXMLInstance(self, doc):
@@ -415,8 +412,7 @@ class Material():
             if cmds.nodeType(alpha_map_connection[0]) == 'file':
                 # create texture node and work out texture path
                 maya_texture_file = ms_commands.getFileTextureName(alpha_map_connection[0])
-                output_dir = os.path.join(params['outputDir'], params['tex_dir'])
-                texture = ms_commands.convertTexToExr(maya_texture_file, output_dir, overwrite=self.params['overwriteExistingExrs'], pass_through=False)
+                texture = ms_commands.convertTexToExr(maya_texture_file, params['absolute_tex_dir'], overwrite=self.params['overwriteExistingExrs'], pass_through=False)
                 texture_node = Texture((self.name + '_alpha_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb', alpha_as_luminance=True)
                 self.alpha_map = texture_node.name + '_inst'
                 self.textures = self.textures + [texture_node]
@@ -426,8 +422,7 @@ class Material():
             if cmds.nodeType(normal_map_connection[0]) == 'file':
                 # create texture node and work out texture path
                 maya_texture_file = ms_commands.getFileTextureName(normal_map_connection[0])
-                output_dir = os.path.join(params['outputDir'], params['tex_dir'])
-                texture = ms_commands.convertTexToExr(maya_texture_file, output_dir, overwrite=self.params['overwriteExistingExrs'], pass_through=False)
+                texture = ms_commands.convertTexToExr(maya_texture_file, params['absolute_tex_dir'], overwrite=self.params['overwriteExistingExrs'], pass_through=False)
                 texture_node = Texture((self.name + '_alpha_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
                 self.normal_map = texture_node.name + '_inst'
                 self.textures = self.textures + [texture_node]
@@ -512,51 +507,44 @@ class ShadingNode():
 
                         #else if its a maya texture node
                         elif cmds.nodeType(connected_node) == 'file':
-                            #work out texture path
                             maya_texture_file = ms_commands.getFileTextureName(connected_node)
-                            output_dir = os.path.join(params['outputDir'], params['tex_dir'])
-
-                            texture = ms_commands.convertTexToExr(maya_texture_file, output_dir, overwrite=self.params['overwriteExistingExrs'], pass_through=False)
-
+                            texture = ms_commands.convertTexToExr(maya_texture_file, params['absolute_tex_dir'], overwrite=self.params['overwriteExistingExrs'], pass_through=False)
                             texture_node = Texture((connected_node + '_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
                             attribute_value = (texture_node.name + '_inst')
                             self.textures = self.textures + [texture_node]
 
-                        #if the node is unrecignised bake it
+                        # if the node is unrecognized, bake it
                         else:
                             if self.params['convertShadingNodes']:
                                 #convert texture and get path
                                 output_texture = os.path.join(params['tex_dir'], (connected_node + '.exr'))
                                 texture = convertConnectionToImage(self.name, self.attribute_key, output_texture, resolution=1024)
-
                                 texture_node = Texture((connected_node + '_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
                                 attribute_value = (texture_node.name + '_inst')
                                 self.textures = self.textures + [texture_node]
 
-                    #no node is connecetd just use the color value
+                    # no node is connected, just use the color value
                     else:
-
-                        #if that color is grey interpret the R value as 1 dimentional value
+                        # if that color is gray interpret the R value as a 1-dimensional value
                         if (attribute_color[0] == attribute_color[1]) and (attribute_color[0] == attribute_color[2]):
                             attribute_value = str(attribute_color[0])
 
-                        #if its not black it must be a color so create a color node
+                        # if its not black it must be a color so create a color node
                         elif attribute_color != (0,0,0):
                             color_name = self.name + '_' + attribute_key + '_color'
-                            normalised_color = ms_commands.normalizeRGB(attribute_color)
-                            color = normalised_color[:3]
-                            color_node = Color(color_name, color, normalised_color[3])
+                            normalized_color = ms_commands.normalizeRGB(attribute_color)
+                            color_node = Color(color_name, normalized_color[:3], normalized_color[3])
                             attribute_value = color_node.name
                             self.colors = self.colors + [color_node]
 
                 elif params['entityDefs'][self.model].attributes[attribute_key].type == 'dropdown_list': 
                     pass
-                #the node must be a text entity
+                # the node must be a text entity
                 else:
                     attribute_value = str(cmds.getAttr(maya_attribute))
 
-                #add attribute to dict
-                self.attributes[attribute_key] = attribute_value    
+                # add attribute to dict
+                self.attributes[attribute_key] = attribute_value
 
     def getChildren(self):
         return self.child_shading_nodes
@@ -635,17 +623,17 @@ class SurfaceShader():
 class Camera():
     def __init__(self, params, cam):
         self.params = params
-        if self.params['sceneCameraDefaultThinLens'] or cmds.getAttr(cam+'.depthOfField'):
+        if self.params['sceneCameraDefaultThinLens'] or cmds.getAttr(cam + '.depthOfField'):
             self.model = 'thinlens_camera'
-            self.f_stop = cmds.getAttr(cam+'.fStop')
-            self.focal_distance = cmds.getAttr(cam+'.focusDistance')
+            self.f_stop = cmds.getAttr(cam + '.fStop')
+            self.focal_distance = cmds.getAttr(cam + '.focusDistance')
             self.diaphragm_blades = 0
             self.diaphragm_tilt_angle = 0.0
         else:
             self.model = 'pinhole_camera'
         self.name = cam
 
-        maya_resolution_aspect = float(params['outputResWidth'])/float(params['outputResHeight'])
+        maya_resolution_aspect = float(params['outputResWidth']) / float(params['outputResHeight'])
         maya_film_aspect = cmds.getAttr(cam + '.horizontalFilmAperture') / cmds.getAttr(cam + '.verticalFilmAperture')
 
         if maya_resolution_aspect > maya_film_aspect:
@@ -656,6 +644,7 @@ class Camera():
             self.film_width = self.film_height * maya_resolution_aspect 
 
         self.focal_length = float(cmds.getAttr(self.name+'.focalLength')) / 1000
+
         # transpose camera matrix -> XXX0, YYY0, ZZZ0, XYZ1
         m = cmds.xform(cam, query=True, ws=True, matrix=True)
         self.transform = [m[0],m[1],m[2],m[3]], [m[4],m[5],m[6],m[7]], [m[8],m[9],m[10],m[11]], [m[12],m[13],m[14],m[15]]
@@ -954,12 +943,12 @@ class Assembly():
                 cmds.currentTime(cmds.currentTime(query=True) - 1)
 
                 for i in range(motion_samples):
-                    print "exporting frame {0}".format((start_time + (sample_interval * i)))
+                    print("exporting frame {0}".format((start_time + (sample_interval * i))))
 
                     cmds.currentTime(start_time + (sample_interval * i))
                     cmds.refresh()
 
-                    output_file = os.path.join(self.params['outputDir'], self.params['geo_dir'], ('{0}.{1:03}.obj'.format(file_name,i)))
+                    output_file = os.path.join(self.params['absolute_geo_dir'], ('{0}.{1:03}.obj'.format(file_name,i)))
                     self.params['obj_exporter'](geo.name, output_file, overwrite=True)
 
                     doc.appendParameter('{0:03}'.format(i), '{0}/{1}.{2:03}.obj'.format(self.params['geo_dir'],file_name,i))
@@ -967,7 +956,7 @@ class Assembly():
                 doc.endElement('parameters')
                 cmds.currentTime(start_time)
             else:
-                output_file = os.path.join(self.params['outputDir'], self.params['geo_dir'], file_name + '.obj')
+                output_file = os.path.join(self.params['absolute_geo_dir'], file_name + '.obj')
                 self.params['obj_exporter'](geo.name, output_file)
 
                 doc.appendParameter('filename', os.path.join(self.params['geo_dir'], file_name + '.obj'))
@@ -1035,11 +1024,8 @@ class Scene():
                 environment_edf_model = 'latlong_map_environment_edf'
                 if lat_long_connection:
                     if cmds.nodeType(lat_long_connection) == 'file':
-                        dest_dir = os.path.join(params['outputDir'], params['tex_dir'])
                         maya_texture_file = ms_commands.getFileTextureName(lat_long_connection)
-                        texture_file = ms_commands.convertTexToExr(maya_texture_file, dest_dir, self.params['overwriteExistingExrs'])
-
-                        print '***', texture_file
+                        texture_file = ms_commands.convertTexToExr(maya_texture_file, params['absolute_tex_dir'], self.params['overwriteExistingExrs'])
 
                         self.addTexture(self.params['environment'] + '_latlong_edf_map', (os.path.join(params['tex_dir'], os.path.split(texture_file)[1])))
                         env_edf_params['exitance'] = self.params['environment'] + '_latlong_edf_map_inst'
@@ -1048,15 +1034,13 @@ class Scene():
                 else:
                     cmds.error('no texture connected to {0}.latitude_longitude_exitance'.format(self.params['environment']))
 
-
             elif environment_edf_model_enum == 3:
                 mirrorball_edf_connection = cmds.connectionInfo((self.params['environment'] + '.mirror_ball_exitance'), sourceFromDestination=True).split('.')[0]
                 environment_edf_model = 'mirrorball_map_environment_edf'
                 if mirrorball_edf_connection:
                     if cmds.nodeType(mirrorball_edf_connection) == 'file':
-                        dest_dir = os.path.join(params['outputDir'], params['tex_dir'])
                         maya_texture_name = ms_commands.getFileTextureName(mirrorball_edf_connection)
-                        texture_file = ms_commands.convertTexToExr(maya_texture_name, dest_dir, self.params['overwriteExistingExrs'])
+                        texture_file = ms_commands.convertTexToExr(maya_texture_name, params['absolute_tex_dir'], self.params['overwriteExistingExrs'])
                         self.addTexture(self.params['environment'] + '_mirrorball_map_environment_edf', (os.path.join(params['tex_dir'], os.path.split(texture_file)[1])))
                         env_edf_params['exitance'] = self.params['environment'] + '_mirrorball_map_environment_edf_inst'
                 else:
@@ -1081,49 +1065,48 @@ class Scene():
 
     def writeXML(self, doc):
         print('writing scene element')
+
         doc.startElement('scene')
 
-        #write current camera
+        # write current camera
         camera_instance = Camera(self.params, self.params['outputCamera'])
         camera_instance.writeXML(doc)   
-             
-        #write colors
+
+        # write colors
         for col in self.color_objects:
              self.color_objects[col].writeXML(doc)
-             
-        #write texture objects
+
+        # write texture objects
         for tex in self.texture_objects:
             self.texture_objects[tex].writeXMLObject(doc)
 
-        #write texture instances
+        # write texture instances
         for tex in self.texture_objects:
             self.texture_objects[tex].writeXMLInstance(doc)
         
-        #if there is an environment write it
+        # if there is an environment write it
         if self.environment:
             self.environment_edf.writeXML(doc)
             self.environment_shader.writeXML(doc)
             self.environment.writeXML(doc)
 
-        #export assemblies
+        # write assemblies
         shape_list = cmds.ls(g=True, v=True)
         light_list = cmds.ls(lt=True, v=True)
-
         if self.params['exportTransformationBlur']:
             for geo in shape_list:
                 if ms_commands.shapeIsExportable(geo):
                     # add first connected transform to the list
                     geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
-                    geo_assembly = Assembly(self.params, (geo_transform + '_assembly'), [geo], geo_transform)
+                    geo_assembly = Assembly(self.params, geo_transform + '_assembly', [geo], geo_transform)
                     geo_assembly.writeXML(doc)
-
 
             for light in light_list:
                     light_transform = cmds.listRelatives(light, ad=True, ap=True)[0]
-                    light_assembly = Assembly(self.params, (light_transform + '_assembly'), [light], light_transform)
+                    light_assembly = Assembly(self.params, light_transform + '_assembly', [light], light_transform)
                     light_assembly.writeXML(doc)
         else:
-            assembly = Assembly(self.params, 'main_assembly', (light_list + shape_list))
+            assembly = Assembly(self.params, "assembly", light_list + shape_list)
             assembly.writeXML(doc)
 
         doc.endElement('scene')
@@ -1157,10 +1140,11 @@ class Configurations():
 
     def writeXML(self, doc):
         print('writing configurations')
-        doc.startElement("configurations")
-        #add base custom interactive config
-        doc.appendElement('configuration name="interactive" base="base_interactive"')
 
+        doc.startElement("configurations")
+
+        # add base interactive config
+        doc.appendElement('configuration name="interactive" base="base_interactive"')
 
         #if 'customise final configuration' is set read customised values
         if self.params['customFinalConfigCheck']:
@@ -1229,12 +1213,17 @@ class Configurations():
         else:# otherwise add default configurations
             print('writing default final config')
             doc.appendElement('configuration name="final" base="base_final"')
+
         doc.endElement('configurations')
 
 
 #--------------------------------------------------------------------------------------------------
 # Main export function.
 #--------------------------------------------------------------------------------------------------
+
+def safe_make_dirs(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
 
 def export(render_settings_node):
     start_time = time.time()
@@ -1259,33 +1248,38 @@ def export(render_settings_node):
 
     # loop through frames and perform export
     while (current_frame  <= end_frame):
-        frame_name = '{0:04}'.format(int(current_frame))
-
         cmds.currentTime(current_frame)
 
-        # set up correct directories
-        params['temp_dir'] = os.path.join(frame_name, 'temp')
-        params['geo_dir'] = 'geo'
+        frame_name = '{0:04}'.format(int(current_frame))
 
-        if not os.path.exists(os.path.join(params['outputDir'], params['geo_dir'])):
-            os.makedirs(os.path.join(params['outputDir'], params['geo_dir']))
+        # compute the base output directory
+        scene_filepath = cmds.file(q=True, sceneName=True)
+        scene_basename = os.path.splitext(os.path.basename(scene_filepath))[0]
+        project_directory = cmds.workspace(q=True, rd=True)
+        params['outputDir'] = params['outputDir'].replace("<ProjectDir>", project_directory)
+        params['outputDir'] = os.path.join(params['outputDir'], scene_basename)
 
-        params['tex_dir'] = 'textures'
-        params['skipTextures'] = False
-
-        if params['animatedTextures']:
-            # set textures directory as child of the root directory
-            params['tex_dir'] = os.path.join(frame_name, 'textures')
-            textures_directory = os.path.join(params['outputDir'], params['tex_dir'])
-        else:
-            # set textures directory as child of frame directory
-            textures_directory = os.path.join(params['outputDir'], params['tex_dir'])
-
-        if not os.path.exists(textures_directory):
-            os.makedirs(textures_directory)
-
-        filename = params['fileName'].replace("#", frame_name)
+        # compute the output file path
+        filename = params['fileName']
+        filename = filename.replace("<FileName>", scene_basename)
+        filename = filename.replace("#", frame_name)
         filepath = os.path.join(params['outputDir'], filename)
+
+        # directory for geometry
+        params['geo_dir'] = 'geometry'
+        params['absolute_geo_dir'] = os.path.join(params['outputDir'], params['geo_dir'])
+
+        # directory for textures
+        params['tex_dir'] = 'textures'
+        if params['animatedTextures']:
+            params['tex_dir'] = os.path.join(frame_name, params['tex_dir'])
+        params['absolute_tex_dir'] = os.path.join(params['outputDir'], params['tex_dir'])
+
+        # create directories if they don't exist yet
+        safe_make_dirs(params['absolute_geo_dir'])
+        safe_make_dirs(params['absolute_tex_dir'])
+
+        params['skipTextures'] = False
 
         print('beginning export')
         print('opening output file {0}'.format(filepath))
@@ -1318,5 +1312,5 @@ def export(render_settings_node):
     # Compute and report export time.
     export_time = time.time() - start_time
     export_message = "Export completed in {0:.1f} seconds.".format(export_time)
-    print export_message
+    print(export_message)
     cmds.confirmDialog(title="Export Completed", icon='information', message=export_message, button="OK")

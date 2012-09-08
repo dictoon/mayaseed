@@ -227,7 +227,9 @@ def convertTexToExr(file_path, dest_dir, overwrite=True, pass_through=False):
     if not os.path.exists(dest_dir):
         os.mkdir(dest_dir)
 
-    p = subprocess.Popen([imf_copy_path, file_path, dest_file])
+    # -r: make a tiled OpenEXR file
+    # -t: set the tile dimensions
+    p = subprocess.call([imf_copy_path, "-r", "-t 32", file_path, dest_file])
 
     return dest_file
 
@@ -494,6 +496,16 @@ def getConnectedNode(connection):
 # Material conversion.
 #--------------------------------------------------------------------------------------------------
 
+def convertAllMaterials():
+    materials = cmds.ls(mat=True)
+
+    if not materials:
+        cmds.warning('no materials in the scene') 
+        return
+
+    for material in materials:
+        convertMaterial(material)
+
 def convertSelectedMaterials():
     materials = cmds.ls(sl=True, mat=True)
 
@@ -507,7 +519,7 @@ def convertSelectedMaterials():
 def convertMaterial(material):
     material_type = cmds.nodeType(material)
 
-    if material_type == 'phong' or 'blinn':
+    if material_type == 'phong' or material_type == 'blinn':
         convertPhongBlinnMaterial(material)
     else:
         cmds.warning("don't know how to convert material of type '{0}'".format(material_type))
@@ -570,6 +582,9 @@ def convertPhongBlinnMaterial(material):
     # assign shader to new objects
 
     cmds.select(clear=True)
-    for object in listObjectsByShader(material):
-        cmds.select(object, r=True)
-        cmds.hyperShade(assign=new_material_node)
+
+    objects = listObjectsByShader(material)
+    if objects is not None:
+        for object in objects:
+            cmds.select(object, r=True)
+            cmds.hyperShade(assign=new_material_node)
