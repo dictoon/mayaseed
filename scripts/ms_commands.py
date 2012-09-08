@@ -227,7 +227,9 @@ def convertTexToExr(file_path, dest_dir, overwrite=True, pass_through=False):
     if not os.path.exists(dest_dir):
         os.mkdir(dest_dir)
 
-    p = subprocess.call([imf_copy_path, file_path, dest_file])
+    # -r: make a tiled OpenEXR file
+    # -t: set the tile dimensions
+    p = subprocess.call([imf_copy_path, "-r", "-t 32", file_path, dest_file])
 
     return dest_file
 
