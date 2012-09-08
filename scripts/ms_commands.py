@@ -43,49 +43,6 @@ MAYASEED_URL = 'https://github.com/jonathantopf/mayaseed'
 APPLESEED_URL = 'http://appleseedhq.net/'
 ROOT_DIRECTORY = os.path.split((os.path.dirname(inspect.getfile(inspect.currentframe()))))[0]
 
-
-#--------------------------------------------------------------------------------------------------
-# addShadingAttribs function.
-#--------------------------------------------------------------------------------------------------
-
-def addShadingAttribs():
-    shaderName = False
-    try:
-        shape = cmds.listRelatives(cmds.ls(sl=True)[0], s=True)[0]
-        shadingEngine = cmds.listConnections(shape, t='shadingEngine')[0]
-        shaderName = cmds.connectionInfo((shadingEngine + ".surfaceShader"),sourceFromDestination=True).split('.')[0] 
-    except:
-        print '# No objects with shader connectoins selectd'
-    if shaderName:
-        if not cmds.objExists(shaderName + '.mayaseed_bsdf'):
-            cmds.addAttr(shaderName, ln='mayaseed_bsdf',  at='enum', en='Lambertian:Ashikhmin-Shirley:Kelemen:Specular_BRDF:<None>')
-            cmds.addAttr(shaderName, ln='mayaseed_edf',  at='enum', en='<None>:Diffuse')
-            cmds.addAttr(shaderName, ln='mayaseed_surface_shader', at='enum', en='Physical:Constant:<None>')
-        else:
-            print '# {0} already has Mayaseed shader attributes'.format(shaderName)
-
-
-#--------------------------------------------------------------------------------------------------
-# removeShadingAttribs function.
-#--------------------------------------------------------------------------------------------------
-
-def removeShadingAttribs():
-    shaderName = ''
-    try:
-        shape = cmds.listRelatives(cmds.ls(sl=True)[0], s=True)[0]
-        shadingEngine = cmds.listConnections(shape, t='shadingEngine')[0]
-        shaderName = cmds.connectionInfo((shadingEngine + ".surfaceShader"),sourceFromDestination=True).split('.')[0] 
-    except:
-        print '# No objects with shader connectoins selectd'
-    if shaderName:
-        if cmds.objExists(shaderName + '.mayaseed_bsdf'):
-            cmds.deleteAttr(shaderName, at='mayaseed_bsdf')
-            cmds.deleteAttr(shaderName, at='mayaseed_edf')
-            cmds.deleteAttr(shaderName, at='mayaseed_surface_shader')
-        else:
-            print '# {0} has no Mayaseed shader attributes to remove'.format(shaderName)
-
-
 #--------------------------------------------------------------------------------------------------
 # Show About dialog.
 #--------------------------------------------------------------------------------------------------
