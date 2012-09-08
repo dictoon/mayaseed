@@ -567,26 +567,22 @@ def convertPhongBlinnMaterial(material):
         print("connecting {0}.outColor to {1}.alpha_map_color".format(transparency_connection, new_material_node))
         cmds.connectAttr(transparency_connection + '.outColor', new_material_node + '.alpha_map_color')
 
-    # set shininess
-
+    # shininess
     shininess = 0
     material_type = cmds.nodeType(material)
     if material_type == 'phong':
-        # 2..100 -> 0..980
-        shininess = (cmds.getAttr(material + '.cosinePower') - 2) * 10
+        # 2..100 -> 0..1000
+        shininess = (cmds.getAttr(material + '.cosinePower') - 2.0) / 98.0 * 1000.0
     elif material_type == 'blinn':
-        # 0 .. 1 -> 1000 .. 0
-        shininess = 1000 * (1 - cmds.getAttr(material + '.eccentricity'))
-
-    cmds.setAttr((bsdf + '.shininess_u'), shininess, shininess, shininess, type='float3')
-    cmds.setAttr((bsdf + '.shininess_v'), shininess, shininess, shininess, type='float3')
+        # 0..1 -> 1000..0
+        shininess = 1000.0 * (1.0 - cmds.getAttr(material + '.eccentricity'))
+    cmds.setAttr(bsdf + '.shininess_u', shininess, shininess, shininess, type='float3')
+    cmds.setAttr(bsdf + '.shininess_v', shininess, shininess, shininess, type='float3')
 
     # assign shader to new objects
-
-    cmds.select(clear=True)
-
     objects = listObjectsByShader(material)
     if objects is not None:
+        cmds.select(clear=True)
         for object in objects:
             cmds.select(object, r=True)
             cmds.hyperShade(assign=new_material_node)
