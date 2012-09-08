@@ -494,6 +494,16 @@ def getConnectedNode(connection):
 # Material conversion.
 #--------------------------------------------------------------------------------------------------
 
+def convertAllMaterials():
+    materials = cmds.ls(mat=True)
+
+    if not materials:
+        cmds.warning('no materials in the scene') 
+        return
+
+    for material in materials:
+        convertMaterial(material)
+
 def convertSelectedMaterials():
     materials = cmds.ls(sl=True, mat=True)
 
