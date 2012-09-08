@@ -85,8 +85,8 @@ def buildMenu():
     cmds.menuItem(divider=True, parent='ms_menu')
     cmds.menuItem('menu_convert_maya_materials', subMenu=True, label='Convert Maya materials', to=True, parent='ms_menu')
 
-    cmds.menuItem(label='Selected materials', parent='menu_convert_maya_materials', command='import ms_commands\nms_commands.convertSelectedMaterials()')
-    cmds.menuItem(label='All materials', parent='menu_convert_maya_materials', command='import ms_commands\nms_commands.convertAllMaterials()')
+    cmds.menuItem(label='Selected Materials', parent='menu_convert_maya_materials', command='import ms_commands\nms_commands.convertSelectedMaterials()')
+    cmds.menuItem(label='All Materials', parent='menu_convert_maya_materials', command='import ms_commands\nms_commands.convertAllMaterials()')
 
     # Export
     cmds.menuItem(divider=True, parent='ms_menu')
