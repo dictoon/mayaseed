@@ -761,13 +761,12 @@ class Geometry():
                     self.colors = self.material_node.colors
                     self.textures = self.material_node.textures
                     self.material_name = self.material_node.name
-            else: 
-                if cmds.objExists(shader + '.ms_shader_translation'):
-                    # custom shader translation code goes here
-                    pass
-                else:
-                    cmds.warning('no appleseed material or shader translation connected to ' + self.name)
-
+                else: 
+                    if cmds.objExists(shader + '.ms_shader_translation'):
+                        # custom shader translation code goes here
+                        pass
+                    else:
+                        cmds.warning("no appleseed material or shader translation connected to {0}".format(self.name))
         else:
             cmds.warning("no shading engine connected to {0}".format(self.name))
 
