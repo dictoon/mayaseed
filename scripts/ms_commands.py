@@ -227,7 +227,7 @@ def convertTexToExr(file_path, dest_dir, overwrite=True, pass_through=False):
     if not os.path.exists(dest_dir):
         os.mkdir(dest_dir)
 
-    p = subprocess.Popen([imf_copy_path, file_path, dest_file])
+    p = subprocess.call([imf_copy_path, file_path, dest_file])
 
     return dest_file
 
