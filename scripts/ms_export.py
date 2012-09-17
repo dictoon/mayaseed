@@ -935,27 +935,34 @@ class Assembly():
                     motion_samples = 2
                 sample_interval = 1.0 / (motion_samples - 1)
 
-                doc.startElement('parameters name="filename"')
                 cmds.currentTime(cmds.currentTime(query=True) - 1)
 
-                for i in range(motion_samples):
-                    print("exporting frame {0}".format((start_time + (sample_interval * i))))
+                doc.startElement('parameters name="filename"')
 
-                    cmds.currentTime(start_time + (sample_interval * i))
+                for i in range(motion_samples):
+                    frame = start_time + sample_interval * i
+                    print("exporting frame {0}".format(frame))
+
+                    cmds.currentTime(frame)
                     cmds.refresh()
 
-                    output_file = os.path.join(self.params['absolute_geo_dir'], ('{0}.{1:03}.obj'.format(file_name,i)))
-                    self.params['obj_exporter'](geo.name, output_file, overwrite=True)
+                    obj_filename = "{0}.{1:03}.obj".format(file_name, i)
+                    doc.appendParameter("{0:03}".format(i), "{0}/{1}".format(self.params['geo_dir'], obj_filename))
 
-                    doc.appendParameter('{0:03}'.format(i), '{0}/{1}.{2:03}.obj'.format(self.params['geo_dir'],file_name,i))
+                    # write the OBJ file to disk
+                    obj_filepath = os.path.join(self.params['absolute_geo_dir'], obj_filename)
+                    self.params['obj_exporter'](geo.name, obj_filepath, overwrite=True)
 
                 doc.endElement('parameters')
+
                 cmds.currentTime(start_time)
             else:
-                output_file = os.path.join(self.params['absolute_geo_dir'], file_name + '.obj')
-                self.params['obj_exporter'](geo.name, output_file)
+                obj_filename = file_name + ".obj"
+                doc.appendParameter('filename', os.path.join(self.params['geo_dir'], obj_filename))
 
-                doc.appendParameter('filename', os.path.join(self.params['geo_dir'], file_name + '.obj'))
+                # write the OBJ file to disk
+                obj_filepath = os.path.join(self.params['absolute_geo_dir'], obj_filename)
+                self.params['obj_exporter'](geo.name, obj_filepath)
 
             doc.endElement('object')
 
@@ -1222,9 +1229,18 @@ def safe_make_dirs(path):
         os.makedirs(path)
 
 def export(render_settings_node):
-    start_time = time.time()
-
     params = getMayaParams(render_settings_node)
+
+    if params['error']:
+        cmds.error("error validating UI attributes")
+        raise RuntimeError("check script editor for details")
+
+    # compute the base output directory
+    scene_filepath = cmds.file(q=True, sceneName=True)
+    scene_basename = os.path.splitext(os.path.basename(scene_filepath))[0]
+    project_directory = cmds.workspace(q=True, rd=True)
+    params['outputDir'] = params['outputDir'].replace("<ProjectDir>", project_directory)
+    params['outputDir'] = os.path.join(params['outputDir'], scene_basename)
 
     if params['exportAnimation']:
         start_frame = params['animationStartFrame']
@@ -1233,27 +1249,18 @@ def export(render_settings_node):
         start_frame = cmds.currentTime(query=True)
         end_frame = start_frame
 
-    if params['error']:
-        cmds.error('error validating ui attributes ')
-        raise RuntimeError('check script editor for details')
-
-    # todo: add check for esc being held down here to cancel an export
+    start_time = time.time()
 
     current_frame = start_frame
     original_time = cmds.currentTime(query=True)
 
     # loop through frames and perform export
     while (current_frame  <= end_frame):
+        # todo: add check for Escape being held down here to cancel an export
+
+        # todo: is this necessary, since we're already doing it when exporting geometry?
         cmds.currentTime(current_frame)
-
         frame_name = '{0:04}'.format(int(current_frame))
-
-        # compute the base output directory
-        scene_filepath = cmds.file(q=True, sceneName=True)
-        scene_basename = os.path.splitext(os.path.basename(scene_filepath))[0]
-        project_directory = cmds.workspace(q=True, rd=True)
-        params['outputDir'] = params['outputDir'].replace("<ProjectDir>", project_directory)
-        params['outputDir'] = os.path.join(params['outputDir'], scene_basename)
 
         # compute the output file path
         filename = params['fileName']
@@ -1262,7 +1269,7 @@ def export(render_settings_node):
         filepath = os.path.join(params['outputDir'], filename)
 
         # directory for geometry
-        params['geo_dir'] = 'geometry'
+        params['geo_dir'] = os.path.join(frame_name, "geometry")
         params['absolute_geo_dir'] = os.path.join(params['outputDir'], params['geo_dir'])
 
         # directory for textures
