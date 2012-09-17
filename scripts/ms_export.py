@@ -199,7 +199,8 @@ def getMayaParams(render_settings_node):
     if cmds.listConnections(render_settings_node + '.camera'):
         params['outputCamera'] = cmds.listConnections(render_settings_node + '.camera')[0]
     else:
-        raise RuntimeError('no camera connected to ' + render_settings_node)
+        cmds.warning('no camera connected to',  render_settings_node, 'using persp')
+        params['outputCamera'] = 'perspShape'
     
     if cmds.getAttr(render_settings_node + '.color_space') == 1:
         params['outputColorSpace'] = 'linear_rgb'

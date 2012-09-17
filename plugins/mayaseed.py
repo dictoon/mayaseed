@@ -155,6 +155,7 @@ def ms_renderSettings_nodeInitializer():
     #camera
     camera_msgAttr = OpenMaya.MFnMessageAttribute()
     ms_renderSettings.camera = camera_msgAttr.create("camera", "cam")
+    
     #color space
     color_space_enumAttr = OpenMaya.MFnEnumAttribute()
     ms_renderSettings.color_space = color_space_enumAttr.create("color_space", "col_space")
