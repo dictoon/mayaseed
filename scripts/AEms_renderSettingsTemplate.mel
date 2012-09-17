@@ -153,7 +153,10 @@ global proc AEcustomCameraMenuCreate(string $attr) {
     string $cameras[] = `ls -cameras`;
     menuItem -label "<none>";
     for ($item in $cameras) {
-        menuItem -label $item;
+        string $is_orthographic = `getAttr ($item + ".orthographic")`;
+        if ($is_orthographic == 0) {
+            menuItem -label $item;
+        }
     }
 
     string $currentCameraConnectionTransform = `getConnectedNode($nodeName + ".camera")`;
