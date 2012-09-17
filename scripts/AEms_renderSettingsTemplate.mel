@@ -186,6 +186,11 @@ global proc setCameraConnection(string $nodeName) {
     }
     if ($newSelection != "<none>") {
         connectAttr -f $newSelectionAttr $cameraConnectionName;
+    } else {
+        if ($currentCameraConnection != ""){
+            string $cams[] = `listConnections ($nodeName + ".camera")`;
+            disconnectAttr ($cams[0] + "Shape.nodeState") ($nodeName + ".camera");
+        }
     }
 }
 
