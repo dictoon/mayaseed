@@ -1095,7 +1095,7 @@ class Scene():
             self.environment.writeXML(doc)
 
         # write assemblies
-        shape_list = cmds.ls(g=True, v=True)
+        shape_list = cmds.ls(g=True, v=True, noIntermediate=True)
         light_list = cmds.ls(lt=True, v=True)
         if self.params['exportTransformationBlur']:
             for geo in shape_list:
