@@ -76,6 +76,15 @@ class WriteXml():
 
 
 #--------------------------------------------------------------------------------------------------
+# cancelExport function.
+#--------------------------------------------------------------------------------------------------
+
+def checkExportCanceled():
+    if cmds.progressWindow(query=True, isCancelled=True):
+        cmds.progressWindow(endProgress=1)
+        raise RuntimeError('Export Cancelled')
+
+#--------------------------------------------------------------------------------------------------
 # writeTransform function.
 #--------------------------------------------------------------------------------------------------
 
@@ -200,7 +209,7 @@ def getMayaParams(render_settings_node):
         params['outputCamera'] = cmds.listConnections(render_settings_node + '.camera')[0]
     else:
         cmds.warning('no camera connected to',  render_settings_node, 'using persp')
-        params['outputCamera'] = 'perspShape'
+        params['outputCamera'] = 'persp'
     
     if cmds.getAttr(render_settings_node + '.color_space') == 1:
         params['outputColorSpace'] = 'linear_rgb'
@@ -730,6 +739,7 @@ class EnvironmentEdf():
 
 class Geometry():
     def __init__(self, params, name, output_file, assembly='main_assembly'):
+        checkExportCanceled()
         self.params = params
         self.name = name
         self.safe_name = ms_commands.legalizeFilename(name)
@@ -805,6 +815,7 @@ class Geometry():
 
 class Assembly():
     def __init__(self, params, name='main_assembly', object_list=False, position_from_object=False):
+        checkExportCanceled()
         self.params = params
         self.name = ms_commands.legalizeFilename(name)
         self.position_from_object = position_from_object
@@ -952,6 +963,7 @@ class Assembly():
 
                     # write the OBJ file to disk
                     obj_filepath = os.path.join(self.params['absolute_geo_dir'], obj_filename)
+                    checkExportCanceled()
                     self.params['obj_exporter'](geo.name, obj_filepath, overwrite=True)
 
                 doc.endElement('parameters')
@@ -963,6 +975,7 @@ class Assembly():
 
                 # write the OBJ file to disk
                 obj_filepath = os.path.join(self.params['absolute_geo_dir'], obj_filename)
+                checkExportCanceled()
                 self.params['obj_exporter'](geo.name, obj_filepath)
 
             doc.endElement('object')
@@ -992,6 +1005,7 @@ class Assembly():
 
 class Scene():
     def __init__(self,params):
+        checkExportCanceled()
         self.params = params
         self.assembly_list = []
         self.color_objects = dict()
@@ -1099,6 +1113,7 @@ class Scene():
         light_list = cmds.ls(lt=True, v=True)
         if self.params['exportTransformationBlur']:
             for geo in shape_list:
+                checkExportCanceled()
                 if ms_commands.shapeIsExportable(geo):
                     # add first connected transform to the list
                     geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
@@ -1232,6 +1247,11 @@ def safe_make_dirs(path):
 def export(render_settings_node):
     params = getMayaParams(render_settings_node)
 
+    # create progres bar
+    params['progress_amount'] = 0
+    cmds.progressWindow(title='Exporting', progress=params['progress_amount'], status='Exporting ' + render_settings_node, isInterruptable=True)
+
+
     if params['error']:
         cmds.error("error validating UI attributes")
         raise RuntimeError("check script editor for details")
@@ -1317,4 +1337,8 @@ def export(render_settings_node):
     export_time = time.time() - start_time
     export_message = "Export completed in {0:.1f} seconds.".format(export_time)
     print(export_message)
+
+    # end progress bar
+    cmds.progressWindow(endProgress=1)
+
     cmds.confirmDialog(title="Export Completed", icon='information', message=export_message, button="OK")
