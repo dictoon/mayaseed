@@ -978,6 +978,9 @@ class Assembly():
                 checkExportCancelled()
                 self.params['obj_exporter'](geo.name, obj_filepath)
 
+            self.params['progress_bar_progress'] += self.params['progress_bar_incriments']
+            cmds.progressWindow(edit=True, progress=self.params['progress_bar_progress'])
+
             doc.endElement('object')
 
         # write lights
@@ -1112,6 +1115,8 @@ class Scene():
         shape_list = cmds.ls(g=True, v=True, noIntermediate=True)
         light_list = cmds.ls(lt=True, v=True)
 
+        self.params['progress_bar_incriments'] = 100 / len(shape_list)
+        self.params['progress_bar_progress'] = 0
 
         if self.params['exportTransformationBlur']:
             for geo in shape_list:
