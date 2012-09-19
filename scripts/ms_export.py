@@ -79,7 +79,7 @@ class WriteXml():
 # cancelExport function.
 #--------------------------------------------------------------------------------------------------
 
-def checkExportCanceled():
+def checkExportCancelled():
     if cmds.progressWindow(query=True, isCancelled=True):
         cmds.progressWindow(endProgress=1)
         raise RuntimeError('Export Cancelled')
@@ -739,7 +739,7 @@ class EnvironmentEdf():
 
 class Geometry():
     def __init__(self, params, name, output_file, assembly='main_assembly'):
-        checkExportCanceled()
+        checkExportCancelled()
         self.params = params
         self.name = name
         self.safe_name = ms_commands.legalizeFilename(name)
@@ -815,7 +815,7 @@ class Geometry():
 
 class Assembly():
     def __init__(self, params, name='main_assembly', object_list=False, position_from_object=False):
-        checkExportCanceled()
+        checkExportCancelled()
         self.params = params
         self.name = ms_commands.legalizeFilename(name)
         self.position_from_object = position_from_object
@@ -963,7 +963,7 @@ class Assembly():
 
                     # write the OBJ file to disk
                     obj_filepath = os.path.join(self.params['absolute_geo_dir'], obj_filename)
-                    checkExportCanceled()
+                    checkExportCancelled()
                     self.params['obj_exporter'](geo.name, obj_filepath, overwrite=True)
 
                 doc.endElement('parameters')
@@ -975,7 +975,7 @@ class Assembly():
 
                 # write the OBJ file to disk
                 obj_filepath = os.path.join(self.params['absolute_geo_dir'], obj_filename)
-                checkExportCanceled()
+                checkExportCancelled()
                 self.params['obj_exporter'](geo.name, obj_filepath)
 
             doc.endElement('object')
@@ -1005,7 +1005,7 @@ class Assembly():
 
 class Scene():
     def __init__(self,params):
-        checkExportCanceled()
+        checkExportCancelled()
         self.params = params
         self.assembly_list = []
         self.color_objects = dict()
@@ -1111,9 +1111,11 @@ class Scene():
         # write assemblies
         shape_list = cmds.ls(g=True, v=True, noIntermediate=True)
         light_list = cmds.ls(lt=True, v=True)
+
+
         if self.params['exportTransformationBlur']:
             for geo in shape_list:
-                checkExportCanceled()
+                checkExportCancelled()
                 if ms_commands.shapeIsExportable(geo):
                     # add first connected transform to the list
                     geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
