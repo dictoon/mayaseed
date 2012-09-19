@@ -202,7 +202,7 @@ MStatus ms_export_obj::doIt(const MArgList& args)
         poly_it.next();
     }
 
-    // CLose the file.
+    // Close the file.
     out_file.close();
 
     return MS::kSuccess;
