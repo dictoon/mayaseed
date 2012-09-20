@@ -22,9 +22,8 @@
 //
 
 // Platform-specific configuration.
-#if defined _WIN32
-    #define REQUIRE_IOSTREAM
-#elif defined __APPLE__
+#define REQUIRE_IOSTREAM
+#if defined __APPLE__
     #include <maya/OpenMayaMac.h>
 #endif
 
@@ -38,7 +37,6 @@
 #include <maya/MFnMesh.h>
 #include <maya/MGlobal.h>
 #include <maya/MIntArray.h>
-#include <maya/MIOStream.h>
 #include <maya/MItMeshPolygon.h>
 #include <maya/MObject.h>
 #include <maya/MObjectArray.h>
