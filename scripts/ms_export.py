@@ -745,8 +745,7 @@ class Geometry():
         self.safe_name = ms_commands.legalizeFilename(name)
 
         self.hierarchy_name = name
-        self.material_name = ''
-        self.material_node = False
+        self.material_nodes = []
         self.shading_nodes = []
         self.colors = []
         self.textures = []
@@ -757,26 +756,26 @@ class Geometry():
             self.hierarchy_name = current_object + ' ' + self.hierarchy_name
         self.output_file = output_file
         self.assembly = assembly
-        
+
+
         # get material name
         shape_node = cmds.listRelatives(self.name, shapes=True)[0]
-        shading_engine = cmds.listConnections(shape_node, t='shadingEngine')
-        if shading_engine:
-            connected_shaders = cmds.listConnections(shading_engine[0] + ".surfaceShader")
-            if connected_shaders:
-                shader = connected_shaders[0]
-                if cmds.nodeType(shader) == 'ms_appleseed_material':
-                    # this is an appleseed material
-                    self.material_node = Material(self.params, shader)
-                    self.shading_nodes = self.material_node.getShadingNodes()
-                    self.colors = self.material_node.colors
-                    self.textures = self.material_node.textures
-                    self.material_name = self.material_node.name
-                else: 
-                    if cmds.objExists(shader + '.ms_shader_translation'):
-                        # custom shader translation code goes here
-                        pass
-                    else:
+
+        #get list of unique shading engines
+        shading_engines = set(cmds.listConnections(shape_node, t='shadingEngine')) 
+
+        if shading_engines:
+            for shading_engine in shading_engines:
+                connected_material = cmds.listConnections(shading_engine + ".surfaceShader")
+                if connected_material != None:
+                    if cmds.nodeType(connected_material[0]) == 'ms_appleseed_material':
+                        # this is an appleseed material
+                        new_material = Material(self.params, connected_material[0])
+                        self.material_nodes.append(new_material)
+                        self.shading_nodes = self.shading_nodes + new_material.getShadingNodes()
+                        self.colors = self.colors + new_material.colors
+                        self.textures = self.textures + new_material.textures
+                    else: 
                         cmds.warning("no appleseed material or shader translation connected to {0}".format(self.name))
         else:
             cmds.warning("no shading engine connected to {0}".format(self.name))
@@ -786,8 +785,8 @@ class Geometry():
         self.transform = [m[0],m[1],m[2],m[3]], [m[4],m[5],m[6],m[7]], [m[8],m[9],m[10],m[11]], [m[12],m[13],m[14],m[15]]
         
 
-    def getMaterial(self):
-        return self.material_node
+    def getMaterials(self):
+        return self.material_nodes
 
     def getShadingNodes(self):
         return self.shading_nodes
@@ -802,10 +801,10 @@ class Geometry():
         else:
             writeTransform(doc, self.params['scene_scale'], self.name)
 
-        if self.material_name:
-            doc.appendElement('assign_material slot="0" side="front" material="{0}"'.format(self.material_name))
+        for material in self.material_nodes:
+            doc.appendElement('assign_material slot="{0}" side="front" material="{1}"'.format(material.name, material.name))
             if self.params['matDoubleShade']:
-                doc.appendElement('assign_material slot="0" side="back" material="{0}"'.format(self.material_name))
+                doc.appendElement('assign_material slot="{0}" side="back" material="{1}"'.format(material.name, material.name))
         doc.endElement('object_instance')
 
 
@@ -855,15 +854,13 @@ class Assembly():
 
         # populate material, shading node and color list
         for geo in self.geo_objects:
-            if geo.getMaterial():
-                self.material_objects = self.material_objects + [geo.getMaterial()]
+            if geo.getMaterials():
+                self.material_objects = self.material_objects + geo.getMaterials()
             else:
                 cmds.warning("no material connected to {0}".format(geo.name))
             self.shading_node_objects = self.shading_node_objects + geo.getShadingNodes()
             self.color_objects = self.color_objects + geo.colors
             self.texture_objects = self.texture_objects + geo.textures
-
-        # uniquify lists of materials, shading nodes, colors and textures by turning them into dictionaries.
 
         # materials
         unsorted_materials = self.material_objects
