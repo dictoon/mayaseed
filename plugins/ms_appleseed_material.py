@@ -1,6 +1,12 @@
+#!/usr/bin/python
 
 #
-# Copyright (c) 2012 Jonathan Topf
+# This source file is part of appleseed.
+# Visit http://appleseedhq.net/ for additional information and resources.
+#
+# This software is released under the MIT license.
+#
+# Copyright (c) 2010-2012 Francois Beaune
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +26,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
-
 
 import sys
 import maya.OpenMaya as OpenMaya
@@ -43,11 +48,11 @@ class appleseed_material(OpenMayaMPx.MPxNode):
     hardwareColorAttribute = OpenMaya.MObject()
     
     render_layerAttribute = OpenMaya.MObject()
-    BSDFAttribute = OpenMaya.MObject()
-    EDFAttribute = OpenMaya.MObject()
-    surface_shaderAttribute = OpenMaya.MObject()
+    BSDF_frontAttribute = OpenMaya.MObject()
+    EDF_frontAttribute = OpenMaya.MObject()
+    surface_shader_frontAttribute = OpenMaya.MObject()
     alpha_mapAttribute = OpenMaya.MObject()
-    normal_mapAttribute = OpenMaya.MObject()
+    normal_map_frontAttribute = OpenMaya.MObject()
 
 
 
@@ -65,14 +70,14 @@ class appleseed_material(OpenMayaMPx.MPxNode):
             
             # Get the data handles corresponding to your attributes among the values in the data block.
             surfacePointDataHandle = pDataBlock.inputValue( appleseed_material.surfacePointAttribute )
-            BSDFDataHandle = pDataBlock.inputValue( appleseed_material.BSDFAttribute )
+            BSDF_frontDataHandle = pDataBlock.inputValue( appleseed_material.BSDF_frontAttribute )
             hardwareColorDataHandle = pDataBlock.inputValue( appleseed_material.hardwareColInAttribute )
             
             # Obtain the (x,y,z) location of the currently rendered point in camera coordinates.
             surfacePoint = surfacePointDataHandle.asFloatVector()
             
-            # Get the BSDF and hardware Color values.
-            BSDFValue = BSDFDataHandle.asFloatVector()
+            # Get the BSDF_front and hardware Color values.
+            BSDF_frontValue = BSDF_frontDataHandle.asFloatVector()
             hardwareValue = hardwareColorDataHandle.asFloatVector()
 
             outColor = OpenMaya.MFloatVector(0.5, 0.5, 0.5)
@@ -128,35 +133,70 @@ def nodeInitializer():
     appleseed_material.render_layer =  render_layer_Attr.create("render_layer", "render_layer", OpenMaya.MFnData.kString, render_layer_string)  
     appleseed_material.addAttribute( appleseed_material.render_layer )
 
-    #BSDF Attribute
-    appleseed_material.BSDFAttribute = numericAttributeFn.createColor( 'BSDF_color', 'BSDF' )
+    #duplicate front attributes on back
+    duplcated_front_on_back_nAttr = OpenMaya.MFnNumericAttribute()
+    appleseed_material.duplcated_front_on_back = duplcated_front_on_back_nAttr.create("duplcated_front_attributes_on_back", "duplcated_front_on_back", OpenMaya.MFnNumericData.kBoolean, True)
+    appleseed_material.addAttribute( appleseed_material.duplcated_front_on_back )
+
+    # front ***************************
+
+    #BSDF_front Attribute
+    appleseed_material.BSDF_frontAttribute = numericAttributeFn.createColor( 'BSDF_front_color', 'BSDF_front' )
     numericAttributeFn.setStorable( True )
     numericAttributeFn.setDefault( 0.0,0.0,0.0 )
-    appleseed_material.addAttribute( appleseed_material.BSDFAttribute )
+    appleseed_material.addAttribute( appleseed_material.BSDF_frontAttribute )
     
-    #EDF Attribute
-    appleseed_material.EDFAttribute = numericAttributeFn.createColor( 'EDF_color', 'EDF' )
+    #EDF_front Attribute
+    appleseed_material.EDF_frontAttribute = numericAttributeFn.createColor( 'EDF_front_color', 'EDF_front' )
     numericAttributeFn.setStorable( True )
     numericAttributeFn.setDefault( 0.0,0.0,0.0 )
-    appleseed_material.addAttribute( appleseed_material.EDFAttribute )
+    appleseed_material.addAttribute( appleseed_material.EDF_frontAttribute )
     
-    #surface_shader Attribute
-    appleseed_material.surface_shaderAttribute = numericAttributeFn.createColor( 'surface_shader_color', 'surface_shader' )
+    #surface_shader_front Attribute
+    appleseed_material.surface_shader_frontAttribute = numericAttributeFn.createColor( 'surface_shader_front_color', 'surface_shader_front' )
     numericAttributeFn.setStorable( True )
     numericAttributeFn.setDefault( 0.0,0.0,0.0 )
-    appleseed_material.addAttribute( appleseed_material.surface_shaderAttribute )
+    appleseed_material.addAttribute( appleseed_material.surface_shader_frontAttribute )
     
+    #normal_map_front Attribute
+    appleseed_material.normal_map_frontAttribute = numericAttributeFn.createColor( 'normal_map_front_color', 'normal_map_front' )
+    numericAttributeFn.setStorable( True )
+    numericAttributeFn.setDefault( 0.0,0.0,0.0 )
+    appleseed_material.addAttribute( appleseed_material.normal_map_frontAttribute )
+
+    # back ***************************
+
+    #BSDF_back Attribute
+    appleseed_material.BSDF_backAttribute = numericAttributeFn.createColor( 'BSDF_back_color', 'BSDF_back' )
+    numericAttributeFn.setStorable( True )
+    numericAttributeFn.setDefault( 0.0,0.0,0.0 )
+    appleseed_material.addAttribute( appleseed_material.BSDF_backAttribute )
+    
+    #EDF_back Attribute
+    appleseed_material.EDF_backAttribute = numericAttributeFn.createColor( 'EDF_back_color', 'EDF_back' )
+    numericAttributeFn.setStorable( True )
+    numericAttributeFn.setDefault( 0.0,0.0,0.0 )
+    appleseed_material.addAttribute( appleseed_material.EDF_backAttribute )
+    
+    #surface_shader_back Attribute
+    appleseed_material.surface_shader_backAttribute = numericAttributeFn.createColor( 'surface_shader_back_color', 'surface_shader_back' )
+    numericAttributeFn.setStorable( True )
+    numericAttributeFn.setDefault( 0.0,0.0,0.0 )
+    appleseed_material.addAttribute( appleseed_material.surface_shader_backAttribute )
+    
+    #normal_map_back Attribute
+    appleseed_material.normal_map_backAttribute = numericAttributeFn.createColor( 'normal_map_back_color', 'normal_map_back' )
+    numericAttributeFn.setStorable( True )
+    numericAttributeFn.setDefault( 0.0,0.0,0.0 )
+    appleseed_material.addAttribute( appleseed_material.normal_map_backAttribute )
+
+
+
     #alpha_map Attribute
     appleseed_material.alpha_mapAttribute = numericAttributeFn.createColor( 'alpha_map_color', 'alpha_map' )
     numericAttributeFn.setStorable( True )
     numericAttributeFn.setDefault( 0.0,0.0,0.0 )
     appleseed_material.addAttribute( appleseed_material.alpha_mapAttribute )
-    
-    #normal_map Attribute
-    appleseed_material.normal_mapAttribute = numericAttributeFn.createColor( 'normal_map_color', 'normal_map' )
-    numericAttributeFn.setStorable( True )
-    numericAttributeFn.setDefault( 0.0,0.0,0.0 )
-    appleseed_material.addAttribute( appleseed_material.normal_mapAttribute )
 
     #hardware Color Attribute
     appleseed_material.hardwareColInAttribute = numericAttributeFn.createColor( 'hardware_color_in', 'hci' )
@@ -189,8 +229,8 @@ def nodeInitializer():
     # NODE ATTRIBUTE DEPENDENCIES
     #==================================
     #  - All the input attributes affect the computation of the pixel color output (outColor).
-    appleseed_material.attributeAffects( appleseed_material.BSDFAttribute, appleseed_material.outColorAttribute )
-    appleseed_material.attributeAffects( appleseed_material.BSDFAttribute, appleseed_material.hardwareColorAttribute )
+    appleseed_material.attributeAffects( appleseed_material.BSDF_frontAttribute, appleseed_material.outColorAttribute )
+    appleseed_material.attributeAffects( appleseed_material.BSDF_frontAttribute, appleseed_material.hardwareColorAttribute )
     appleseed_material.attributeAffects( appleseed_material.hardwareColInAttribute, appleseed_material.outColorAttribute )
 
 def initializePlugin( mobject ):

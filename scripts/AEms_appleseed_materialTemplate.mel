@@ -20,16 +20,32 @@
 
 global proc AEms_appleseed_materialTemplate( string $nodeName )
 {
-	//AEswatchDisplay $nodeName;
-	editorTemplate -beginScrollLayout;
+    //AEswatchDisplay $nodeName;
+    editorTemplate -beginScrollLayout;
 
-	editorTemplate -beginLayout "Main Attributes" -collapse 0;
-		editorTemplate -addControl "render_layer";
-		editorTemplate -addControl "BSDF_color";
-		editorTemplate -addControl "EDF_color";
-		editorTemplate -addControl "surface_shader_color";
+    editorTemplate -beginLayout "Main Attributes" -collapse 0;
+
+        editorTemplate -addControl "render_layer";
+
+        editorTemplate -addSeparator; 
+
+        editorTemplate -addControl "duplcated_front_attributes_on_back";
+
+        editorTemplate -addControl "BSDF_front_color";
+        editorTemplate -addControl "EDF_front_color";
+        editorTemplate -addControl "surface_shader_front_color";
+        editorTemplate -addControl "normal_map_front_color";
+
+        editorTemplate -addSeparator; 
+
+        editorTemplate -addControl "BSDF_back_color";
+        editorTemplate -addControl "EDF_back_color";
+        editorTemplate -addControl "surface_shader_back_color";
+		editorTemplate -addControl "normal_map_back_color";
+
+        editorTemplate -addSeparator; 
+
 		editorTemplate -addControl "alpha_map_color";
-		editorTemplate -addControl "normal_map_color";
 	editorTemplate -endLayout;
 
 
