@@ -247,7 +247,6 @@ global proc AEms_renderSettingsTemplate(string $nodeName) {
         editorTemplate -beginLayout "Assembly Settings" -collapse true;
             editorTemplate -addControl "interpret_sets_as_assemblies";
             editorTemplate -addSeparator;
-            editorTemplate -addControl "double_sided_shading";
         editorTemplate -endLayout;
 
         editorTemplate -beginLayout "Configuration Settings" -collapse true;

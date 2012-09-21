@@ -129,6 +129,7 @@ def convertConnectionToImage(shader, attribute, dest_file, resolution=1024, pass
 #--------------------------------------------------------------------------------------------------
 
 def findPathToImfCopy():
+
     #
     # Values of maya_base_path:
     #
@@ -418,7 +419,7 @@ def export_obj(object_name, file_path, overwrite=True):
 # Legalize file name.
 #--------------------------------------------------------------------------------------------------
 
-def legalizeFilename(filename):
+def legalizeName(filename):
     filename = filename.replace('\\', '_')
     filename = filename.replace('/', '_')
     filename = filename.replace(':', '_')

@@ -310,8 +310,8 @@ class Texture():
     def __init__(self, name, file_name, color_space='srgb', alpha_as_luminance=False):
         self.name = name
 
-        directory = ms_commands.legalizeFilename(os.path.split(file_name)[0])
-        filename = ms_commands.legalizeFilename(os.path.split(file_name)[1])
+        directory = ms_commands.legalizeName(os.path.split(file_name)[0])
+        filename = ms_commands.legalizeName(os.path.split(file_name)[1])
         self.filepath = os.path.join(directory, filename)
 
         self.color_space = color_space
@@ -374,87 +374,116 @@ class Light():
 
 class Material():
     def __init__(self, params, maya_node):
-        self.name = maya_node
         self.params = params
-
-        self.bsdf = False
-        self.edf = False
-        self.surface_shader = False
-        self.alpha_map = False
-        self.normal_map = False
-
-        self.child_shading_nodes = []
+        self.name = maya_node
+        self.safe_name = ms_commands.legalizeName(self.name)
+        self.duplicate_shaders = cmds.getAttr(self.name + '.duplcated_front_attributes_on_back')
+        self.shading_nodes = []
         self.colors = []
         self.textures = []
 
-        bsdf_connection = cmds.listConnections(self.name + '.BSDF_color')
-        if bsdf_connection:
-            if cmds.nodeType(bsdf_connection[0]) == 'ms_appleseed_shading_node':
-                # create shading node object
-                shading_node = ShadingNode(self.params, bsdf_connection[0])
-                self.bsdf = shading_node.name
-                self.child_shading_nodes = self.child_shading_nodes + [shading_node] + shading_node.getChildren()
-                self.colors = self.colors + shading_node.colors
-                self.textures = self.textures + shading_node.textures
+        self.bsdf_front = self.getMayaAttr(self.name + '.BSDF_front_color')
+        self.edf_front = self.getMayaAttr(self.name + '.EDF_front_color')
+        self.surface_shader_front = self.getMayaAttr(self.name + '.surface_shader_front_color')
+        self.normal_map_front = self.getMayaAttr(self.name + '.normal_map_front_color')
+        self.alpha_map = self.getMayaAttr(self.name + '.alpha_map_color')
+        if self.alpha_map != None:
+            self.alpha_map.alpha_mode = 'luminance'
 
-        edf_connection = cmds.listConnections(self.name + '.EDF_color')
-        if edf_connection:
-            if cmds.nodeType(edf_connection[0]) == 'ms_appleseed_shading_node':
-                # create shading node object
-                shading_node = ShadingNode(self.params, edf_connection[0])
-                self.edf = shading_node.name
-                self.child_shading_nodes = self.child_shading_nodes + [shading_node] + shading_node.getChildren()
-                self.colors = self.colors + shading_node.colors
-                self.textures = self.textures + shading_node.textures
+        #only use front shaders on back if box is checked
+        if not self.duplicate_shaders:
+            self.bsdf_back = self.getMayaAttr(self.name + '.BSDF_back_color')
+            self.edf_back = self.getMayaAttr(self.name + '.EDF_back_color')
+            self.surface_shader_back = self.getMayaAttr(self.name + '.surface_shader_back_color')
+            self.normal_map_back = self.getMayaAttr(self.name + '.normal_map_back_color')
 
-        surface_shader_connection = cmds.listConnections(self.name + '.surface_shader_color')
-        if surface_shader_connection:
-            if cmds.nodeType(surface_shader_connection[0]) == 'ms_appleseed_shading_node':
-                # create shading node object
-                shading_node = ShadingNode(self.params, surface_shader_connection[0])
-                self.surface_shader = shading_node.name
-                self.child_shading_nodes = self.child_shading_nodes + [shading_node] + shading_node.getChildren()
-                self.colors = self.colors + shading_node.colors
-                self.textures = self.textures + shading_node.textures
+            self.shader_connections = [self.bsdf_front,
+                                  self.bsdf_back,
+                                  self.edf_front,
+                                  self.edf_back,
+                                  self.surface_shader_front,
+                                  self.surface_shader_back]
 
-        alpha_map_connection = cmds.listConnections(self.name + '.alpha_map_color')
-        if alpha_map_connection:
-            if cmds.nodeType(alpha_map_connection[0]) == 'file':
-                # create texture node and work out texture path
-                maya_texture_file = ms_commands.getFileTextureName(alpha_map_connection[0])
+            self.texture_connections = [self.normal_map_front,
+                                   self.normal_map_back,
+                                   self.alpha_map]
+
+        else: 
+            self.bsdf_back, self.edf_back, self.surface_shader_back, self.normal_map_back = self.bsdf_front, self.edf_front, self.surface_shader_front, self.normal_map_front
+
+            self.shader_connections = [self.bsdf_front,
+                                       self.edf_front,
+                                       self.surface_shader_front]
+
+            self.texture_connections = [self.normal_map_front,
+                                        self.alpha_map]
+
+    def getMayaAttr(self, attr_name):
+        connection = cmds.listConnections(attr_name)
+        if connection:
+            if cmds.nodeType(connection[0]) == 'ms_appleseed_shading_node':
+                shading_node = ShadingNode(self.params, connection[0])
+                self.shading_nodes = self.shading_nodes + [shading_node] + shading_node.getChildren()
+                self.colors = self.colors + shading_node.colors
+                return shading_node
+
+            elif cmds.nodeType(connection[0]) == 'file':
+                maya_texture_file = ms_commands.getFileTextureName(connection[0])
                 texture = ms_commands.convertTexToExr(maya_texture_file, params['absolute_tex_dir'], overwrite=self.params['overwriteExistingExrs'], pass_through=False)
-                texture_node = Texture((self.name + '_alpha_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb', alpha_as_luminance=True)
-                self.alpha_map = texture_node.name + '_inst'
-                self.textures = self.textures + [texture_node]
+                texture_node = Texture(self.params, connection[0], os.path.join(params['tex_dir'], os.path.split(texture)[1]))
+                self.texture_nodes = self.texture_nodes + [texture_node]
+                return texture_node
 
-        normal_map_connection = cmds.listConnections(self.name + '.normal_map_color')
-        if normal_map_connection:
-            if cmds.nodeType(normal_map_connection[0]) == 'file':
-                # create texture node and work out texture path
-                maya_texture_file = ms_commands.getFileTextureName(normal_map_connection[0])
-                texture = ms_commands.convertTexToExr(maya_texture_file, params['absolute_tex_dir'], overwrite=self.params['overwriteExistingExrs'], pass_through=False)
-                texture_node = Texture((self.name + '_alpha_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
-                self.normal_map = texture_node.name + '_inst'
-                self.textures = self.textures + [texture_node]
+        else:
+            return None
 
     def getShadingNodes(self):
-        return self.child_shading_nodes
+        return self.shading_nodes
 
     def writeXML(self, doc):
-        print('writing material {0}'.format(self.name))
-        doc.startElement('material name="{0}" model="generic_material"'.format(self.name))
-        if self.bsdf:
-            doc.appendParameter('bsdf', self.bsdf)
-        if self.edf:
-            doc.appendParameter('edf', self.edf)
-        if self.surface_shader:
-            doc.appendParameter('surface_shader', self.surface_shader)
-        if self.alpha_map:
-            doc.appendParameter('alpha_map', self.alpha_map)
-        if self.normal_map:
-            doc.appendParameter('normal_map', self.apha_map)
-        doc.endElement('material')
+        print 'diplicate shader =', self.duplicate_shaders
+        if self.duplicate_shaders:
+            print('writing material {0}'.format(self.name))
+            doc.startElement('material name="{0}" model="generic_material"'.format(self.name))
+            if self.bsdf_front:
+                doc.appendParameter('bsdf', self.bsdf_front.name)
+            if self.edf_front:
+                doc.appendParameter('edf', self.edf_front.name)
+            if self.surface_shader_front:
+                doc.appendParameter('surface_shader', self.surface_shader_front.name)
+            if self.alpha_map:
+                doc.appendParameter('alpha_map', self.alpha_map_front.name)
+            if self.normal_map_front:
+                doc.appendParameter('normal_map', self.normal_map_front.name)
+            doc.endElement('material')
+        else:
+            print('writing material {0}_front'.format(self.name))
+            doc.startElement('material name="{0}_front" model="generic_material"'.format(self.name))
+            if self.bsdf_front:
+                doc.appendParameter('bsdf', self.bsdf_front.name)
+            if self.edf_front:
+                doc.appendParameter('edf', self.edf_front.name)
+            if self.surface_shader_front:
+                doc.appendParameter('surface_shader', self.surface_shader_front.name)
+            if self.alpha_map:
+                doc.appendParameter('alpha_map', self.alpha_map_front.name)
+            if self.normal_map_front:
+                doc.appendParameter('normal_map', self.normal_map_front.name)
+            doc.endElement('material')    
 
+            print('writing material {0}_back'.format(self.name))
+            doc.startElement('material name="{0}_back" model="generic_material"'.format(self.name))
+            if self.bsdf_back:
+                doc.appendParameter('bsdf', self.bsdf_back.name)
+            if self.edf_back:
+                doc.appendParameter('edf', self.edf_back.name)
+            if self.surface_shader_back:
+                doc.appendParameter('surface_shader', self.surface_shader_back.name)
+            if self.alpha_map:
+                doc.appendParameter('alpha_map', self.alpha_map_back.name)
+            if self.normal_map_back:
+                doc.appendParameter('normal_map', self.normal_map_back.name)
+            doc.endElement('material') 
 
 #--------------------------------------------------------------------------------------------------
 # ShadingNode class.
@@ -742,7 +771,7 @@ class Geometry():
         checkExportCancelled()
         self.params = params
         self.name = name
-        self.safe_name = ms_commands.legalizeFilename(name)
+        self.safe_name = ms_commands.legalizeName(name)
 
         self.hierarchy_name = name
         self.material_nodes = []
@@ -802,9 +831,12 @@ class Geometry():
             writeTransform(doc, self.params['scene_scale'], self.name)
 
         for material in self.material_nodes:
-            doc.appendElement('assign_material slot="{0}" side="front" material="{1}"'.format(material.name, material.name))
-            if self.params['matDoubleShade']:
+            if material.duplicate_shaders:
+                doc.appendElement('assign_material slot="{0}" side="front" material="{1}"'.format(material.name, material.name))
                 doc.appendElement('assign_material slot="{0}" side="back" material="{1}"'.format(material.name, material.name))
+            else:
+                doc.appendElement('assign_material slot="{0}" side="front" material="{1}_front"'.format(material.name, material.name))
+                doc.appendElement('assign_material slot="{0}" side="back" material="{1}_back"'.format(material.name, material.name))
         doc.endElement('object_instance')
 
 
@@ -816,7 +848,7 @@ class Assembly():
     def __init__(self, params, name='main_assembly', object_list=False, position_from_object=False):
         checkExportCancelled()
         self.params = params
-        self.name = ms_commands.legalizeFilename(name)
+        self.name = ms_commands.legalizeName(name)
         self.position_from_object = position_from_object
         self.light_objects = []
         self.geo_objects = []
@@ -931,7 +963,7 @@ class Assembly():
 
         # export and write objects
         for geo in self.geo_objects:
-            file_name = ms_commands.legalizeFilename(geo.name)
+            file_name = ms_commands.legalizeName(geo.name)
 
             doc.startElement('object name="{0}" model="mesh_object"'.format(file_name))
 
