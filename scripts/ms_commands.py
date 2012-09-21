@@ -496,13 +496,13 @@ def convertPhongBlinnMaterial(material):
     # bump_connection = getConnectedNode(material + '.bumpMapping')
 
     bsdf = createShadingNode('ashikhmin_brdf')
-    cmds.connectAttr(bsdf + '.outColor', new_material_node + '.BSDF_color')
+    cmds.connectAttr(bsdf + '.outColor', new_material_node + '.BSDF_front_color')
 
     # edf = createShadingNode('diffuse_edf')
     # cmds.connectAttr(edf + '.outColor', new_material_node + '.EDF_color')
 
     surface_shader = createShadingNode('physical_surface_shader')
-    cmds.connectAttr(surface_shader + '.outColor', new_material_node + '.surface_shader_color')
+    cmds.connectAttr(surface_shader + '.outColor', new_material_node + '.surface_shader_front_color')
 
     # diffuse
     color_value = cmds.getAttr(material + '.color')[0]
@@ -537,10 +537,13 @@ def convertPhongBlinnMaterial(material):
     cmds.setAttr(bsdf + '.shininess_u', shininess, shininess, shininess, type='float3')
     cmds.setAttr(bsdf + '.shininess_v', shininess, shininess, shininess, type='float3')
 
-    # assign shader to new objects
-    objects = listObjectsByShader(material)
-    if objects is not None:
-        cmds.select(clear=True)
-        for object in objects:
-            cmds.select(object, r=True)
-            cmds.hyperShade(assign=new_material_node)
+    material_shading_group = cmds.listConnections(material, type='shadingEngine')[0]
+
+    cmds.connectAttr(new_material_node + '.outColor', material_shading_group + '.surfaceShader', force=True)
+
+
+
+
+
+
+

@@ -147,10 +147,7 @@ def ms_renderSettings_nodeInitializer():
     #interpret sets as assemblies bool attribute
     interpret_sets_as_assemblies_nAttr = OpenMaya.MFnNumericAttribute()
     ms_renderSettings.interpret_sets_as_assemblies = interpret_sets_as_assemblies_nAttr.create("interpret_sets_as_assemblies", "sets_as_assemblies", OpenMaya.MFnNumericData.kBoolean)
-    #double sided shading bool attribute
-    double_sided_shading_nAttr = OpenMaya.MFnNumericAttribute()
-    ms_renderSettings.double_sided_shading = double_sided_shading_nAttr.create("double_sided_shading", "double_shade", OpenMaya.MFnNumericData.kBoolean)
-    
+ 
     #output ---------------------------------------------------
     #camera
     camera_msgAttr = OpenMaya.MFnMessageAttribute()
@@ -346,7 +343,6 @@ def ms_renderSettings_nodeInitializer():
     ms_renderSettings.addAttribute(ms_renderSettings.export_all_cameras_as_thin_lens)
 
     ms_renderSettings.addAttribute(ms_renderSettings.interpret_sets_as_assemblies)
-    ms_renderSettings.addAttribute(ms_renderSettings.double_sided_shading)
     ms_renderSettings.addAttribute(ms_renderSettings.camera)
     ms_renderSettings.addAttribute(ms_renderSettings.color_space)
     ms_renderSettings.addAttribute(ms_renderSettings.width)
