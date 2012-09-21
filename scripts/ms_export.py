@@ -202,7 +202,6 @@ def getMayaParams(render_settings_node):
     params['matDefaultBSDF'] = 'Lambertian'
     params['matDefaultEDF'] = 'None'
     params['matDefaultSurfaceShader'] = 'Physical'
-    params['matDoubleShade'] = cmds.getAttr(render_settings_node + '.double_sided_shading')
 
     # output 
     if cmds.listConnections(render_settings_node + '.camera'):
@@ -1206,7 +1205,7 @@ class Configurations():
             print('writing custom final config')
             doc.startElement('configuration name="final" base="base_final"')
 
-            if self.params['customFinalConfigEngine'] == "Path Tracing":
+            if self.params['customFinalConfigEngine'] == 0:
                 engine = 'pt'
             else:
                 engine = 'drt'
