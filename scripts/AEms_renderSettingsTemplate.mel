@@ -206,7 +206,6 @@ global proc AEms_renderSettingsTemplate(string $nodeName) {
 
     editorTemplate -beginScrollLayout;
         editorTemplate -beginLayout "Export Settings" -collapse false;
-            //editorTemplate -callCustom "AEfileBrowse" "AEfileBrowseRepeat" "output_directory";
             editorTemplate -addControl "output_directory";
             editorTemplate -addControl "output_file";
             editorTemplate -addSeparator;

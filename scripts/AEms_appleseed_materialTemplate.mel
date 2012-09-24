@@ -20,7 +20,6 @@
 
 global proc AEms_appleseed_materialTemplate( string $nodeName )
 {
-    //AEswatchDisplay $nodeName;
     editorTemplate -beginScrollLayout;
 
     editorTemplate -beginLayout "Main Attributes" -collapse 0;
@@ -41,21 +40,17 @@ global proc AEms_appleseed_materialTemplate( string $nodeName )
         editorTemplate -addControl "BSDF_back_color";
         editorTemplate -addControl "EDF_back_color";
         editorTemplate -addControl "surface_shader_back_color";
-		editorTemplate -addControl "normal_map_back_color";
+        editorTemplate -addControl "normal_map_back_color";
 
         editorTemplate -addSeparator; 
 
-		editorTemplate -addControl "alpha_map_color";
-	editorTemplate -endLayout;
+        editorTemplate -addControl "alpha_map_color";
+    editorTemplate -endLayout;
 
-
-//	AEhardwareTextureTemplate $nodeName 
-//	("hardwareColor diffuse"); 
-
-	// include/call base class/node attributes
-	AEdependNodeTemplate $nodeName;
-	
-	editorTemplate -addExtraControls;
-	editorTemplate -endScrollLayout;
+    // include/call base class/node attributes
+    AEdependNodeTemplate $nodeName;
+    
+    editorTemplate -addExtraControls;
+    editorTemplate -endScrollLayout;
 }
 
