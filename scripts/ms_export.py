@@ -396,26 +396,26 @@ class Material():
             self.surface_shader_back = self.getMayaAttr(self.name + '.surface_shader_back_color')
             self.normal_map_back = self.getMayaAttr(self.name + '.normal_map_back_color')
 
-            self.shader_connections = [self.bsdf_front,
-                                  self.bsdf_back,
-                                  self.edf_front,
-                                  self.edf_back,
-                                  self.surface_shader_front,
-                                  self.surface_shader_back]
+            self.shading_nodes = self.shading_nodes + [self.bsdf_front,
+                                                       self.bsdf_back,
+                                                       self.edf_front,
+                                                       self.edf_back,
+                                                       self.surface_shader_front,
+                                                       self.surface_shader_back]
 
-            self.texture_connections = [self.normal_map_front,
-                                   self.normal_map_back,
-                                   self.alpha_map]
+            self.textures = self.textures + [self.normal_map_front,
+                                             self.normal_map_back,
+                                             self.alpha_map]
 
         else: 
             self.bsdf_back, self.edf_back, self.surface_shader_back, self.normal_map_back = self.bsdf_front, self.edf_front, self.surface_shader_front, self.normal_map_front
 
-            self.shader_connections = [self.bsdf_front,
-                                       self.edf_front,
-                                       self.surface_shader_front]
+            self.shading_nodes = self.shading_nodes + [self.bsdf_front,
+                                                       self.edf_front,
+                                                       self.surface_shader_front]
 
-            self.texture_connections = [self.normal_map_front,
-                                        self.alpha_map]
+            self.textures = self.textures + [self.normal_map_front,
+                                             self.alpha_map]
 
     def getMayaAttr(self, attr_name):
         connection = cmds.listConnections(attr_name)
@@ -424,13 +424,15 @@ class Material():
                 shading_node = ShadingNode(self.params, connection[0])
                 self.shading_nodes = self.shading_nodes + [shading_node] + shading_node.getChildren()
                 self.colors = self.colors + shading_node.colors
+                self.textures = self.textures + shading_node.textures
                 return shading_node
 
             elif cmds.nodeType(connection[0]) == 'file':
                 maya_texture_file = ms_commands.getFileTextureName(connection[0])
-                texture = ms_commands.convertTexToExr(maya_texture_file, params['absolute_tex_dir'], overwrite=self.params['overwriteExistingExrs'], pass_through=False)
-                texture_node = Texture(self.params, connection[0], os.path.join(params['tex_dir'], os.path.split(texture)[1]))
-                self.texture_nodes = self.texture_nodes + [texture_node]
+                texture = ms_commands.convertTexToExr(maya_texture_file, self.params['absolute_tex_dir'], overwrite=self.params['overwriteExistingExrs'], pass_through=False)
+                texture_node = Texture((connection[0] + '_texture'), (os.path.join(self.params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
+                attribute_value = (texture_node.name + '_inst')
+                self.textures = self.textures + [texture_node]
                 return texture_node
 
         else:
@@ -448,12 +450,11 @@ class Material():
                 doc.appendParameter('bsdf', self.bsdf_front.name)
             if self.edf_front:
                 doc.appendParameter('edf', self.edf_front.name)
-            if self.surface_shader_front:
-                doc.appendParameter('surface_shader', self.surface_shader_front.name)
+            doc.appendParameter('surface_shader', self.surface_shader_front.name)
             if self.alpha_map:
-                doc.appendParameter('alpha_map', self.alpha_map_front.name)
+                doc.appendParameter('alpha_map', self.alpha_map.name + '_inst')
             if self.normal_map_front:
-                doc.appendParameter('normal_map', self.normal_map_front.name)
+                doc.appendParameter('normal_map', self.normal_map_front.name + '_inst')
             doc.endElement('material')
         else:
             print('writing material {0}_front'.format(self.name))
@@ -462,12 +463,11 @@ class Material():
                 doc.appendParameter('bsdf', self.bsdf_front.name)
             if self.edf_front:
                 doc.appendParameter('edf', self.edf_front.name)
-            if self.surface_shader_front:
-                doc.appendParameter('surface_shader', self.surface_shader_front.name)
+            doc.appendParameter('surface_shader', self.surface_shader_front.name)
             if self.alpha_map:
-                doc.appendParameter('alpha_map', self.alpha_map_front.name)
+                doc.appendParameter('alpha_map', self.alpha_map.name + '_inst')
             if self.normal_map_front:
-                doc.appendParameter('normal_map', self.normal_map_front.name)
+                doc.appendParameter('normal_map', self.normal_map_front.name + '_inst')
             doc.endElement('material')    
 
             print('writing material {0}_back'.format(self.name))
@@ -476,12 +476,11 @@ class Material():
                 doc.appendParameter('bsdf', self.bsdf_back.name)
             if self.edf_back:
                 doc.appendParameter('edf', self.edf_back.name)
-            if self.surface_shader_back:
-                doc.appendParameter('surface_shader', self.surface_shader_back.name)
+            doc.appendParameter('surface_shader', self.surface_shader_back.name)
             if self.alpha_map:
-                doc.appendParameter('alpha_map', self.alpha_map_back.name)
+                doc.appendParameter('alpha_map', self.alpha_map.name + '_inst')
             if self.normal_map_back:
-                doc.appendParameter('normal_map', self.normal_map_back.name)
+                doc.appendParameter('normal_map', self.normal_map_back.name + '_inst')
             doc.endElement('material') 
 
 #--------------------------------------------------------------------------------------------------
@@ -525,7 +524,7 @@ class ShadingNode():
 
                     #get attribute color value
                     attribute_color = cmds.getAttr(maya_attribute)[0]
-                    connected_node = False
+                    connected_node = None
 
                     #check for connected node
                     connection = cmds.listConnections(maya_attribute)
@@ -885,7 +884,7 @@ class Assembly():
 
         # populate material, shading node and color list
         for geo in self.geo_objects:
-            if geo.getMaterials():
+            if geo.getMaterials() != None:
                 self.material_objects = self.material_objects + geo.getMaterials()
             else:
                 cmds.warning("no material connected to {0}".format(geo.name))
@@ -905,8 +904,9 @@ class Assembly():
         unsorted_shading_nodes = self.shading_node_objects
         self.shading_node_objects = dict()
         for shading_node in unsorted_shading_nodes:
-            if not shading_node.name in self.shading_node_objects:
-                self.shading_node_objects[shading_node.name] = shading_node
+            if shading_node != None:
+                if not shading_node.name in self.shading_node_objects:
+                    self.shading_node_objects[shading_node.name] = shading_node
         self.shading_node_objects = self.shading_node_objects.values()
 
         # colors
@@ -921,8 +921,9 @@ class Assembly():
         unsorted_textures = self.texture_objects
         self.texture_objects = dict()
         for texture in unsorted_textures:
-            if not texture.name in self.texture_objects:
-                self.texture_objects[texture.name] = texture
+            if texture!= None:
+                if not texture.name in self.texture_objects:
+                    self.texture_objects[texture.name] = texture
         self.texture_objects = self.texture_objects.values()
 
     def writeXML(self, doc):
@@ -1127,6 +1128,7 @@ class Scene():
 
         # write texture objects
         for tex in self.texture_objects:
+            print 'writing texture', self.texture_objects[tex].name
             self.texture_objects[tex].writeXMLObject(doc)
 
         # write texture instances
