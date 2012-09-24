@@ -130,9 +130,9 @@ def nodeInitializer():
     appleseed_material.addAttribute( appleseed_material.render_layer )
 
     #duplicate front attributes on back
-    duplcated_front_on_back_nAttr = OpenMaya.MFnNumericAttribute()
-    appleseed_material.duplcated_front_on_back = duplcated_front_on_back_nAttr.create("duplcated_front_attributes_on_back", "duplcated_front_on_back", OpenMaya.MFnNumericData.kBoolean, True)
-    appleseed_material.addAttribute( appleseed_material.duplcated_front_on_back )
+    duplicate_front_on_back_nAttr = OpenMaya.MFnNumericAttribute()
+    appleseed_material.duplicate_front_on_back = duplicate_front_on_back_nAttr.create("duplicate_front_attributes_on_back", "duplicate_front_on_back", OpenMaya.MFnNumericData.kBoolean, True)
+    appleseed_material.addAttribute( appleseed_material.duplicate_front_on_back )
 
     # front ***************************
 

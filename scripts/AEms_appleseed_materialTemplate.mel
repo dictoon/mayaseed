@@ -28,7 +28,7 @@ global proc AEms_appleseed_materialTemplate( string $nodeName )
 
         editorTemplate -addSeparator; 
 
-        editorTemplate -addControl "duplcated_front_attributes_on_back";
+        editorTemplate -addControl "duplicate_front_attributes_on_back";
 
         editorTemplate -addControl "BSDF_front_color";
         editorTemplate -addControl "EDF_front_color";
