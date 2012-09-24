@@ -354,7 +354,7 @@ def createShadingNode(model, entity_defs_obj=False):
     else:
         entity_defs = getEntityDefs(os.path.join(ROOT_DIRECTORY, 'scripts', 'appleseedEntityDefs.xml'))
 
-    shading_node_name = cmds.shadingNode('ms_appleseed_shading_node', asUtility=True)
+    shading_node_name = cmds.shadingNode('ms_appleseed_shading_node', asUtility=True, name=model)
 
     cmds.addAttr(shading_node_name, longName='node_model', dt="string")
     cmds.setAttr((shading_node_name + '.node_model'), model, type="string", lock=True)
