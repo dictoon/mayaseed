@@ -174,7 +174,7 @@ def ms_renderSettings_nodeInitializer():
 
     #custom final config
     export_custom_final_config_nAttr = OpenMaya.MFnNumericAttribute()
-    ms_renderSettings.export_custom_final_config = export_custom_final_config_nAttr.create("export_custom_final_config", "export_final", OpenMaya.MFnNumericData.kBoolean)  
+    ms_renderSettings.export_custom_final_config = export_custom_final_config_nAttr.create("export_custom_final_config", "export_final", OpenMaya.MFnNumericData.kBoolean, True)  
     
     #lighting engine
     final_config_lighting_engine_enumAttr = OpenMaya.MFnEnumAttribute()
@@ -291,13 +291,13 @@ def ms_renderSettings_nodeInitializer():
 
     #min_samples
     gtr_min_samples_AttrInt = OpenMaya.MFnNumericAttribute()
-    ms_renderSettings.gtr_min_samples = gtr_min_samples_AttrInt.create("gtr_min_samples", "gtr_min_samples", OpenMaya.MFnNumericData.kInt, 2)
+    ms_renderSettings.gtr_min_samples = gtr_min_samples_AttrInt.create("gtr_min_samples", "gtr_min_samples", OpenMaya.MFnNumericData.kInt, 8)
     gtr_min_samples_AttrInt.setHidden(False)
     gtr_min_samples_AttrInt.setKeyable(True)
 
     #max_samples
     gtr_max_samples_AttrInt = OpenMaya.MFnNumericAttribute()
-    ms_renderSettings.gtr_max_samples = gtr_max_samples_AttrInt.create("gtr_max_samples", "gtr_max_samples", OpenMaya.MFnNumericData.kInt, 32)
+    ms_renderSettings.gtr_max_samples = gtr_max_samples_AttrInt.create("gtr_max_samples", "gtr_max_samples", OpenMaya.MFnNumericData.kInt, 64)
     gtr_max_samples_AttrInt.setHidden(False)
     gtr_max_samples_AttrInt.setKeyable(True)
 
