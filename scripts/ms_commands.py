@@ -530,7 +530,9 @@ def convertPhongBlinnMaterial(material):
     material_type = cmds.nodeType(material)
     if material_type == 'phong':
         # 2..100 -> 0..1000
-        shininess = (cmds.getAttr(material + '.cosinePower') - 2.0) / 98.0 * 1000.0
+        cosinePower = cmds.getAttr(material + '.cosinePower')
+        cosinePower = max(cosinePower, 0.0)
+        shininess = cosinePower * 10.0
     elif material_type == 'blinn':
         # 0..1 -> 1000..0
         shininess = 1000.0 * (1.0 - cmds.getAttr(material + '.eccentricity'))
