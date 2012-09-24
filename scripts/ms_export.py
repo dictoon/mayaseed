@@ -396,12 +396,12 @@ class Material():
             self.surface_shader_back = self.getMayaAttr(self.name + '.surface_shader_back_color')
             self.normal_map_back = self.getMayaAttr(self.name + '.normal_map_back_color')
 
-            self.shading_nodes = self.shading_nodes + [self.bsdf_front,
-                                                       self.bsdf_back,
-                                                       self.edf_front,
-                                                       self.edf_back,
-                                                       self.surface_shader_front,
-                                                       self.surface_shader_back]
+            self.shading_nodes += [self.bsdf_front,
+                                   self.bsdf_back,
+                                   self.edf_front,
+                                   self.edf_back,
+                                   self.surface_shader_front,
+                                   self.surface_shader_back]
 
             self.textures = self.textures + [self.normal_map_front,
                                              self.normal_map_back,
@@ -410,12 +410,11 @@ class Material():
         else: 
             self.bsdf_back, self.edf_back, self.surface_shader_back, self.normal_map_back = self.bsdf_front, self.edf_front, self.surface_shader_front, self.normal_map_front
 
-            self.shading_nodes = self.shading_nodes + [self.bsdf_front,
-                                                       self.edf_front,
-                                                       self.surface_shader_front]
+            self.shading_nodes += [self.bsdf_front,
+                                   self.edf_front,
+                                   self.surface_shader_front]
 
-            self.textures = self.textures + [self.normal_map_front,
-                                             self.alpha_map]
+            self.textures += [self.normal_map_front, self.alpha_map]
 
     def getMayaAttr(self, attr_name):
         connection = cmds.listConnections(attr_name)
@@ -423,8 +422,8 @@ class Material():
             if cmds.nodeType(connection[0]) == 'ms_appleseed_shading_node':
                 shading_node = ShadingNode(self.params, connection[0])
                 self.shading_nodes = self.shading_nodes + [shading_node] + shading_node.getChildren()
-                self.colors = self.colors + shading_node.colors
-                self.textures = self.textures + shading_node.textures
+                self.colors += shading_node.colors
+                self.textures += shading_node.textures
                 return shading_node
 
             elif cmds.nodeType(connection[0]) == 'file':
@@ -432,7 +431,7 @@ class Material():
                 texture = ms_commands.convertTexToExr(maya_texture_file, self.params['absolute_tex_dir'], overwrite=self.params['overwriteExistingExrs'], pass_through=False)
                 texture_node = Texture((connection[0] + '_texture'), (os.path.join(self.params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
                 attribute_value = (texture_node.name + '_inst')
-                self.textures = self.textures + [texture_node]
+                self.textures += [texture_node]
                 return texture_node
 
         else:
@@ -539,7 +538,7 @@ class ShadingNode():
                             shading_node = ShadingNode(self.params, connected_node)
                             attribute_value = shading_node.name
                             self.child_shading_nodes = self.child_shading_nodes + [shading_node] + shading_node.child_shading_nodes
-                            self.colors = self.colors + shading_node.colors
+                            self.colors += shading_node.colors
                             self.textures = self.textures + shading_node.textures
 
                         #else if its a maya texture node
@@ -548,7 +547,7 @@ class ShadingNode():
                             texture = ms_commands.convertTexToExr(maya_texture_file, params['absolute_tex_dir'], overwrite=self.params['overwriteExistingExrs'], pass_through=False)
                             texture_node = Texture((connected_node + '_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
                             attribute_value = (texture_node.name + '_inst')
-                            self.textures = self.textures + [texture_node]
+                            self.textures += [texture_node]
 
                         # if the node is unrecognized, bake it
                         else:
@@ -558,7 +557,7 @@ class ShadingNode():
                                 texture = convertConnectionToImage(self.name, self.attribute_key, output_texture, resolution=1024)
                                 texture_node = Texture((connected_node + '_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
                                 attribute_value = (texture_node.name + '_inst')
-                                self.textures = self.textures + [texture_node]
+                                self.textures += [texture_node]
 
                     # no node is connected, just use the color value
                     else:
@@ -572,7 +571,7 @@ class ShadingNode():
                             normalized_color = ms_commands.normalizeRGB(attribute_color)
                             color_node = Color(color_name, normalized_color[:3], normalized_color[3])
                             attribute_value = color_node.name
-                            self.colors = self.colors + [color_node]
+                            self.colors += [color_node]
 
                 elif params['entityDefs'][self.model].attributes[attribute_key].type == 'dropdown_list': 
                     pass
