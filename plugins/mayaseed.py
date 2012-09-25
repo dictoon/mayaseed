@@ -248,7 +248,7 @@ def ms_renderSettings_nodeInitializer():
 
     #enable_caustics
     pt_enable_causticsnAttr = OpenMaya.MFnNumericAttribute()
-    ms_renderSettings.pt_enable_caustics = pt_enable_causticsnAttr.create("pt_enable_caustics", "pt_enable_caustics", OpenMaya.MFnNumericData.kBoolean, True)
+    ms_renderSettings.pt_enable_caustics = pt_enable_causticsnAttr.create("pt_enable_caustics", "pt_enable_caustics", OpenMaya.MFnNumericData.kBoolean, False)
 
     #enable_dl
     pt_enable_dlnAttr = OpenMaya.MFnNumericAttribute()
