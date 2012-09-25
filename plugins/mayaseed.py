@@ -70,6 +70,10 @@ def ms_renderSettings_nodeInitializer():
     output_file_Attr = OpenMaya.MFnTypedAttribute()
     ms_renderSettings.output_file = output_file_Attr.create("output_file", "out_file", OpenMaya.MFnData.kString, output_file_string)  
 
+    #export maya lights
+    export_maya_lights_nAttr = OpenMaya.MFnNumericAttribute()
+    ms_renderSettings.export_maya_lights = export_maya_lights_nAttr.create("export_maya_lights", "export_maya_lights", OpenMaya.MFnNumericData.kBoolean, True)
+
     #convert textures to exr
     convert_textures_to_exr_nAttr = OpenMaya.MFnNumericAttribute()
     ms_renderSettings.convert_textures_to_exr = convert_textures_to_exr_nAttr.create("convert_textures_to_exr", "convert_tex_to_exr", OpenMaya.MFnNumericData.kBoolean, True)
@@ -325,6 +329,7 @@ def ms_renderSettings_nodeInitializer():
     ms_renderSettings.addAttribute(ms_renderSettings.output_dir)
     ms_renderSettings.addAttribute(ms_renderSettings.output_file)
     ms_renderSettings.addAttribute(ms_renderSettings.convert_shading_nodes_to_textures)
+    ms_renderSettings.addAttribute(ms_renderSettings.export_maya_lights)
     ms_renderSettings.addAttribute(ms_renderSettings.convert_textures_to_exr)
     ms_renderSettings.addAttribute(ms_renderSettings.overwrite_existing_textures)
     ms_renderSettings.addAttribute(ms_renderSettings.export_camera_blur)

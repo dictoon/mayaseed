@@ -213,9 +213,12 @@ global proc AEms_renderSettingsTemplate(string $nodeName) {
             editorTemplate -label "Convert Textures to OpenEXR" -addControl "convert_textures_to_exr";
             editorTemplate -label "Overwrite Existing Textures Files" -addControl "overwrite_existing_textures";
             editorTemplate -addSeparator;
+            editorTemplate -addControl "export_maya_lights";
+            editorTemplate -addSeparator;
             editorTemplate -label "Export Camera Transformation Motion Blur" -addControl "export_camera_blur";
             editorTemplate -label "Export Assembly Transformation Motion Blur" -addControl "export_transformation_blur";
             editorTemplate -label "Export Object Deformation Motion Blur" -addControl "export_deformation_blur";
+
             editorTemplate -addControl "motion_samples";
             editorTemplate -addControl "shutter_open_time";
             editorTemplate -addControl "shutter_close_time";

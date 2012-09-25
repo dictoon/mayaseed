@@ -165,6 +165,7 @@ def getMayaParams(render_settings_node):
     params['overwriteExistingExrs'] = cmds.getAttr(render_settings_node + '.overwrite_existing_textures')
     params['fileName'] = cmds.getAttr(render_settings_node + '.output_file')
     params['exportCameraBlur'] = cmds.getAttr(render_settings_node + '.export_camera_blur')
+    params['exportMayaLights'] = cmds.getAttr(render_settings_node + '.export_maya_lights')
     params['exportTransformationBlur'] = cmds.getAttr(render_settings_node + '.export_transformation_blur')
     params['exportDeformationBlur'] = cmds.getAttr(render_settings_node + '.export_deformation_blur')
     params['motionSamples'] = cmds.getAttr(render_settings_node + '.motion_samples')
@@ -376,7 +377,7 @@ class Material():
         self.params = params
         self.name = maya_node
         self.safe_name = ms_commands.legalizeName(self.name)
-        self.duplicate_shaders = cmds.getAttr(self.name + '.duplcated_front_attributes_on_back')
+        self.duplicate_shaders = cmds.getAttr(self.name + '.duplicate_front_attributes_on_back')
         self.shading_nodes = []
         self.colors = []
         self.textures = []
@@ -863,11 +864,11 @@ class Assembly():
                         geo_filename = self.name + '.obj'
                         geo_filepath = os.path.join(self.params['geo_dir'], geo_filename)
                         self.geo_objects.append(Geometry(self.params, geo_transform, geo_filepath, self.name))
-                elif cmds.nodeType(object) == 'pointLight':
+                elif (cmds.nodeType(object) == 'pointLight') and self.params['exportMayaLights']:
                     light_transform = cmds.listRelatives(object, ad=True, ap=True)[0]
                     if not (light_transform in self.light_objects):
                         self.light_objects.append(Light(self.params, cmds.listRelatives(object, ad=True, ap=True)[0]))
-                elif cmds.nodeType(object) == 'spotLight':
+                elif (cmds.nodeType(object) == 'spotLight') and self.params['exportMayaLights']:
                     light_transform = cmds.listRelatives(object, ad=True, ap=True)[0]
                     if not (light_transform in self.light_objects):
                         light_object = Light(self.params, cmds.listRelatives(object, ad=True, ap=True)[0])
