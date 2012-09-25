@@ -381,6 +381,8 @@ class Material():
         self.shading_nodes = []
         self.colors = []
         self.textures = []
+        self.enable_front = cmds.getAttr(self.name + '.enable_front_material')
+        self.enable_back = cmds.getAttr(self.name + '.enable_back_material')
 
         self.bsdf_front = self.getMayaAttr(self.name + '.BSDF_front_color')
         self.edf_front = self.getMayaAttr(self.name + '.EDF_front_color')
@@ -444,44 +446,46 @@ class Material():
     def writeXML(self, doc):
         print 'diplicate shader =', self.duplicate_shaders
         if self.duplicate_shaders:
-            print('writing material {0}'.format(self.name))
-            doc.startElement('material name="{0}" model="generic_material"'.format(self.name))
-            if self.bsdf_front:
-                doc.appendParameter('bsdf', self.bsdf_front.name)
-            if self.edf_front:
-                doc.appendParameter('edf', self.edf_front.name)
-            doc.appendParameter('surface_shader', self.surface_shader_front.name)
-            if self.alpha_map:
-                doc.appendParameter('alpha_map', self.alpha_map.name + '_inst')
-            if self.normal_map_front:
-                doc.appendParameter('normal_map', self.normal_map_front.name + '_inst')
-            doc.endElement('material')
+            if self.enable_front:
+                print('writing material {0}'.format(self.name))
+                doc.startElement('material name="{0}" model="generic_material"'.format(self.name))
+                if self.bsdf_front:
+                    doc.appendParameter('bsdf', self.bsdf_front.name)
+                if self.edf_front:
+                    doc.appendParameter('edf', self.edf_front.name)
+                doc.appendParameter('surface_shader', self.surface_shader_front.name)
+                if self.alpha_map:
+                    doc.appendParameter('alpha_map', self.alpha_map.name + '_inst')
+                if self.normal_map_front:
+                    doc.appendParameter('normal_map', self.normal_map_front.name + '_inst')
+                doc.endElement('material')
         else:
-            print('writing material {0}_front'.format(self.name))
-            doc.startElement('material name="{0}_front" model="generic_material"'.format(self.name))
-            if self.bsdf_front:
-                doc.appendParameter('bsdf', self.bsdf_front.name)
-            if self.edf_front:
-                doc.appendParameter('edf', self.edf_front.name)
-            doc.appendParameter('surface_shader', self.surface_shader_front.name)
-            if self.alpha_map:
-                doc.appendParameter('alpha_map', self.alpha_map.name + '_inst')
-            if self.normal_map_front:
-                doc.appendParameter('normal_map', self.normal_map_front.name + '_inst')
-            doc.endElement('material')    
-
-            print('writing material {0}_back'.format(self.name))
-            doc.startElement('material name="{0}_back" model="generic_material"'.format(self.name))
-            if self.bsdf_back:
-                doc.appendParameter('bsdf', self.bsdf_back.name)
-            if self.edf_back:
-                doc.appendParameter('edf', self.edf_back.name)
-            doc.appendParameter('surface_shader', self.surface_shader_back.name)
-            if self.alpha_map:
-                doc.appendParameter('alpha_map', self.alpha_map.name + '_inst')
-            if self.normal_map_back:
-                doc.appendParameter('normal_map', self.normal_map_back.name + '_inst')
-            doc.endElement('material') 
+            if self.enable_front:
+                print('writing material {0}_front'.format(self.name))
+                doc.startElement('material name="{0}_front" model="generic_material"'.format(self.name))
+                if self.bsdf_front:
+                    doc.appendParameter('bsdf', self.bsdf_front.name)
+                if self.edf_front:
+                    doc.appendParameter('edf', self.edf_front.name)
+                doc.appendParameter('surface_shader', self.surface_shader_front.name)
+                if self.alpha_map:
+                    doc.appendParameter('alpha_map', self.alpha_map.name + '_inst')
+                if self.normal_map_front:
+                    doc.appendParameter('normal_map', self.normal_map_front.name + '_inst')
+                doc.endElement('material')    
+            if self.enable_back:
+                print('writing material {0}_back'.format(self.name))
+                doc.startElement('material name="{0}_back" model="generic_material"'.format(self.name))
+                if self.bsdf_back:
+                    doc.appendParameter('bsdf', self.bsdf_back.name)
+                if self.edf_back:
+                    doc.appendParameter('edf', self.edf_back.name)
+                doc.appendParameter('surface_shader', self.surface_shader_back.name)
+                if self.alpha_map:
+                    doc.appendParameter('alpha_map', self.alpha_map.name + '_inst')
+                if self.normal_map_back:
+                    doc.appendParameter('normal_map', self.normal_map_back.name + '_inst')
+                doc.endElement('material') 
 
 #--------------------------------------------------------------------------------------------------
 # ShadingNode class.
@@ -527,7 +531,7 @@ class ShadingNode():
                     connected_node = None
 
                     #check for connected node
-                    connection = cmds.listConnections(maya_attribute)
+                    connection = cmds.listConnections(maya_attribute, d=False, s=True)
                     if connection:
                         connected_node = connection[0]
 
@@ -553,9 +557,14 @@ class ShadingNode():
                         # if the node is unrecognized, bake it
                         else:
                             if self.params['convertShadingNodes']:
+                                print '***********', maya_attribute
+                                print '***********', connection
+                                print '***********', connected_node
+                                print '***********', self.name
+                                print '***********', attribute_key
                                 #convert texture and get path
                                 output_texture = os.path.join(params['tex_dir'], (connected_node + '.exr'))
-                                texture = convertConnectionToImage(self.name, self.attribute_key, output_texture, resolution=1024)
+                                texture = ms_commands.convertConnectionToImage(self.name, attribute_key, output_texture, resolution=1024)
                                 texture_node = Texture((connected_node + '_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
                                 attribute_value = (texture_node.name + '_inst')
                                 self.textures += [texture_node]
@@ -830,11 +839,15 @@ class Geometry():
 
         for material in self.material_nodes:
             if material.duplicate_shaders:
-                doc.appendElement('assign_material slot="{0}" side="front" material="{1}"'.format(material.name, material.name))
-                doc.appendElement('assign_material slot="{0}" side="back" material="{1}"'.format(material.name, material.name))
+                if material.enable_front:
+                    doc.appendElement('assign_material slot="{0}" side="front" material="{1}"'.format(material.name, material.name))
+                if material.enable_back:
+                    doc.appendElement('assign_material slot="{0}" side="back" material="{1}"'.format(material.name, material.name))
             else:
-                doc.appendElement('assign_material slot="{0}" side="front" material="{1}_front"'.format(material.name, material.name))
-                doc.appendElement('assign_material slot="{0}" side="back" material="{1}_back"'.format(material.name, material.name))
+                if material.enable_front:
+                    doc.appendElement('assign_material slot="{0}" side="front" material="{1}_front"'.format(material.name, material.name))
+                if material.enable_back:
+                    doc.appendElement('assign_material slot="{0}" side="back" material="{1}_back"'.format(material.name, material.name))
         doc.endElement('object_instance')
 
 

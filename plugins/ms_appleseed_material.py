@@ -136,6 +136,11 @@ def nodeInitializer():
 
     # front ***************************
 
+    #enable front
+    enable_front_nAttr = OpenMaya.MFnNumericAttribute()
+    appleseed_material.enable_front = enable_front_nAttr.create("enable_front_material", "enable_front", OpenMaya.MFnNumericData.kBoolean, True)
+    appleseed_material.addAttribute( appleseed_material.enable_front )
+
     #BSDF_front Attribute
     appleseed_material.BSDF_frontAttribute = numericAttributeFn.createColor( 'BSDF_front_color', 'BSDF_front' )
     numericAttributeFn.setStorable( True )
@@ -161,6 +166,11 @@ def nodeInitializer():
     appleseed_material.addAttribute( appleseed_material.normal_map_frontAttribute )
 
     # back ***************************
+
+    #enable back
+    enable_back_nAttr = OpenMaya.MFnNumericAttribute()
+    appleseed_material.enable_back = enable_back_nAttr.create("enable_back_material", "enable_back", OpenMaya.MFnNumericData.kBoolean, True)
+    appleseed_material.addAttribute( appleseed_material.enable_back )
 
     #BSDF_back Attribute
     appleseed_material.BSDF_backAttribute = numericAttributeFn.createColor( 'BSDF_back_color', 'BSDF_back' )
