@@ -531,7 +531,7 @@ class ShadingNode():
                     connected_node = None
 
                     #check for connected node
-                    connection = cmds.listConnections(maya_attribute, d=False, s=True)
+                    connection = cmds.listConnections(maya_attribute, destination=False, source=True)
                     if connection:
                         connected_node = connection[0]
 
