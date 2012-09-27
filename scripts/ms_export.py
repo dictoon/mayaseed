@@ -444,7 +444,6 @@ class Material():
         return self.shading_nodes
 
     def writeXML(self, doc):
-        print 'diplicate shader =', self.duplicate_shaders
         if self.duplicate_shaders:
             if self.enable_front:
                 print('writing material {0}'.format(self.name))
