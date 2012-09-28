@@ -22,7 +22,7 @@
 global proc AEms_environmentTemplate(string $nodeName)
 {
    editorTemplate -beginScrollLayout;
-      editorTemplate -beginLayout "Appleseed Projection" -collapse false;
+      editorTemplate -beginLayout "appleseed Projection" -collapse false;
          editorTemplate -addControl "model";
          editorTemplate -addControl "constant_exitance";
          editorTemplate -addControl "gradient_horizon_exitance";
