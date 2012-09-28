@@ -187,7 +187,10 @@ def convertTexToExr(file_path, dest_dir, overwrite=True, pass_through=False):
 
     # -r: make a tiled OpenEXR file
     # -t: set the tile dimensions
-    p = subprocess.call([imf_copy_path, "-r", "-t 32", file_path, dest_file])
+    args = [imf_copy_path, "-r", "-t 32", file_path, dest_file]
+
+    # http://stackoverflow.com/questions/2935704/running-shell-commands-without-a-shell-window
+    p = subprocess.Popen(args, creationflags=0x08000000)
 
     return dest_file
 
@@ -394,23 +397,20 @@ def getFileTextureName(file_node):
     elif sys.platform == 'win32':
         maya_file_texture_name = maya_file_texture_name.replace('/', '\\')
 
-    file_texture_name = maya_file_texture_name
-
     if os.path.exists(maya_file_texture_name):
-        maya_file_texture_name
+        file_texture_name = maya_file_texture_name
     else:
         project_directory = cmds.workspace(q=True, rd=True)
         file_name = os.path.split(maya_file_texture_name)[1]
-        project_relatve_path = os.path.join(project_directory, 'sourceimages', file_name)
-        if os.path.exists(project_relatve_path):
-            file_texture_name = project_relatve_path
-            cmds.warning('file not found:')
-            cmds.warning(maya_file_texture_name)
-            cmds.warning('using equivalent texture from sourceimages')
+        project_relative_path = os.path.join(project_directory, 'sourceimages', file_name)
+        if os.path.exists(project_relative_path):
+            file_texture_name = project_relative_path
+            cmds.warning("file not found: {0}, using equivalent texture from sourceimages".format(maya_file_texture_name))
         else:
-            cmds.error('file not found ' + maya_file_texture_name)
-            raise RuntimeError('file not found ' + maya_file_texture_name)
-    
+            error_msg = "file not found: {0}".format(maya_file_texture_name)
+            cmds.error(error_msg)
+            raise RuntimeError(error_msg)
+
     if cmds.getAttr(file_node + '.useFrameExtension'):
         split_file_texture_name = maya_file_texture_name.split('.')
         frame_ofset = cmds.getAttr(file_node + '.frameOffset')
@@ -438,7 +438,7 @@ def export_obj(object_name, file_path, overwrite=True):
 
 
 #--------------------------------------------------------------------------------------------------
-# Legalize file name.
+# Legalize a name.
 #--------------------------------------------------------------------------------------------------
 
 def legalizeName(filename):
