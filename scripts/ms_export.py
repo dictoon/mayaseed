@@ -829,15 +829,13 @@ class Environment():
         self.name = name
         self.environment_shader = shader
         self.environment_edf = edf
-        self.exitence_miltiplier = cmds.getAttr(self.name + '.exitence_multiplier')
+        self.exitance_multiplier = cmds.getAttr(self.name + '.exitance_multiplier')
 
     def writeXML(self, doc):
         print('writing environment: ' + self.name)
         doc.startElement('environment name="{0}" model="generic_environment"'.format(self.name))
-        doc.appendParameter('environment_edf', self.environment_edf)
-        
-        doc.appendParameter('exitance_multiplier', self.exitence_miltiplier)
-
+        doc.appendParameter('environment_edf', self.environment_edf)        
+        doc.appendParameter('exitance_multiplier', self.exitance_multiplier)
         doc.endElement('environment')
 
 

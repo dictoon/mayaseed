@@ -22,7 +22,7 @@
 #
 
 
-import sys 
+import sys
 import maya.OpenMaya as OpenMaya
 import maya.OpenMayaMPx as OpenMayaMPx
 import maya.OpenMayaRender as OpenMayaRender
@@ -402,7 +402,7 @@ class ms_environment(OpenMayaMPx.MPxLocatorNode):
 
         glFT.glEnable(OpenMayaRender.MGL_BLEND)
         
-        #draw sphere
+        # draw sphere
 
         glFT.glBegin(OpenMayaRender.MGL_LINE_STRIP) 
         glFT.glVertex3f(3.06161699787e-16, 5.0, -8.04061324838e-16)
@@ -495,7 +495,7 @@ class ms_environment(OpenMayaMPx.MPxLocatorNode):
         glFT.glVertex3f(0.5, -0.5, 3.0)
         glFT.glEnd()
 
-        #Appleseed logo
+        # appleseed logo
 
         glFT.glBegin(OpenMayaRender.MGL_LINE_STRIP)
         glFT.glVertex3f(4.99999602985, 6.24639415266, 0.0)
@@ -619,23 +619,23 @@ def ms_environment_nodeInitializer():
     mirror_ball_exitance_nAttr.setDefault(0.5, 0.5, 0.5)
     mirror_ball_exitance_nAttr.setKeyable(True)
 
-    # exitence_multiplier
-    exitence_multiplier_AttrFloat = OpenMaya.MFnNumericAttribute()
-    ms_environment.exitence_multiplier = exitence_multiplier_AttrFloat.create("exitence_multiplier", "exitence_multiplier", OpenMaya.MFnNumericData.kFloat, 1)
-    exitence_multiplier_AttrFloat.setHidden(False)
-    exitence_multiplier_AttrFloat.setKeyable(True)
+    # exitance multiplier
+    exitance_multiplier_AttrFloat = OpenMaya.MFnNumericAttribute()
+    ms_environment.exitance_multiplier = exitance_multiplier_AttrFloat.create("exitance_multiplier", "exitance_multiplier", OpenMaya.MFnNumericData.kFloat, 1)
+    exitance_multiplier_AttrFloat.setHidden(False)
+    exitance_multiplier_AttrFloat.setKeyable(True)
 
     # add attributes
     try:
-        ms_environment.addAttribute( ms_environment.model )
-        ms_environment.addAttribute( ms_environment.constant_exitance )
-        ms_environment.addAttribute( ms_environment.gradient_horizon_exitance )
-        ms_environment.addAttribute( ms_environment.gradient_zenith_exitance )
-        ms_environment.addAttribute( ms_environment.latitude_longitude_exitance )
-        ms_environment.addAttribute( ms_environment.mirror_ball_exitance )
-        ms_environment.addAttribute( ms_environment.exitence_multiplier )
+        ms_environment.addAttribute(ms_environment.model)
+        ms_environment.addAttribute(ms_environment.constant_exitance)
+        ms_environment.addAttribute(ms_environment.gradient_horizon_exitance)
+        ms_environment.addAttribute(ms_environment.gradient_zenith_exitance)
+        ms_environment.addAttribute(ms_environment.latitude_longitude_exitance)
+        ms_environment.addAttribute(ms_environment.mirror_ball_exitance)
+        ms_environment.addAttribute(ms_environment.exitance_multiplier)
     except:
-        sys.stderr.write( "Failed to create attributes of %s node", kPluginNodeTypeName )
+        sys.stderr.write("Failed to create attributes of %s node", kPluginNodeTypeName)
 
 
 #--------------------------------------------------------------------------------------------------
