@@ -388,16 +388,38 @@ def createShadingNode(model, entity_defs_obj=False):
 
 def getFileTextureName(file_node):
     maya_file_texture_name = cmds.getAttr(file_node + '.fileTextureName')
+
+    if sys.platform == 'darwin':
+        maya_file_texture_name = maya_file_texture_name.replace('\\', '/')
+    elif sys.platform == 'win32':
+        maya_file_texture_name = maya_file_texture_name.replace('/', '\\')
+
+    file_texture_name = maya_file_texture_name
+
+    if os.path.exists(maya_file_texture_name):
+        maya_file_texture_name
+    else:
+        project_directory = cmds.workspace(q=True, rd=True)
+        file_name = os.path.split(maya_file_texture_name)[1]
+        project_relatve_path = os.path.join(project_directory, 'sourceimages', file_name)
+        if os.path.exists(project_relatve_path):
+            file_texture_name = project_relatve_path
+            cmds.warning('file not found:')
+            cmds.warning(maya_file_texture_name)
+            cmds.warning('using equivalent texture from sourceimages')
+        else:
+            cmds.error('file not found ' + maya_file_texture_name)
+            raise RuntimeError('file not found ' + maya_file_texture_name)
     
     if cmds.getAttr(file_node + '.useFrameExtension'):
-        file_texture_name = maya_file_texture_name.split('.')
+        split_file_texture_name = maya_file_texture_name.split('.')
         frame_ofset = cmds.getAttr(file_node + '.frameOffset')
         current_frame = cmds.currentTime(q=True)
-        frame_padding = len(file_texture_name[1])
-        frame_number = str(int(current_frame + frame_ofset)).zfill(5)
-        maya_file_texture_name = file_texture_name[0] + '.' + frame_number + '.' + file_texture_name[2]
+        frame_padding = len(split_file_texture_name[1])
+        frame_number = str(int(current_frame + frame_ofset)).zfill(frame_padding)
+        file_texture_name = split_file_texture_name[0] + '.' + frame_number + '.' + split_file_texture_name[2]
 
-    return maya_file_texture_name 
+    return file_texture_name 
 
 
 #--------------------------------------------------------------------------------------------------
