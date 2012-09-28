@@ -567,8 +567,12 @@ def convertPhongBlinnMaterial(material):
     cmds.connectAttr(new_material_node + '.outColor', material_shading_group + '.surfaceShader', force=True)
 
 
+#--------------------------------------------------------------------------------------------------
+# returns list of materials connecetd to mesh.
+#--------------------------------------------------------------------------------------------------
 
-
-
-
+def get_attached_materials(mesh_name):
+    shading_engine = cmds.listConnections(mesh_name, t='shadingEngine')
+    if shading_engine:
+        return cmds.listConnections(shading_engine[0] + ".surfaceShader")
 
