@@ -344,6 +344,13 @@ class MLight(MTransformChild):
 
     def __init__(self, params, maya_light_name, MTransform_object):
         MTransformChild.__init__(self, params, maya_light_name, MTransform_object)
+        self.color = cmds.getAttr(self.name + '.color')
+        self.multiplier = cmds.getAttr(self.name+'.intensity')
+        self.decay = cmds.getAttr(self.name+'.decayRate')
+        self.inner_angle = cmds.getAttr(self.name + '.coneAngle')
+        self.outer_angle = cmds.getAttr(self.name + '.coneAngle') + cmds.getAttr(self.name + '.penumbraAngle')
+        self.model = cmds.nodeType(self.name)
+
 
 #--------------------------------------------------------------------------------------------------
 # MCamera class.
