@@ -208,7 +208,7 @@ def getMayaParams(render_settings_node):
     if cmds.listConnections(render_settings_node + '.camera'):
         params['outputCamera'] = cmds.listConnections(render_settings_node + '.camera')[0]
     else:
-        cmds.warning('no camera connected to',  render_settings_node, 'using persp')
+        cmds.warning("no camera connected to {0}, using \"persp\"".format(render_settings_node))
         params['outputCamera'] = 'persp'
     
     if cmds.getAttr(render_settings_node + '.color_space') == 1:
@@ -265,7 +265,7 @@ def getMayaParams(render_settings_node):
     if cmds.pluginInfo(('ms_export_obj_' + str(int(mel.eval('getApplicationVersionAsFloat()')))), query=True, r=True):
         params['obj_exporter'] = ms_commands.export_obj
     else:
-        cmds.warning('no compiled obj exporter present, exporting using python obj exporter')
+        cmds.warning("no compiled obj exporter present, exporting using python obj exporter")
         params['obj_exporter'] = ms_export_obj.export
 
 
@@ -444,7 +444,6 @@ class Material():
         return self.shading_nodes
 
     def writeXML(self, doc):
-        print 'diplicate shader =', self.duplicate_shaders
         if self.duplicate_shaders:
             if self.enable_front:
                 print('writing material {0}'.format(self.name))
@@ -985,7 +984,7 @@ class Assembly():
                 start_time = cmds.currentTime(query=True)
                 motion_samples = self.params['motionSamples']
                 if motion_samples < 2:
-                    cmds.warning('Motion samples is set too low, must be at least 2. Using 2.')
+                    cmds.warning("motion samples is set too low, must be at least 2; using 2")
                     motion_samples = 2
                 sample_interval = 1.0 / (motion_samples - 1)
 
