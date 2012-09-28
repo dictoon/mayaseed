@@ -397,9 +397,7 @@ def getFileTextureName(file_node):
 
     file_texture_name = maya_file_texture_name
 
-    if os.path.exists(maya_file_texture_name):
-        maya_file_texture_name
-    else:
+    if not os.path.exists(maya_file_texture_name):
         project_directory = cmds.workspace(q=True, rd=True)
         file_name = os.path.split(maya_file_texture_name)[1]
         project_relatve_path = os.path.join(project_directory, 'sourceimages', file_name)
