@@ -29,6 +29,7 @@ global proc AEms_environmentTemplate(string $nodeName)
          editorTemplate -addControl "gradient_zenith_exitance";
          editorTemplate -addControl "latitude_longitude_exitance";
          editorTemplate -addControl "mirror_ball_exitance";
+         editorTemplate -addControl "exitence_multiplier";
 
       editorTemplate -endLayout;
 
