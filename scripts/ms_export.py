@@ -275,7 +275,7 @@ def getMayaParams(render_settings_node):
 # GetMayaScene function.
 #--------------------------------------------------------------------------------------------------
 
-def GetMayaScene():
+def get_maya_scene():
     
     """ Parses the maya scene and returns a list of dicts containing temporal scena data """
 
@@ -835,9 +835,7 @@ class Environment():
         print('writing environment: ' + self.name)
         doc.startElement('environment name="{0}" model="generic_environment"'.format(self.name))
         doc.appendParameter('environment_edf', self.environment_edf)
-        
         doc.appendParameter('exitance_multiplier', self.exitence_miltiplier)
-
         doc.endElement('environment')
 
 
