@@ -277,7 +277,7 @@ def getMayaParams(render_settings_node):
 
 def GetMayaScene():
     
-    """ Parses the maya scene and returns a list of dicts containing temporal scena data"""
+    """ Parses the maya scene and returns a list of dicts containing temporal scena data """
 
     pass
 
@@ -290,22 +290,92 @@ class MTransform():
 
     """ lightweight class representing info for a maya transform node """
 
-    def __init__(self):
+    def __init__(self, params, maya_transform_name):
+        self.name = maya_transform_name
+        self.safe_name = legalizeName(self.name)
+        self.parent = None
+        self.matricies = []
+        self.child_meshes = []
+        self.child_lights = []
+        self.child_transforms = []
+
+    def add_transform_sample():
         pass
+
+#--------------------------------------------------------------------------------------------------
+# MTransformChild class.
+#--------------------------------------------------------------------------------------------------
+
+class MTransformChild():
+
+    """ base class for all classes representing maya scene entities """
+
+    def __init__(self, params, maya_entity_name, MTransform_object):
+        self.params = params
+        self.name = maya_entity_name
+        self.safe_name = legalizeName(self.name)
+        self.transform = MTransform_object
 
 #--------------------------------------------------------------------------------------------------
 # MMesh class.
 #--------------------------------------------------------------------------------------------------
 
-class MMesh():
+class MMesh(MTransformChild):
 
     """ lightweight class representing maya mesh data """
 
-    def __init__(self):
-        self.name = name
-        self.safe_name = legalizeName(self.name)
-        self.materials = []
-        self.transform = []
+    def __init__(self, params, maya_mesh_name, MTransform_object):
+        MTransformChild.__init__(self, params, maya_mesh_name, MTransform_object)        
+        self.material_names = ms_commands.get_attached_materials(self.name)
+
+    def add_deform_sample():
+        pass
+
+    def export_obj(export_dir):
+        pass
+
+#--------------------------------------------------------------------------------------------------
+# MLight class.
+#--------------------------------------------------------------------------------------------------
+
+class MLight(MTransformChild):
+
+    """ lightweight class representing maya light data """
+
+    def __init__(self, params, maya_light_name, MTransform_object):
+        MTransformChild.__init__(self, params, maya_light_name, MTransform_object)
+
+#--------------------------------------------------------------------------------------------------
+# MCamera class.
+#--------------------------------------------------------------------------------------------------
+
+class MCamera(MTransformChild):
+
+    """ lightweight class representing maya camera data """
+
+    def __init__(self, params, maya_camera_name, MTransform_object):
+        MTransformChild.__init__(self, params, maya_camera_name, MTransform_object)
+        self.world_space_matricies = []
+
+        self.dof = (self.name + '.depthOfField' )
+        self.focal_distance = cmds.getAttr(self.name + '.focusDistance') 
+        self.focal_length = float(cmds.getAttr(cam_name + '.focalLength')) / 1000
+        self.f_stop = cmds.getAttr(self.name + '.fStop')
+
+        maya_resolution_aspect = float(params['output_res_width'])/float(params['output_res_height'])
+        maya_film_aspect = cmds.getAttr(cam_name + '.horizontalFilmAperture') / cmds.getAttr(cam_name + '.verticalFilmAperture')
+
+        if maya_resolution_aspect > maya_film_aspect:
+            self.film_width = float(cmds.getAttr(self.name + '.horizontalFilmAperture')) * inch_to_meter
+            self.film_height = self.film_width / maya_resolution_aspect  
+        else:
+            self.film_height = float(cmds.getAttr(self.name + '.verticalFilmAperture')) * inch_to_meter
+            self.film_width = self.film_height * maya_resolution_aspect 
+
+
+
+
+
 
 #--------------------------------------------------------------------------------------------------
 # Color class.
@@ -759,12 +829,14 @@ class Environment():
         self.name = name
         self.environment_shader = shader
         self.environment_edf = edf
+        self.exitence_miltiplier = cmds.getAttr(self.name + '.exitence_multiplier')
 
     def writeXML(self, doc):
         print('writing environment: ' + self.name)
         doc.startElement('environment name="{0}" model="generic_environment"'.format(self.name))
         doc.appendParameter('environment_edf', self.environment_edf)
-        #doc.appendParameter('environment_shader', self.environment_shader)
+        
+        doc.appendParameter('exitance_multiplier', self.exitence_miltiplier)
 
         doc.endElement('environment')
 

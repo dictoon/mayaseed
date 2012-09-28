@@ -575,4 +575,6 @@ def get_attached_materials(mesh_name):
     shading_engine = cmds.listConnections(mesh_name, t='shadingEngine')
     if shading_engine:
         return cmds.listConnections(shading_engine[0] + ".surfaceShader")
+    else:
+        return None
 

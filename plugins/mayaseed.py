@@ -619,6 +619,12 @@ def ms_environment_nodeInitializer():
     mirror_ball_exitance_nAttr.setDefault(0.5, 0.5, 0.5)
     mirror_ball_exitance_nAttr.setKeyable(True)
 
+    # exitence_multiplier
+    exitence_multiplier_AttrFloat = OpenMaya.MFnNumericAttribute()
+    ms_environment.exitence_multiplier = exitence_multiplier_AttrFloat.create("exitence_multiplier", "exitence_multiplier", OpenMaya.MFnNumericData.kFloat, 1)
+    exitence_multiplier_AttrFloat.setHidden(False)
+    exitence_multiplier_AttrFloat.setKeyable(True)
+
     # add attributes
     try:
         ms_environment.addAttribute( ms_environment.model )
@@ -627,6 +633,7 @@ def ms_environment_nodeInitializer():
         ms_environment.addAttribute( ms_environment.gradient_zenith_exitance )
         ms_environment.addAttribute( ms_environment.latitude_longitude_exitance )
         ms_environment.addAttribute( ms_environment.mirror_ball_exitance )
+        ms_environment.addAttribute( ms_environment.exitence_multiplier )
     except:
         sys.stderr.write( "Failed to create attributes of %s node", kPluginNodeTypeName )
 
