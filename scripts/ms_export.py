@@ -271,6 +271,41 @@ def getMayaParams(render_settings_node):
 
     return params
 
+#--------------------------------------------------------------------------------------------------
+# GetMayaScene function.
+#--------------------------------------------------------------------------------------------------
+
+def GetMayaScene():
+    
+    """ Parses the maya scene and returns a list of dicts containing temporal scena data"""
+
+    pass
+
+
+#--------------------------------------------------------------------------------------------------
+# MTransform class.
+#--------------------------------------------------------------------------------------------------
+
+class MTransform():
+
+    """ lightweight class representing info for a maya transform node """
+
+    def __init__(self):
+        pass
+
+#--------------------------------------------------------------------------------------------------
+# MMesh class.
+#--------------------------------------------------------------------------------------------------
+
+class MMesh():
+
+    """ lightweight class representing maya mesh data """
+
+    def __init__(self):
+        self.name = name
+        self.safe_name = legalizeName(self.name)
+        self.materials = [...]
+        self.transform = [...]
 
 #--------------------------------------------------------------------------------------------------
 # Color class.
