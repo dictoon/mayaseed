@@ -829,15 +829,11 @@ class Environment():
         self.name = name
         self.environment_shader = shader
         self.environment_edf = edf
-        self.exitence_miltiplier = cmds.getAttr(self.name + '.exitence_multiplier')
 
     def writeXML(self, doc):
         print('writing environment: ' + self.name)
         doc.startElement('environment name="{0}" model="generic_environment"'.format(self.name))
         doc.appendParameter('environment_edf', self.environment_edf)
-        
-        doc.appendParameter('exitance_multiplier', self.exitence_miltiplier)
-
         doc.endElement('environment')
 
 
@@ -1163,63 +1159,71 @@ class Scene():
         self.texture_objects = dict()
         self.assembly_objects = dict()
 
-        #setup environment 
+        # setup environment 
         if self.params['environment']:
-            self.environment = Environment(self.params, self.params['environment'], (self.params['environment'] + '_env_shader'), (self.params['environment'] + '_env_edf'))
+            env_name = self.params['environment']
+            self.environment = Environment(self.params, env_name, (env_name + '_env_shader'), env_name + '_env_edf')
 
-            #retrieve model and param values from ui
-            environment_edf_model_enum = cmds.getAttr(self.params['environment'] + '.model')
+            env_edf_model_enum = cmds.getAttr(env_name + '.model')
             env_edf_params = dict()
-            if environment_edf_model_enum == 0:
-                environment_edf_model = 'constant_environment_edf'
-                environment_color = ms_commands.normalizeRGB(cmds.getAttr(self.params['environment']+'.constant_exitance')[0])
-                self.addColor('constant_env_exitance', environment_color[0:3], environment_color[3])
-                env_edf_params['exitance'] =  'constant_env_exitance'
 
-            elif environment_edf_model_enum == 1:
+            if env_edf_model_enum == 0:
+                environment_edf_model = 'constant_environment_edf'
+
+                environment_color = ms_commands.normalizeRGB(cmds.getAttr(env_name + '.constant_exitance')[0])
+                self.addColor('constant_env_exitance', environment_color[0:3], environment_color[3])
+
+                env_edf_params['exitance'] = 'constant_env_exitance'
+
+            elif env_edf_model_enum == 1:
                 environment_edf_model = 'gradient_environment_edf'
 
-                horizon_exitance = ms_commands.normalizeRGB(cmds.getAttr(self.params['environment']+'.gradient_horizon_exitance')[0])
+                horizon_exitance = ms_commands.normalizeRGB(cmds.getAttr(env_name + '.gradient_horizon_exitance')[0])
                 self.addColor('gradient_env_horizon_exitance', horizon_exitance[0:3], horizon_exitance[3])
 
-                zenith_exitance = ms_commands.normalizeRGB(cmds.getAttr(self.params['environment']+'.gradient_zenith_exitance')[0])
+                zenith_exitance = ms_commands.normalizeRGB(cmds.getAttr(env_name + '.gradient_zenith_exitance')[0])
                 self.addColor('gradient_env_zenith_exitance', zenith_exitance[0:3], zenith_exitance[3])
 
                 env_edf_params['horizon_exitance'] = 'gradient_env_horizon_exitance'
                 env_edf_params['zenith_exitance'] = 'gradient_env_zenith_exitance'
 
-            elif environment_edf_model_enum == 2:
-                lat_long_connection = cmds.connectionInfo((self.params['environment'] + '.latitude_longitude_exitance'), sourceFromDestination=True).split('.')[0]
+            elif env_edf_model_enum == 2:
                 environment_edf_model = 'latlong_map_environment_edf'
-                if lat_long_connection:
-                    if cmds.nodeType(lat_long_connection) == 'file':
-                        maya_texture_file = ms_commands.getFileTextureName(lat_long_connection)
+
+                exitance_connection = cmds.connectionInfo(env_name + '.latitude_longitude_exitance', sourceFromDestination=True).split('.')[0]
+                if exitance_connection:
+                    if cmds.nodeType(exitance_connection) == 'file':
+                        maya_texture_file = ms_commands.getFileTextureName(exitance_connection)
                         texture_file = ms_commands.convertTexToExr(maya_texture_file, params['absolute_tex_dir'], self.params['overwriteExistingExrs'])
+                        self.addTexture(env_name + '_latlong_edf_map', os.path.join(params['tex_dir'], os.path.split(texture_file)[1]))
 
-                        self.addTexture(self.params['environment'] + '_latlong_edf_map', (os.path.join(params['tex_dir'], os.path.split(texture_file)[1])))
-                        env_edf_params['exitance'] = self.params['environment'] + '_latlong_edf_map_inst'
-                        env_edf_params['horizontal_shift'] = 0
-                        env_edf_params['vertical_shift'] = 0
+                        env_edf_params['exitance'] = env_name + '_latlong_edf_map_inst'
+                        env_edf_params['exitance_multiplier'] = cmds.getAttr(env_name + '.exitance_multiplier')
+                        env_edf_params['horizontal_shift'] = 0.0
+                        env_edf_params['vertical_shift'] = 0.0
                 else:
-                    cmds.error('no texture connected to {0}.latitude_longitude_exitance'.format(self.params['environment']))
+                    cmds.error('no texture connected to {0}.latitude_longitude_exitance'.format(env_name))
 
-            elif environment_edf_model_enum == 3:
-                mirrorball_edf_connection = cmds.connectionInfo((self.params['environment'] + '.mirror_ball_exitance'), sourceFromDestination=True).split('.')[0]
+            elif env_edf_model_enum == 3:
                 environment_edf_model = 'mirrorball_map_environment_edf'
-                if mirrorball_edf_connection:
-                    if cmds.nodeType(mirrorball_edf_connection) == 'file':
-                        maya_texture_name = ms_commands.getFileTextureName(mirrorball_edf_connection)
+
+                exitance_connection = cmds.connectionInfo(env_name + '.mirror_ball_exitance', sourceFromDestination=True).split('.')[0]
+                if exitance_connection:
+                    if cmds.nodeType(exitance_connection) == 'file':
+                        maya_texture_name = ms_commands.getFileTextureName(exitance_connection)
                         texture_file = ms_commands.convertTexToExr(maya_texture_name, params['absolute_tex_dir'], self.params['overwriteExistingExrs'])
-                        self.addTexture(self.params['environment'] + '_mirrorball_map_environment_edf', (os.path.join(params['tex_dir'], os.path.split(texture_file)[1])))
-                        env_edf_params['exitance'] = self.params['environment'] + '_mirrorball_map_environment_edf_inst'
+                        self.addTexture(env_name + '_mirrorball_map_environment_edf', os.path.join(params['tex_dir'], os.path.split(texture_file)[1]))
+
+                        env_edf_params['exitance'] = env_name + '_mirrorball_map_environment_edf_inst'
+                        env_edf_params['exitance_multiplier'] = cmds.getAttr(env_name + '.exitance_multiplier')
                 else:
-                    cmds.error('no texture connected to {0}.mirrorball_exitance'.format(self.params['environment']))
+                    cmds.error('no texture connected to {0}.mirrorball_exitance'.format(env_name))
 
             else:
-                cmds.error('no environment model selected for ' + self.params['environment'])
-            
-            self.environment_edf = EnvironmentEdf((self.params['environment'] + '_env_edf'), environment_edf_model, env_edf_params)
-            self.environment_shader = EnvironmentShader((self.params['environment'] + '_env_shader'), (self.params['environment'] + '_env_edf'))
+                cmds.error("no environment model selected for {0}".format(env_name))
+
+            self.environment_edf = EnvironmentEdf(env_name + '_env_edf', environment_edf_model, env_edf_params)
+            self.environment_shader = EnvironmentShader(env_name + '_env_shader', env_name + '_env_edf')
 
         else:
             self.environment = None
