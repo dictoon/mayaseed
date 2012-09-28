@@ -304,8 +304,8 @@ class MMesh():
     def __init__(self):
         self.name = name
         self.safe_name = legalizeName(self.name)
-        self.materials = [...]
-        self.transform = [...]
+        self.materials = []
+        self.transform = []
 
 #--------------------------------------------------------------------------------------------------
 # Color class.
