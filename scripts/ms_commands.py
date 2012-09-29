@@ -370,15 +370,15 @@ def createShadingNode(model, entity_defs_obj=False):
         if entity_key == model:
             for attr_key in entity_defs[entity_key].attributes.keys():
                 if entity_defs[entity_key].attributes[attr_key].type == 'entity_picker':
-                    
-                    #if there is a defualt value, use it
+
+                    # if there is a default value, use it
                     if entity_defs[entity_key].attributes[attr_key].default_value:
                         default_value = float(entity_defs[entity_key].attributes[attr_key].default_value)
                         print default_value
                         addColorAttr(shading_node_name, attr_key, (default_value,default_value,default_value))
                     else:
                         addColorAttr(shading_node_name, attr_key)
-                    
+
                 elif entity_defs[entity_key].attributes[attr_key].type == 'text_box':
                      cmds.addAttr(shading_node_name, longName=attr_key, dt="string")
                      cmds.setAttr((shading_node_name + '.' + attr_key), entity_defs[entity_key].attributes[attr_key].default_value, type="string")
@@ -549,16 +549,15 @@ def convertPhongBlinnMaterial(material):
         cmds.connectAttr(transparency_connection + '.outColor', new_material_node + '.alpha_map_color')
 
     # shininess
-    shininess = 0
     material_type = cmds.nodeType(material)
     if material_type == 'phong':
-        # 2..100 -> 0..1000
-        cosinePower = cmds.getAttr(material + '.cosinePower')
-        cosinePower = max(cosinePower, 0.0)
-        shininess = cosinePower * 10.0
+        shininess = cmds.getAttr(material + '.cosinePower')
     elif material_type == 'blinn':
-        # 0..1 -> 1000..0
-        shininess = 1000.0 * (1.0 - cmds.getAttr(material + '.eccentricity'))
+        # 0..1 -> 100..0
+        shininess = 100.0 * (1.0 - cmds.getAttr(material + '.eccentricity'))
+    else:
+        shininess = 0.0
+    shininess = max(shininess, 0.0)
     cmds.setAttr(bsdf + '.shininess_u', shininess, shininess, shininess, type='float3')
     cmds.setAttr(bsdf + '.shininess_v', shininess, shininess, shininess, type='float3')
 
@@ -577,4 +576,3 @@ def get_attached_materials(mesh_name):
         return cmds.listConnections(shading_engine[0] + ".surfaceShader")
     else:
         return None
-
