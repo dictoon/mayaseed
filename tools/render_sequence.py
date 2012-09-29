@@ -36,13 +36,13 @@ class RenderSequence_GUI(QtGui.QWidget):
         super(RenderSequence_GUI, self).__init__()
         self.initUI()
         
-    def initUI(self):               
+    def initUI(self):
         
-    	main_layout = QtGui.QVBoxLayout()
-    	self.setLayout(main_layout)
+        main_layout = QtGui.QVBoxLayout()
+        self.setLayout(main_layout)
 
         appleseed_cli_layout = QtGui.QHBoxLayout()
-    	src_layout = QtGui.QHBoxLayout()
+        src_layout = QtGui.QHBoxLayout()
         dest_layout = QtGui.QHBoxLayout()
 
         main_layout.addLayout(appleseed_cli_layout)
@@ -55,7 +55,7 @@ class RenderSequence_GUI(QtGui.QWidget):
         appleseed_cli_layout.addWidget(self.bin_dir)
 
         # src layout ----
-    	src_button = QtGui.QPushButton('select file', self)
+        src_button = QtGui.QPushButton('select file', self)
         self.src_text = QtGui.QLineEdit()
         self.sequence_check = QtGui.QCheckBox('.appleseed sequence')
         src_layout.addWidget(src_button)
@@ -159,18 +159,11 @@ class RenderSequence_GUI(QtGui.QWidget):
                 print file
 
         return iter_files
-            
 
-
-        
-def main():
-    
+def main():    
     app = QtGui.QApplication(sys.argv)
     ex = RenderSequence_GUI()
     sys.exit(app.exec_())
 
-
 if __name__ == '__main__':
     main()
-
-
