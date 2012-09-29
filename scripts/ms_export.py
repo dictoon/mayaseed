@@ -50,29 +50,32 @@ class WriteXml():
         try:
             self.file_object = open(file_path, 'w')
         except IOError:
-            error_msg = 'IO error: failed to open {0} for writing.'.format(file_path)
+            error_msg = "IO error: failed to open {0} for writing.".format(file_path)
             cmds.error(error_msg)
             raise RuntimeError(error_msg)
 
-    def startElement(self,str):
-        self.file_object.write(((self.indentation_level * self.spaces_per_indentation_level) * ' ') + "<" + str + '>\n')
+    def startElement(self, str):
+        self.appendLine("<" + str + ">")
         self.indentation_level += 1
         
     def endElement(self, str):
         self.indentation_level -= 1
-        self.file_object.write(((self.indentation_level * self.spaces_per_indentation_level) * ' ') + '</' + str + '>\n')
+        self.appendLine("</" + str + ">")
         
     def appendElement(self, str):
-        self.file_object.write(((self.indentation_level * self.spaces_per_indentation_level) * ' ') + '<' + str + '/>\n')
+        self.appendLine("<" + str + "/>")
 
     def appendParameter(self, name, value):
-        self.file_object.write(((self.indentation_level * self.spaces_per_indentation_level) * ' ') + '<parameter name="{0}" value="{1}" />\n'.format(name, value))
+        self.appendLine('<parameter name="{0}" value="{1}" />'.format(name, value))
 
     def appendLine(self, str):
-        self.file_object.write(((self.indentation_level * self.spaces_per_indentation_level) * ' ') + str + '\n')
+        self.file_object.write(self.indentation_string() + str + "\n")
 
     def close(self):
-        self.file_object.close() #close file
+        self.file_object.close()
+
+    def indentation_string(self):
+        return (self.indentation_level * self.spaces_per_indentation_level) * " "
 
 
 #--------------------------------------------------------------------------------------------------
