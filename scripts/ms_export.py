@@ -1436,7 +1436,7 @@ def safe_make_dirs(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
-def export(render_settings_node):
+def export_container(render_settings_node):
     params = getMayaParams(render_settings_node)
 
     # create progres bar
@@ -1534,3 +1534,14 @@ def export(render_settings_node):
     cmds.progressWindow(endProgress=1)
 
     cmds.confirmDialog(title="Export Completed", icon='information', message=export_message, button="OK")
+
+
+def export(render_settings_node):
+    if cmds.getAttr(render_settings_node + '.profile_export'):
+        import cProfile
+        command = 'import ms_export\nms_export.export_container("' + render_settings_node + '")'
+        cProfile.run(command)
+    else:
+        export_container(render_settings_node)
+
+

@@ -286,6 +286,10 @@ global proc AEms_renderSettingsTemplate(string $nodeName) {
             editorTemplate -endLayout;
         editorTemplate -endLayout;
 
+        editorTemplate -beginLayout "Advanced Settings" -collapse true;
+            editorTemplate -addControl "profile_export";
+        editorTemplate -endLayout;
+
         AEdependNodeTemplate $nodeName;       // add any base class attributes
         editorTemplate -addExtraControls;     // add any other attributes
     editorTemplate -endScrollLayout;

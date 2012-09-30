@@ -323,6 +323,11 @@ def ms_renderSettings_nodeInitializer():
     gtr_sampler_enumAttr.addField("uniform", 0)
     gtr_sampler_enumAttr.addField("adaptive", 1)
 
+    #profile export
+    profile_export_nAttr = OpenMaya.MFnNumericAttribute()
+    ms_renderSettings.profile_export = profile_export_nAttr.create("profile_export", "profile_export", OpenMaya.MFnNumericData.kBoolean, False)
+
+
     # add attributes
     ms_renderSettings.addAttribute(ms_renderSettings.export_button)
 
@@ -382,6 +387,7 @@ def ms_renderSettings_nodeInitializer():
     ms_renderSettings.addAttribute(ms_renderSettings.gtr_max_variation)
     ms_renderSettings.addAttribute(ms_renderSettings.gtr_sampler)
 
+    ms_renderSettings.addAttribute(ms_renderSettings.profile_export)
 
 #--------------------------------------------------------------------------------------------------
 # ms_environment node.
