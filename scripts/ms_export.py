@@ -103,7 +103,6 @@ def writeTransform(doc, scale = 1, object=False, motion=False, motion_samples=2)
         sample_interval = 1.0 / (motion_samples - 1)
 
         cmds.select(object)
-        cmds.currentTime(cmds.currentTime(query=True) - 1)
 
         for i in range(motion_samples):
             new_time = start_time + (sample_interval * i)
