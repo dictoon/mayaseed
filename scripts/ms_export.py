@@ -87,6 +87,7 @@ def checkExportCancelled():
         cmds.progressWindow(endProgress=1)
         raise RuntimeError('Export Cancelled')
 
+
 #--------------------------------------------------------------------------------------------------
 # writeTransform function.
 #--------------------------------------------------------------------------------------------------
@@ -96,19 +97,20 @@ def writeTransform(doc, scale = 1, object=False, motion=False, motion_samples=2)
         start_time = cmds.currentTime(query=True)
 
         if motion_samples < 2:
-            print('Motion samples is set too low, must be atleast 2, using 2')
+            print('Motion samples is set too low, must be at least 2, using 2.')
             motion_samples = 2
-        sample_interval = 1.0/(motion_samples - 1)
+
+        sample_interval = 1.0 / (motion_samples - 1)
 
         cmds.select(object)
-        cmds.currentTime(cmds.currentTime(query=True)-1)
+        cmds.currentTime(cmds.currentTime(query=True) - 1)
 
         for i in range(motion_samples):
             new_time = start_time + (sample_interval * i)
             cmds.currentTime(new_time)
             cmds.refresh()
 
-            if (object):
+            if object:
                 m = cmds.xform(object, query=True, ws=True, matrix=True)
                 transform = [m[0],m[1],m[2],m[3]], [m[4],m[5],m[6],m[7]], [m[8],m[9],m[10],m[11]], [m[12],m[13],m[14],m[15]]
             else:
