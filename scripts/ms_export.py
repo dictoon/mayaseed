@@ -864,10 +864,6 @@ class Environment():
         print('writing environment: ' + self.name)
         doc.startElement('environment name="{0}" model="generic_environment"'.format(self.name))
         doc.appendParameter('environment_edf', self.environment_edf)
-<<<<<<< HEAD
-        doc.appendParameter('exitance_multiplier', self.exitence_miltiplier)
-=======
->>>>>>> ab20fb215cedd642d9781c79c5cb631a019c68c2
         doc.endElement('environment')
 
 
