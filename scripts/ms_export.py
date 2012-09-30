@@ -278,11 +278,30 @@ def getMayaParams(render_settings_node):
 # GetMayaScene function.
 #--------------------------------------------------------------------------------------------------
 
-def get_maya_scene():
+def get_maya_scene(params):
     
-    """ Parses the maya scene and returns a list of dicts containing temporal scena data """
+    """ Parses the maya scene and returns a list of root transforms witht the relevant children """
 
-    pass
+    start_time = cmds.currentTime(query=True)
+
+    # the maya scene is stored as a list of root transforms that contain mesh's/geometry/lights as children
+    maya_root_transforms = []
+
+    # find all root transforms and create Mtransforms from them
+    for maya_transform in cmds.ls(tr=True):
+        if ms_commands.isExportable(maya_transform):
+            if not cmds.listRelatives(maya_transform, ap=True):
+                maya_root_transforms.append(MTransform(params, maya_transform))
+
+    # iterate over root transforms and build a tree of transforms and children
+    for root_transform in maya_root_transforms:
+        current_transform = root_transform
+        mesh_names = cmds.listRelatives(current_transform.name, type='mesh')
+        mesh_objects = []
+        for mesh_name in mesh_names:
+            mesh_objects.append(MMesh(params, mesh_name, current_transform))
+        light_names = cmds.listRelatives(current_transform.name, type='light')
+        camera_names = cmds.listRelatives(current_transform.name, type='camera')
 
 
 #--------------------------------------------------------------------------------------------------
@@ -298,6 +317,7 @@ class MTransform():
         self.safe_name = legalizeName(self.name)
         self.parent = None
         self.matricies = []
+        self.child_cameras = []
         self.child_meshes = []
         self.child_lights = []
         self.child_transforms = []
