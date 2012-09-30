@@ -189,9 +189,13 @@ def convertTexToExr(file_path, dest_dir, overwrite=True, pass_through=False):
     # -t: set the tile dimensions
     args = [imf_copy_path, "-r", "-t 32", file_path, dest_file]
 
-    # http://stackoverflow.com/questions/2935704/running-shell-commands-without-a-shell-window
-    p = subprocess.Popen(args, creationflags=0x08000000)
-    p.wait()
+
+    if sys.platform == 'darwin':
+        p = subprocess.Popen(args)
+    elif sys.platform == 'win32':
+        # http://stackoverflow.com/questions/2935704/running-shell-commands-without-a-shell-window
+        p = subprocess.Popen(args, creationflags=0x08000000)
+        p.wait()
 
     return dest_file
 
