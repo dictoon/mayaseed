@@ -281,7 +281,7 @@ def getMayaParams(render_settings_node):
 
 def get_maya_scene(params):
     
-    """ Parses the maya scene and returns a list of root transforms witht the relevant children """
+    """ Parses the maya scene and returns a list of root transforms with the relevant children """
 
     start_time = cmds.currentTime(query=True)
 
