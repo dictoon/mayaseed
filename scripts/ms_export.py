@@ -317,17 +317,17 @@ def get_maya_scene(params):
 
         if params['export_transformation_blur']:
             for transform in maya_root_transforms:
-                for transform_decendent in transform.decendent_transforms:
+                for transform_descendant in transform.descendant_transforms:
                     transform.add_transform_sample()
 
         if params['export_deformation_blur']:
             for transform in maya_root_transforms:
-                for mesh in transform.decendent_meshes:
+                for mesh in transform.descendant_meshes:
                     mesh.add_deform_sample()
 
         if params['export_camera_blur']:
             for transform in maya_root_transforms:
-                for camera in transform.decendent_cameras:
+                for camera in transform.descendant_cameras:
                     camera.add_matrix_sample()
 
         print cmds.currentTime(query=True)
@@ -356,13 +356,13 @@ class MTransform():
         self.parent = parent
         self.matricies = []
         self.child_cameras = []
-        self.decendent_cameras = []
+        self.descendant_cameras = []
         self.child_meshes = []
-        self.decendent_meshes = []
+        self.descendant_meshes = []
         self.child_lights = []
-        self.decendent_lights = []
+        self.descendant_lights = []
         self.child_transforms = []
-        self.decendent_transforms = []
+        self.descendant_transforms = []
 
         # get children
         mesh_names = cmds.listRelatives(self.name, type='mesh')
@@ -386,11 +386,11 @@ class MTransform():
                 new_transform = MTransform(params, transform_name, self)
                 self.child_transforms.append(new_transform)
 
-                # add decendents
-                self.decendent_cameras += new_transform.child_cameras
-                self.decendent_meshes += new_transform.child_meshes
-                self.decendent_lights += new_transform.child_lights
-                self.decendent_transforms += new_transform.child_transforms
+                # add descendants
+                self.descendant_cameras += new_transform.child_cameras
+                self.descendant_meshes += new_transform.child_meshes
+                self.descendant_lights += new_transform.child_lights
+                self.descendant_transforms += new_transform.child_transforms
 
     def add_transform_sample():
         pass
