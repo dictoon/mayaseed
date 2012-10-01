@@ -300,7 +300,7 @@ def get_maya_scene(params):
     start_time = cmds.currentTime(query=True)
     start_frame = int(start_time)
     end_frame = start_frame
-    frame_incriment = 1.0 / (motion_samples - 1)
+    sample_increment = 1.0 / (motion_samples - 1)
 
     if params['export_animation']:
         start_frame = params['animation_start_frame']
@@ -331,7 +331,7 @@ def get_maya_scene(params):
                     camera.add_matrix_sample()
 
         print cmds.currentTime(query=True)
-        current_frame += frame_incriment
+        current_frame += sample_increment
 
         # add code to export textures here
     
