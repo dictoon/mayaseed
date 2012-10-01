@@ -300,7 +300,7 @@ def get_maya_scene(params):
     start_time = cmds.currentTime(query=True)
     start_frame = int(start_time)
     end_frame = start_frame
-    frame_incriment = 1 / (motion_samples - 1)
+    frame_incriment = 1.0 / (motion_samples - 1)
 
     if params['export_animation']:
         start_frame = params['animation_start_frame']
