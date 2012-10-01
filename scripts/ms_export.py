@@ -317,8 +317,8 @@ def get_maya_scene(params):
 
         if params['export_transformation_blur']:
             for transform in maya_root_transforms:
-                for transform_descendant in transform.descendant_transforms:
-                    transform.add_transform_sample()
+                for descendant_transform in transform.descendant_transforms:
+                    descendant_transform.add_transform_sample()
 
         if params['export_deformation_blur']:
             for transform in maya_root_transforms:
