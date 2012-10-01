@@ -464,7 +464,7 @@ class MCamera(MTransformChild):
         self.focal_length = float(cmds.getAttr(self.name + '.focalLength')) / 1000
         self.f_stop = cmds.getAttr(self.name + '.fStop')
 
-        maya_resolution_aspect = float(self.params['output_res_width'])/float(self.params['output_res_height'])
+        maya_resolution_aspect = float(self.params['output_res_width']) / float(self.params['output_res_height'])
         maya_film_aspect = cmds.getAttr(self.name + '.horizontalFilmAperture') / cmds.getAttr(self.name + '.verticalFilmAperture')
 
         if maya_resolution_aspect > maya_film_aspect:
