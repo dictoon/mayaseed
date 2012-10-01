@@ -168,14 +168,14 @@ def getMayaParams(render_settings_node):
     params['convertTexturesToExr'] = cmds.getAttr(render_settings_node + '.convert_textures_to_exr')
     params['overwriteExistingExrs'] = cmds.getAttr(render_settings_node + '.overwrite_existing_textures')
     params['fileName'] = cmds.getAttr(render_settings_node + '.output_file')
-    params['exportCameraBlur'] = cmds.getAttr(render_settings_node + '.export_camera_blur')
+    params['export_camera_blur'] = cmds.getAttr(render_settings_node + '.export_camera_blur')
     params['exportMayaLights'] = cmds.getAttr(render_settings_node + '.export_maya_lights')
-    params['exportTransformationBlur'] = cmds.getAttr(render_settings_node + '.export_transformation_blur')
-    params['exportDeformationBlur'] = cmds.getAttr(render_settings_node + '.export_deformation_blur')
-    params['motionSamples'] = cmds.getAttr(render_settings_node + '.motion_samples')
-    params['exportAnimation'] = cmds.getAttr(render_settings_node + '.export_animation')
-    params['animationStartFrame'] = cmds.getAttr(render_settings_node + '.animation_start_frame')
-    params['animationEndFrame'] = cmds.getAttr(render_settings_node + '.animation_end_frame')
+    params['export_transformation_blur'] = cmds.getAttr(render_settings_node + '.export_transformation_blur')
+    params['export_deformation_blur'] = cmds.getAttr(render_settings_node + '.export_deformation_blur')
+    params['motion_samples'] = cmds.getAttr(render_settings_node + '.motion_samples')
+    params['export_animation'] = cmds.getAttr(render_settings_node + '.export_animation')
+    params['animation_start_frame'] = cmds.getAttr(render_settings_node + '.animation_start_frame')
+    params['animation_end_frame'] = cmds.getAttr(render_settings_node + '.animation_end_frame')
     params['animatedTextures'] = cmds.getAttr(render_settings_node + '.export_animated_textures')
     params['scene_scale'] = 1
     
@@ -224,8 +224,8 @@ def getMayaParams(render_settings_node):
     else:
         params['outputColorSpace'] = 'srgb'
 
-    params['outputResWidth'] = cmds.getAttr(render_settings_node + '.width')
-    params['outputResHeight'] = cmds.getAttr(render_settings_node + '.height')
+    params['output_res_width'] = cmds.getAttr(render_settings_node + '.width')
+    params['output_res_height'] = cmds.getAttr(render_settings_node + '.height')
 
     # configuration
     # custom Final config
@@ -290,19 +290,56 @@ def get_maya_scene(params):
 
     # find all root transforms and create Mtransforms from them
     for maya_transform in cmds.ls(tr=True):
-        if ms_commands.isExportable(maya_transform):
-            if not cmds.listRelatives(maya_transform, ap=True):
-                maya_root_transforms.append(MTransform(params, maya_transform))
+        if not cmds.listRelatives(maya_transform, ap=True):
+            maya_root_transforms.append(MTransform(params, maya_transform, None))
 
-    # iterate over root transforms and build a tree of transforms and children
-    for root_transform in maya_root_transforms:
-        current_transform = root_transform
-        mesh_names = cmds.listRelatives(current_transform.name, type='mesh')
-        mesh_objects = []
-        for mesh_name in mesh_names:
-            mesh_objects.append(MMesh(params, mesh_name, current_transform))
-        light_names = cmds.listRelatives(current_transform.name, type='light')
-        camera_names = cmds.listRelatives(current_transform.name, type='camera')
+    motion_samples = params['motion_samples']
+    if motion_samples < 2:
+        motion_samples = 2
+
+    start_time = cmds.currentTime(query=True)
+    start_frame = int(start_time)
+    end_frame = start_frame
+    frame_incriment = 1 / (motion_samples - 1)
+
+    if params['export_animation']:
+        start_frame = params['animation_start_frame']
+        end_frame = params['animation_end_frame']
+
+    if params['export_transformation_blur'] or params['export_deformation_blur'] or params['export_camera_blur']:
+        end_frame += 1
+
+    # add motion samples
+    current_frame = start_frame
+
+    while current_frame <= end_frame:
+        cmds.currentTime(current_frame)
+
+        if params['export_transformation_blur']:
+            for transform in maya_root_transforms:
+                for transform_decendent in transform.decendent_transforms:
+                    transform.add_transform_sample()
+
+        if params['export_deformation_blur']:
+            for transform in maya_root_transforms:
+                for mesh in transform.decendent_meshes:
+                    mesh.add_deform_sample()
+
+        if params['export_camera_blur']:
+            for transform in maya_root_transforms:
+                for camera in transform.decendent_cameras:
+                    camera.add_matrix_sample()
+
+        print cmds.currentTime(query=True)
+        current_frame += frame_incriment
+
+        # add code to export textures here
+    
+
+    # return to pre-export time
+    cmds.currentTime(start_time)
+
+    return maya_root_transforms
 
 
 #--------------------------------------------------------------------------------------------------
@@ -313,15 +350,47 @@ class MTransform():
 
     """ lightweight class representing info for a maya transform node """
 
-    def __init__(self, params, maya_transform_name):
+    def __init__(self, params, maya_transform_name, parent):
         self.name = maya_transform_name
-        self.safe_name = legalizeName(self.name)
-        self.parent = None
+        self.safe_name = ms_commands.legalizeName(self.name)
+        self.parent = parent
         self.matricies = []
         self.child_cameras = []
+        self.decendent_cameras = []
         self.child_meshes = []
+        self.decendent_meshes = []
         self.child_lights = []
+        self.decendent_lights = []
         self.child_transforms = []
+        self.decendent_transforms = []
+
+        # get children
+        mesh_names = cmds.listRelatives(self.name, type='mesh')
+        if mesh_names != None:
+            for mesh_name in mesh_names:
+                self.child_meshes.append(MMesh(params, mesh_name, self))
+
+        light_names = cmds.listRelatives(self.name, type='light')
+        if light_names != None:
+            for light_name in light_names:
+                self.child_lights.append(MLight(params, light_name, self))
+
+        camera_names = cmds.listRelatives(self.name, type='camera')
+        if camera_names != None:
+            for camera_name in camera_names:
+                self.child_cameras.append(MCamera(params, camera_name, self))
+
+        transform_names = cmds.listRelatives(self.name, type='transform')
+        if transform_names != None:
+            for transform_name in transform_names:
+                new_transform = MTransform(params, transform_name, self)
+                self.child_transforms.append(new_transform)
+
+                # add decendents
+                self.decendent_cameras += new_transform.child_cameras
+                self.decendent_meshes += new_transform.child_meshes
+                self.decendent_lights += new_transform.child_lights
+                self.decendent_transforms += new_transform.child_transforms
 
     def add_transform_sample():
         pass
@@ -337,7 +406,7 @@ class MTransformChild():
     def __init__(self, params, maya_entity_name, MTransform_object):
         self.params = params
         self.name = maya_entity_name
-        self.safe_name = legalizeName(self.name)
+        self.safe_name = ms_commands.legalizeName(self.name)
         self.transform = MTransform_object
 
 #--------------------------------------------------------------------------------------------------
@@ -371,9 +440,11 @@ class MLight(MTransformChild):
         self.color = cmds.getAttr(self.name + '.color')
         self.multiplier = cmds.getAttr(self.name+'.intensity')
         self.decay = cmds.getAttr(self.name+'.decayRate')
-        self.inner_angle = cmds.getAttr(self.name + '.coneAngle')
-        self.outer_angle = cmds.getAttr(self.name + '.coneAngle') + cmds.getAttr(self.name + '.penumbraAngle')
         self.model = cmds.nodeType(self.name)
+        if self.model == 'spotLight':
+            self.inner_angle = cmds.getAttr(self.name + '.coneAngle')
+            self.outer_angle = cmds.getAttr(self.name + '.coneAngle') + cmds.getAttr(self.name + '.penumbraAngle')
+
 
 
 #--------------------------------------------------------------------------------------------------
@@ -390,11 +461,11 @@ class MCamera(MTransformChild):
 
         self.dof = (self.name + '.depthOfField' )
         self.focal_distance = cmds.getAttr(self.name + '.focusDistance') 
-        self.focal_length = float(cmds.getAttr(cam_name + '.focalLength')) / 1000
+        self.focal_length = float(cmds.getAttr(self.name + '.focalLength')) / 1000
         self.f_stop = cmds.getAttr(self.name + '.fStop')
 
-        maya_resolution_aspect = float(params['output_res_width'])/float(params['output_res_height'])
-        maya_film_aspect = cmds.getAttr(cam_name + '.horizontalFilmAperture') / cmds.getAttr(cam_name + '.verticalFilmAperture')
+        maya_resolution_aspect = float(self.params['output_res_width'])/float(self.params['output_res_height'])
+        maya_film_aspect = cmds.getAttr(self.name + '.horizontalFilmAperture') / cmds.getAttr(self.name + '.verticalFilmAperture')
 
         if maya_resolution_aspect > maya_film_aspect:
             self.film_width = float(cmds.getAttr(self.name + '.horizontalFilmAperture')) * inch_to_meter
@@ -403,7 +474,8 @@ class MCamera(MTransformChild):
             self.film_height = float(cmds.getAttr(self.name + '.verticalFilmAperture')) * inch_to_meter
             self.film_width = self.film_height * maya_resolution_aspect 
 
-
+    def add_matrix_sample():
+        pass
 
 
 
@@ -500,7 +572,7 @@ class Light():
 
         doc.appendParameter('exitance', self.color_name)
 
-        writeTransform(doc, self.params['scene_scale'], self.name, self.params['exportTransformationBlur'], self.params['motionSamples'])
+        writeTransform(doc, self.params['scene_scale'], self.name, self.params['export_transformation_blur'], self.params['motion_samples'])
         doc.endElement('light')
 
 
@@ -814,7 +886,7 @@ class Camera():
             self.model = 'pinhole_camera'
         self.name = cam
 
-        maya_resolution_aspect = float(params['outputResWidth']) / float(params['outputResHeight'])
+        maya_resolution_aspect = float(params['output_res_width']) / float(params['output_res_height'])
         maya_film_aspect = cmds.getAttr(cam + '.horizontalFilmAperture') / cmds.getAttr(cam + '.verticalFilmAperture')
 
         if maya_resolution_aspect > maya_film_aspect:
@@ -845,7 +917,7 @@ class Camera():
             doc.appendParameter('diaphragm_tilt_angle', self.diaphragm_tilt_angle)
 
         #output transform matrix
-        writeTransform(doc, self.params['scene_scale'], self.name, self.params['exportCameraBlur'], self.params['motionSamples'])
+        writeTransform(doc, self.params['scene_scale'], self.name, self.params['export_camera_blur'], self.params['motion_samples'])
 
         doc.endElement('camera')
 
@@ -964,7 +1036,7 @@ class Geometry():
         print('writing object instance: '+ self.name)
         doc.startElement('object_instance name="{0}.0_inst" object="{1}.0"'.format(self.safe_name, self.safe_name))
 
-        if self.params['exportTransformationBlur']:
+        if self.params['export_transformation_blur']:
             # write 0 transform as the assembly will handle that
             writeTransform(doc)
         else:
@@ -1113,10 +1185,10 @@ class Assembly():
 
             doc.startElement('object name="{0}" model="mesh_object"'.format(file_name))
 
-            if  self.params['exportDeformationBlur']:
+            if  self.params['export_deformation_blur']:
                 # store the start time of the export
                 start_time = cmds.currentTime(query=True)
-                motion_samples = self.params['motionSamples']
+                motion_samples = self.params['motion_samples']
                 if motion_samples < 2:
                     cmds.warning("motion samples is set too low, must be at least 2; using 2")
                     motion_samples = 2
@@ -1170,8 +1242,8 @@ class Assembly():
         doc.startElement('assembly_instance name="{0}_inst" assembly="{1}"'.format(self.name, self.name))
 
         # if transformation blur is set output the transform with motion from the position_from_object variable
-        if self.params['exportTransformationBlur']:
-            writeTransform(doc, self.params['scene_scale'], self.position_from_object, True, self.params['motionSamples'])
+        if self.params['export_transformation_blur']:
+            writeTransform(doc, self.params['scene_scale'], self.position_from_object, True, self.params['motion_samples'])
         else:
             writeTransform(doc, self.params['scene_scale'])
         doc.endElement('assembly_instance')
@@ -1302,7 +1374,7 @@ class Scene():
         self.params['progress_bar_incriments'] = 100.0 / len(shape_list)
         self.params['progress_bar_progress'] = 0
 
-        if self.params['exportTransformationBlur']:
+        if self.params['export_transformation_blur']:
             for geo in shape_list:
                 checkExportCancelled()
                 if ms_commands.shapeIsExportable(geo):
@@ -1335,7 +1407,7 @@ class Output():
         doc.startElement('frame name="beauty"')
         doc.appendParameter('camera', self.params['outputCamera'])
         doc.appendParameter('color_space', self.params['outputColorSpace'])
-        doc.appendParameter('resolution', '{0} {1}'.format(self.params['outputResWidth'], self.params['outputResHeight']))
+        doc.appendParameter('resolution', '{0} {1}'.format(self.params['output_res_width'], self.params['output_res_height']))
         doc.endElement('frame')
         doc.endElement('output')
 
@@ -1454,9 +1526,9 @@ def export_container(render_settings_node):
     params['outputDir'] = params['outputDir'].replace("<ProjectDir>", project_directory)
     params['outputDir'] = os.path.join(params['outputDir'], scene_basename)
 
-    if params['exportAnimation']:
-        start_frame = params['animationStartFrame']
-        end_frame = params['animationEndFrame']
+    if params['export_animation']:
+        start_frame = params['animation_start_frame']
+        end_frame = params['animation_end_frame']
     else:
         start_frame = cmds.currentTime(query=True)
         end_frame = start_frame
