@@ -20,11 +20,11 @@ The following section is a list of attributes in the render settings node and a 
 
 ####Output Directory####
 
-This is where you tell Mayaseed where to export the appleseed scene file and other relevant files to.
+This is where you tell Mayaseed where to export the appleseed scene file and other relevant files to. any Occurrence of `<ProjectDir>` will be replaced with the path to your current Maya project.
 
 ####Output File####
 
-This is where you choose the name of your output file, the `#` character will be replaced with the frame number padded to 5 characters. So `my_scene.#.appleseed` will export as my_scene.00001.appleseed`.
+This is where you choose the name of your output file, the `#` character will be replaced with the frame number padded to 5 characters. So `my_scene.#.appleseed` will export as my_scene.00001.appleseed`. Any occurrence of `<FileName>` will be replaced with the name of the current Maya file.
 
 ####Convert Shading Nodes To Textures####
 
@@ -34,9 +34,17 @@ Use this checkbox to convert maya shading networks to textures on export. If a c
 
 If this checkbox is checked then Maya will convert and overwrite texture files with every export.
 
-####Export Motion Blur####
+####Export Camera Transformation Motion Blur####
 
-This attribute is only a placeholder at this point.
+This attribute turns on camera transformation blur
+
+####Export Assembly Transformation Motion Blur####
+
+This attribute turns transformation blur on for all objects in the scene
+
+####Export Object Deformation Motion Blur####
+
+This attribute turns on deformation blur for all mesh objects in the scene
 
 ####Motion Samples####
 Sets the number of motion samples to be used in motion blur to give the appearance of curved motion blur.
@@ -65,37 +73,6 @@ This attribute is only a placeholder at this point.
 
 This attribute tells Mayaseed whether to export textures for every frame or only the first one. If animated textures is turned on a textures directory will be present in the frame's sub directory otherwise a texture directory will be present in the frame's parent directory.
 
-###Environment Settings section###
-
-####Environment####
-
-A Maya scene can contain many environment nodes, here you can select which environment node to use in your export and also create new ones.
-
-
-###Camera Settings Section###
-
-####Export All Cameras####
-
-Although appleseed can only use one camera at a time it is possible to have more than one included in the scene file, use this checkbox to export all the maya cameras. 
-
-####Export All Cameras As Thinlens####
-
-Appleseed has two types of cameras: **Pinhole** and **Thinlens**, the main difference being that a Thinlens camera can simulate depth of field and the Pinhole cannot. By default Mayaseed will export cameras with depth of field turned off as Pinhole and with depth of field turned on as Thinlens. Use this option to force Mayaseed to export all cameras as Thinlens.
-
-
-###Assembly Settings Section###
-
-> Note: Appleseed uses the concept of Assembles to divide up the scene into smaller components. 
-
-####Interpret Sets As Assemblies####
-
-With this option checked Mayaseed will export any sets containing geometry as an assembly.
-
-####Double Sided Shading####
-
-Use this option to turn on double shading in your appleseed scene file. Double shading causes geometry to be rendered on both sides of the shading normal. This can help reduce rendering artifacts especially on low poly geometry with smoothed normals.
-
-
 ###Output Settings Section###
 
 ####Camera####
@@ -117,32 +94,35 @@ This attribute sets the height of the framebuffer.
 This sets the color space that appleseed will use, the default is **sRGB**.
 
 
+###Environment Settings section###
+
+####Environment####
+
+A Maya scene can contain many environment nodes, here you can select which environment node to use in your export and also create new ones.
+
+
+###Camera Settings Section###
+
+####Export All Cameras####
+
+Although appleseed can only use one camera at a time it is possible to have more than one included in the scene file, use this checkbox to export all the maya cameras. 
+
+####Export All Cameras As Thinlens####
+
+Appleseed has two types of cameras: **Pinhole** and **Thinlens**, the main difference being that a Thinlens camera can simulate depth of field and the Pinhole cannot. By default Mayaseed will export cameras with depth of field turned off as Pinhole and with depth of field turned on as Thinlens. Use this option to force Mayaseed to export all cameras as Thinlens.
+
+
 ###Configuration Settings Section###
 
-Appleseed configurations contain information on the rendering method and quality setting of a render. Appleseed can have an arbitrarily high number of these render settings but must contain at least two, an **Interactive Config** and a **Final config**. These configurations control the quality of appleseed's default interactive render and final render. Without checking **Export Custom Interactive COnfig** or **Export Custom Final Config** Mayaseed will export a default settings. 
+Appleseed configurations contain information on the rendering method and quality setting of a render. Appleseed can have an arbitrarily high number of these render settings but must contain at least two, an **Interactive Config** and a **Final config**. These configurations control the quality of appleseed's default interactive render and final render. Use this section to customise the setting for the **final** render configuration.
 
-Both Interactive Config and Final COnfig have the following attributes.
+###Advanced settings###
 
-####Lighting Engine####
+This section contains attributes that are beyond normal export settings.
 
-This drop-down menu currently has two options: **Path Tracing** and **Distributed Ray Tracing**. Path tracing is more physically accurate and will compute color bleeding and caustics whereas distributed ray tracing is slower but less accurate.
+####Profile export####
 
-####Min Samples####
-
-Use this attribute to set the minimum render samples.
-
-####Max Samples####
-
-Use this attribute to set the maximum render samples.
-
-####Max Ray Depth####
-
-Max Ray depth controls the maximum number of bounces that a ray can go through. Higher numbers are more accurate but slower to render.
-
-####Light Samples####
-
-This attribute controls the number of samples per light.
-
+This attribute turns on export profiling using the cProfile python modul, see the script editor for the resulting information.
 
 
 ms_environment node
@@ -188,36 +168,67 @@ Attach a texture node to this attribute if you have selected **Latitude Longitud
 Attach a texture node to this attribute if you have selected **Mirror Ball Map** as your environment model.
 
 
-Maya shaders
-------------
+ms\_appleseed\_material
+---------------------
 
-Mayaseed will automatically translate maya shaders as best as possible to appleseed shaders but this often isn't perfect, when automatic shader translation isn't enough you can add a **Custom Shader Translation**. With an object or shader selected you can Choose **Mayaseed -> Add Custom Shader Translation**to add some Mayaseed specific attributes to your shader.
+The `ms_appleseed_material` is a generic material that all objects that will be exported must have assigned. In appleseed you have a separate material slot for the front and back of an object but as maya doesn't implement front and back materials in the same way the ms_appleseed_material has slots for front and back attributes in one material.
 
-> Note: Custom shader translation is an experimental feature and is still limited in functionality.
+####Enable Front material####
 
-Once you have added a custom shader translation to your shader you will now find three new attributes in the **Extra Attributes** section of the Shaders attribute editor, the following is a list of the attributes and their functions.
+This setting turns on generation of the front material
 
-###Mayaseed BSDF###
+####BSDF front colour####
 
-The **Mayaseed BSDF** drop-down menu lets you choose the BSDF model that Mayaseed will translate your shader to on export. BSDF stands for Bidirectional scattering distribution function and controls how light is reflected off the surface of an object. Although appleseed contains more BSDF options Mayaseed only supports the following BSDF's.
+Use this attribute to connect the outColor attribute from an appleseed BSDF
 
-+ Labertian
-+ Ashikhmin-Shirley
-+ Kleeman
-+ Specular_BSDF
-+ \<None>
+####EDF front colour####
 
-###Mayaseed EDF###
+Use this attribute to connect the outColor attribute from an appleseed EDF
 
-The **Mayaseed EDF** drop-down menu lets you choose the EDF model that Mayaseed will translate your shader to on export. EDF stands for **emittance distribution function** and controls how light is emitted from a surface. Mayaseed has the following 2 options available:
+####surface_shader front color####
 
-+ \<None\>
-+ Diffuse
+Use this attribute to connect the outColor attribute from an appleseed surface_shader
 
-###Mayaseed Surface Shader###
+####normal map front colour####
 
-The **Mayaseed Surface Shader** controls how an object is rendered when it is directly visible to the camera. By default this is set to **Physical** which means that the object will be rendered according to the BSDF, this is usually the most physically accurate setting. Mayaseed has the following options available:
+Use this attribute to connect the outColor attribute from a maya File node
 
-+ Physical
-+ Constant
-+ \<None>
+####enable back material####
+
+This setting turns on generation of the back material
+
+####duplicate front materials on back####
+
+Use this material to turn on simple double sided shading mapping all the front attributes onto the back attributes.
+
+####BSDF back colour####
+
+Use this attribute to connect the outColor attribute from an appleseed BSDF
+
+####EDF back colour####
+
+Use this attribute to connect the outColor attribute from an appleseed EDF
+
+####surface_shader back color####
+
+Use this attribute to connect the outColor attribute from an appleseed surface_shader
+
+####normal map back colour####
+
+Use this attribute to connect the outColor attribute from a maya File node
+
+####alpha map colour####
+
+Use this attribute to connect the outColor attribute from a maya File node
+
+
+ms\_appleseed\_shading\_node
+-------------------------
+
+This is a generic container node and only has one output attribute `outColor` which is for connecting to an `ms_appleseed_material` or otehr `ms_appleseed_shading_node`'s. When one of the appleseed\_shading\_node's is created from the Mayaseed menu one of these nodes is instantiated with dynamic attributes generated from the `appleseedEntityDefs.xml`. 
+
+
+
+
+
+

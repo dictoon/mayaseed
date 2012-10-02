@@ -22,13 +22,29 @@ Use this to create a new instance of the ms\_environment node.
 
 Use this to select any ms\_environment nodes that exist in the maya scene.
 
-###Add Custom Shader Translation###
+###Create Material###
 
-With a shader or an object selected use this to add a custom shader translation to a shader, more in the **Maya Shaders** section of the 
+Use this option to create a new ms_appleseed_material, any object you wish to render must have one of these materials attached.
 
-###Remove Custom Shader Translation###
+###Create BSDF###
 
-Use this to remove a custom shader translation from a Maya shader
+Use this option to create one of the appleseed BSDFs
+
+###Create EDF###
+
+Use this option to create one of the appleseed EDFs
+
+###Create Surface_shader###
+
+Use this option to create one of the appleseed Surface_sahders. You will most often want to use the `physical` Surface_shader.
+
+###Convert Maya Materials###
+
+Use the options from this menu to convert the maya materials in the scene to native appleseed materials. Currently Blinn, Phong and surfaceShader are supported.
+
+###Export###
+
+Use this option to select the ms\_rendersettings\_node you'd like to export
 
 ###About ###
 

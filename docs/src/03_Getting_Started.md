@@ -20,15 +20,4 @@ Your first export
 
 To export a scene you first need to create a render settings node, to do this choose **Mayaseed -> create render settings node**.
 
-Now in the attribute editor you can Set up your export
-
->Note: if you deselect a render settings node then you can easily re select it by choosing Mayaseed -> Select render setting node
-
-To set up your first export you will only really need to do two things; set up your output destination and choose your render camera. 
-
-First you will need to set your output directory, and then choose a name for your output file, both attributes are in the export settings section of the renderSettings node. 
-
-Next you need to choose your render camera in the output settings.
-
-That should be all you need for your first export, not all you need to do is click the blue **Export** button at the top of your Render Settings node's attribute editor.
-
+With the latest release of Mayaseed this is all you need to do, your exports will be sent to a directory named *Mayaseed* on your Maya project. Of course there many customisations available in the *ms_rendersettings_node* but I'll leave you to explore them…
