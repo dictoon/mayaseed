@@ -39,6 +39,6 @@ with this:
     putenv MAYA_PLUG_IN_PATH ($env_plugin_path + ":/projects/mayaseed/plugins");
 
 
-Finally you will want to start up Maya and enable the plugin, to do this choose **Window -> Settings Preferences -> Plugin manager** and load 'mayaseed.py', you will also want to click autoload so you don't have to do this step every time Maya loads.
+Finally you will want to start up Maya and enable the plugin, to do this choose **Window -> Settings Preferences -> Plugin manager** and load 'mayaseed.py' and any other plugind with the **ms_** prefix, you will also want to click autoload so you don't have to do this step every time Maya loads.
 
 That should be it. If everything has gone to plan you should have a new menu called Mayaseed where you can create new ms_renderSettings nodes. This exporter is very much a work in progress and many improvements/features are planned for the future. Also please submit any bugs/feature requests as this is meant to be practical and usable software and I'd love to hear how it is being used.

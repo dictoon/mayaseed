@@ -2,7 +2,7 @@ Mayaseed docs - Python Module reference
 =======================================
 
 
-With mayaseed correctly installed you also have the following new python modules available to you.
+With mayaseed correctly installed you also have the following new python modules available to you. This document lists some of the more useful functions in these modules.
 
 + ms_commands 
 + ms_export
@@ -31,27 +31,6 @@ This variable will return the URL of the appleseed website.
 ###Variable: ms\_commands.ROOT_DIRECTORY###
 
 This variable will return the URL of the Mayaseed install's root directory.
-
-
-###Function: ms\_commands.addShadingAttribs()###
-
-With an object or shader selected use this function to add custom shader translation attributes to a shader.
-
-
-###Function: ms\_commands.removeShadingAttribs()###
-
-With an object or shader selected use this function to remove custom shader translation attributes to a shader
-
-
-###Class: ms\_commands.MsInfoDial()###
-
-This function shows the Mayaseed info dialogue.
-
-
-###Function: ms\_commands.normalizeRGB(Tuple[Float:R,Float:G,Float:B]: Color) Returns Tuple[Float:R,Float:G,Float:B,Float:M]###
-
-Use this function normalises a 3 value [R,G,B] tuple and returns a normalised tuple with the RGB values normalised to a 0-1 range with a 4th multiplier value.
-
 
 ###Function: ms\_commands.convertConnectionToImage(String:shader, String:attribute, String:dest\_file, Int:resolution=1024, Boolean:pass_through=False) Returns String:dest\_file###
 
@@ -108,26 +87,6 @@ By default Mayaseed will overwrite any images that have the same name as the out
 Set this argument to True if you'd like to skip export of the textures but still return a file path. Useful if you want to skip the actual file conversion for non animated textures
 
 
-###Function: ms\_commands.shapeIsExportable(String:node\_name) Returns Boolean###
-
-This function will check to see if a maya shape node is exportable based on whether it is visible and is a valid shape node.
-
-
-####Argument: String:node_name####
-
-This string is the name of the node you wish to check
-
-
-####Function: ms\_commands.hasShaderConnected(String:node\_name) Returns Boolean####
-
-This function checks whether a shape node has a shader connected.
-
-
-####Argument: String:node\_name####
-
-This string is the name of the shape node you want to check.
-
-
 ###Function: ms\_commands.getEntityDefs(String:xml\_file\_path) Returns Dict###
 
 This function is used to retrieve a dict containing definitions of all the available appleseed nodes.
@@ -135,6 +94,19 @@ This function is used to retrieve a dict containing definitions of all the avail
 ####Argument: String:xml\_file\_path####
 
 This argument is a string pointing to the path of the appleseed exported **appleseedEntityDefs.xml**. 
+
+
+###Function: createShadingNode(String:Model, Bool:entity_defs_obj=False) Returns String:shading_node_name###
+
+This function looks up the model argument in the appleseedEntityDefs.xml file and returns an ms_appleseed_shading_node initialised with the correct attributes
+
+###Function: convertAllMaterials():###
+
+This function converts all translatable materials in the scene to ms_appleseed_materials and assigns them a unique hardware render color.
+
+###Function: convertSelectedMaterials()###
+
+This function converts all eligible materials in the current selection list to ms_appleseed_materials.
 
 
 ms_export module
