@@ -26,11 +26,10 @@ So copy the following lines to your useSetup.mel file
     putenv MAYA_SCRIPT_PATH ($env_script_path + "<mayaseed_root>/graphics");
     putenv MAYA_PLUG_IN_PATH ($env_plugin_path + "<mayaseed root>/plugins");
 
-
     // mayaseed  --------------
 
 
-This just tells maya to search in your install directory for the Mayaseed plugin when it starts up. You will also want to replace any occurrences of <mayaseed_root> with the path to your Mayaseed install directory, so for example I would replace the following line:
+This just tells Maya to search in your install directory for the Mayaseed plugin when it starts up. You will also want to replace any occurrences of <mayaseed_root> with the path to your Mayaseed install directory, so for example I would replace the following line:
 
     putenv MAYA_SCRIPT_PATH ($env_script_path + ":<mayaseed root>/plugins");
 
