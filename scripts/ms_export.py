@@ -166,7 +166,7 @@ def getMayaParams(render_settings_node):
     params['fileName'] = cmds.getAttr(render_settings_node + '.output_file')
     params['convertShadingNodes'] = cmds.getAttr(render_settings_node + '.convert_shading_nodes_to_textures')
     params['convertTexturesToExr'] = cmds.getAttr(render_settings_node + '.convert_textures_to_exr')
-    params['overwriteExistingExrs'] = cmds.getAttr(render_settings_node + '.overwrite_existing_textures')
+    params['overwrite_existing_textures'] = cmds.getAttr(render_settings_node + '.overwrite_existing_textures')
     params['fileName'] = cmds.getAttr(render_settings_node + '.output_file')
     params['export_camera_blur'] = cmds.getAttr(render_settings_node + '.export_camera_blur')
     params['exportMayaLights'] = cmds.getAttr(render_settings_node + '.export_maya_lights')
@@ -639,7 +639,7 @@ class Material():
 
             elif cmds.nodeType(connection[0]) == 'file':
                 maya_texture_file = ms_commands.getFileTextureName(connection[0])
-                texture = ms_commands.convertTexToExr(maya_texture_file, self.params['absolute_tex_dir'], overwrite=self.params['overwriteExistingExrs'], pass_through=False)
+                texture = ms_commands.convertTexToExr(maya_texture_file, self.params['absolute_tex_dir'], overwrite=self.params['overwrite_existing_textures'], pass_through=False)
                 texture_node = Texture((connection[0] + '_texture'), (os.path.join(self.params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
                 attribute_value = (texture_node.name + '_inst')
                 self.textures += [texture_node]
@@ -756,7 +756,7 @@ class ShadingNode():
                         #else if its a maya texture node
                         elif cmds.nodeType(connected_node) == 'file':
                             maya_texture_file = ms_commands.getFileTextureName(connected_node)
-                            texture = ms_commands.convertTexToExr(maya_texture_file, params['absolute_tex_dir'], overwrite=self.params['overwriteExistingExrs'], pass_through=False)
+                            texture = ms_commands.convertTexToExr(maya_texture_file, params['absolute_tex_dir'], overwrite=self.params['overwrite_existing_textures'], pass_through=False)
                             texture_node = Texture((connected_node + '_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
                             attribute_value = (texture_node.name + '_inst')
                             self.textures += [texture_node]
@@ -1297,7 +1297,7 @@ class Scene():
                 if exitance_connection:
                     if cmds.nodeType(exitance_connection) == 'file':
                         maya_texture_file = ms_commands.getFileTextureName(exitance_connection)
-                        texture_file = ms_commands.convertTexToExr(maya_texture_file, params['absolute_tex_dir'], self.params['overwriteExistingExrs'])
+                        texture_file = ms_commands.convertTexToExr(maya_texture_file, params['absolute_tex_dir'], self.params['overwrite_existing_textures'])
                         self.addTexture(env_name + '_latlong_edf_map', os.path.join(params['tex_dir'], os.path.split(texture_file)[1]))
 
                         env_edf_params['exitance'] = env_name + '_latlong_edf_map_inst'
@@ -1314,7 +1314,7 @@ class Scene():
                 if exitance_connection:
                     if cmds.nodeType(exitance_connection) == 'file':
                         maya_texture_name = ms_commands.getFileTextureName(exitance_connection)
-                        texture_file = ms_commands.convertTexToExr(maya_texture_name, params['absolute_tex_dir'], self.params['overwriteExistingExrs'])
+                        texture_file = ms_commands.convertTexToExr(maya_texture_name, params['absolute_tex_dir'], self.params['overwrite_existing_textures'])
                         self.addTexture(env_name + '_mirrorball_map_environment_edf', os.path.join(params['tex_dir'], os.path.split(texture_file)[1]))
 
                         env_edf_params['exitance'] = env_name + '_mirrorball_map_environment_edf_inst'
