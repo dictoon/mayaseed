@@ -43,6 +43,7 @@ MAYASEED_URL = 'https://github.com/jonathantopf/mayaseed'
 APPLESEED_URL = 'http://appleseedhq.net/'
 ROOT_DIRECTORY = os.path.split((os.path.dirname(inspect.getfile(inspect.currentframe()))))[0]
 
+
 #--------------------------------------------------------------------------------------------------
 # Show About dialog.
 #--------------------------------------------------------------------------------------------------
@@ -55,7 +56,7 @@ class msInfoDial():
         cmds.columnLayout(rs=10, columnOffset=['both', 20], width=600)
         cmds.rowLayout(numberOfColumns=2)
         cmds.text('', width=30)
-        cmds.image(image=os.path.join(ROOT_DIRECTORY, 'graphics', 'mayaseed_graphic.png'))
+        cmds.image(image=os.path.join(ROOT_DIRECTORY, 'graphics', 'mayaseed.png'))
         cmds.setParent('..')
         cmds.text('Version: ' + MAYASEED_VERSION)
         cmds.text(open(os.path.join(ROOT_DIRECTORY, 'scripts', 'about.txt'),'r').read(), width=500, wordWrap=True, al='left')
