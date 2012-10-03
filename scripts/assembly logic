@@ -1,0 +1,80 @@
+
+
+class Assembly():
+
+    parent_assembly = None
+    child_assemblues = []
+    chilld_assembly_instances = []
+    meshes = []
+    mesh_instances = []
+    matrix_stack = []
+
+
+class object():
+
+    matrix_stack = []
+
+
+# function to recursivley check if a mesh is defined in a parent assembly
+# if mesh is defined retuen instance otehrwise return none
+
+def get_mesh_instance(maya_mesh, assembly):
+    currentt_assembly = assembly
+    while current_assembly != None:
+        if mesh in current_assembly:
+            return instance of mesh
+        current_assembly = current_assembly.parent_assembly
+    return None
+
+
+def get_children(parent_assembly, matrix_stack, maya_transform):
+
+    if maya_transform is animated:
+        new_assembly = Assembly()
+        parent_assembly.child_assemlblies.append(new_assembly)
+        new_assembly.matrix_stack = matrix_stack
+
+        for child of maya_transform:
+            
+            if child is a transform:
+                get_children(new_assembly, None, child):
+
+            if child is mesh:
+                mesh_instance = get_mesh_instance(child, parent_assembly)
+
+                if mesh_instance == None:
+                    add new_mesh_object to new_assembly
+                    mesh_instance = instance of new_mesh_object
+
+                add mesh instance to new_assembly
+
+    else:
+        for child of maya_transform:
+
+            if child is transform:
+                new_matrix_stack.append(child.matrix)
+                get_children(parent_assembly, new_matrix_stack, child)
+
+            if child is mesh:
+                mesh_instance = get_mesh_instance(child, parent_assembly)
+
+                if mesh_instance == None:
+                    add new_mesh_object to new_assembly
+                    mesh_instance = instance of new_mesh_object
+
+                add mesh instance to new_assembly with matrix_stack
+
+
+root_assembly = Assembly
+
+for maya_root_transform in maya_scene:
+    get_children(root_assembly, None, maya_transform)
+
+
+
+
+
+
+
+
+
