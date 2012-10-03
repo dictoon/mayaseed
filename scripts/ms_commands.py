@@ -591,7 +591,7 @@ def convert_surface_shader_material(material):
 
     # color
     color_value = cmds.getAttr(material + '.outColor')[0]
-    cmds.setAttr(surface_shader + '.outColor', color_value[0], color_value[1], color_value[2], type='float3')
+    cmds.setAttr(surface_shader + '.color', color_value[0], color_value[1], color_value[2], type='float3')
     if out_color_connection: 
         print("connecting {0}.outColor to {1}.color".format(out_color_connection, surface_shader))
         cmds.connectAttr(out_color_connection + '.outColor', surface_shader + '.color')
