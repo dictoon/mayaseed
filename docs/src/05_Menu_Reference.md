@@ -40,7 +40,7 @@ Use this option to create one of the appleseed surface shaders. You will most of
 
 ###Convert Maya Materials###
 
-Use the options from this menu to convert the Maya materials in the scene to native appleseed materials. Currently Blinn, Phong and surfaceShader are supported.
+Use the options from this menu to convert the Maya materials in the scene to native appleseed materials. Currently Blinn, Phong, Lambert and surfaceShader are supported.
 
 ###Export###
 
