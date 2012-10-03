@@ -60,15 +60,15 @@ This attribute is only a placeholder at this point.
 
 ####Export Animation####
 
-This attribute is only a placeholder at this point.
+Use this attribute to turn on animation export, multiple .appleseed project files will be created. 
 
 ####Animation Start Frame####
 
-This attribute is only a placeholder at this point.
+Sets the first frame of the animation to be exported.
 
 ####Animation End Frame####
 
-This attribute is only a placeholder at this point.
+Sets the last frame of the animation to be exported.
 
 ####Export Animated Textures####
 
@@ -80,8 +80,6 @@ This attribute tells Mayaseed whether to export textures for every frame or only
 ####Camera####
 
 Use this attribute to select the camera you would like to export.
-
-> Note: If you do not select a camera the export will fail.
 
 ####Resolution Width####
 

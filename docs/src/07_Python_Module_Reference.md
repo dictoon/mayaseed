@@ -51,7 +51,7 @@ The resolution of the image you would like to bake. Images are always square.
 
 ####Argument: Boolean:pass_through=False####
 
-Set this argument to True if you'd like to skip export of the textures but still return a file path. Useful if you want to skip the actual file conversion for non animated textures.
+Set this argument to True if you'd like to skip connection baking.
 
 ###Function: convertTexToExr(String:file\_path, String:dest\_dir, Boolean: overwrite=True, Boolean: pass_through=False) Returns String:dest_file###
 
