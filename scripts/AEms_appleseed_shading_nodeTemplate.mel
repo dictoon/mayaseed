@@ -20,20 +20,9 @@
 
 global proc AEms_appleseed_shading_nodeTemplate( string $nodeName )
 {
-	//AEswatchDisplay $nodeName;
-	//editorTemplate -beginScrollLayout;
-
-	//editorTemplate -beginLayout "Main Attributes" -collapse 0;
-	//editorTemplate -endLayout;
-
-
-//	AEhardwareTextureTemplate $nodeName 
-//	("hardwareColor diffuse"); 
-
-	// include/call base class/node attributes
-	AEdependNodeTemplate $nodeName;
-	
-	editorTemplate -addExtraControls;
-	editorTemplate -endScrollLayout;
+    // include/call base class/node attributes
+    AEdependNodeTemplate $nodeName;
+    
+    editorTemplate -addExtraControls;
+    editorTemplate -endScrollLayout;
 }
-
