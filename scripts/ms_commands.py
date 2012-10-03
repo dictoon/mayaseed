@@ -512,6 +512,8 @@ def convertMaterial(material):
         pass
     elif material_type == 'surfaceShader':
         convert_surface_shader_material(material)
+    elif material_type == 'lambert':
+        convert_lambert_material(material)
     else:
         cmds.warning("don't know how to convert material of type '{0}'".format(material_type))
 
@@ -603,6 +605,43 @@ def convert_surface_shader_material(material):
     if out_transparency_connection:
         print("connecting {0}.outColor to {1}.alpha_map_color".format(out_transparency_connection, new_material_node))
         cmds.connectAttr(out_transparency_connection + '.outColor', new_material_node + '.alpha_map_color')
+
+    material_shading_group = cmds.listConnections(material, type='shadingEngine')
+    if material_shading_group != None:
+        cmds.connectAttr(new_material_node + '.outColor', material_shading_group[0] + '.surfaceShader', force=True)
+
+
+def convert_lambert_material(material):
+    print '// converting shader', material
+
+    new_material_node = cmds.shadingNode('ms_appleseed_material', asShader=True, name=(material + '_translation')) 
+
+    # set random hardware color
+    cmds.setAttr(new_material_node + '.hardware_color_in', random.random(), random.random(), random.random(), type='float3')
+
+    color_connection = getConnectedNode(material + '.color')
+    transparency_connection = getConnectedNode(material + '.transparency')
+
+    brdf = createShadingNode('lambertian_brdf')
+    surface_shader = createShadingNode('physical_surface_shader')
+
+    cmds.connectAttr(brdf + '.outColor', new_material_node + '.BSDF_front_color')
+    cmds.connectAttr(surface_shader + '.outColor', new_material_node + '.surface_shader_front_color')
+
+
+    # color
+    color_value = cmds.getAttr(material + '.color')[0]
+    cmds.setAttr(brdf + '.reflectance', color_value[0], color_value[1], color_value[2], type='float3')
+    if color_connection: 
+        print("connecting {0}.outColor to {1}.reflectance".format(color_connection, surface_shader))
+        cmds.connectAttr(color_connection + '.outColor', brdf + '.reflectance')
+
+    # transparency
+    color_value = cmds.getAttr(material + '.transparency')[0]
+    cmds.setAttr(new_material_node + '.alpha_map_color', color_value[0], color_value[1], color_value[2], type='float3')
+    if transparency_connection:
+        print("connecting {0}.outColor to {1}.alpha_map_color".format(transparency_connection, new_material_node))
+        cmds.connectAttr(transparency_connection + '.outColor', new_material_node + '.alpha_map_color')
 
     material_shading_group = cmds.listConnections(material, type='shadingEngine')
     if material_shading_group != None:
