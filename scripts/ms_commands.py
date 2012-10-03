@@ -475,7 +475,7 @@ def listObjectsByShader(shader):
 #--------------------------------------------------------------------------------------------------
 
 def getConnectedNode(connection):
-    connections = cmds.listConnections(connection)
+    connections = cmds.listConnections(connection, destination=False, source=True)
     return None if connections is None else connections[0]
 
 
@@ -571,8 +571,9 @@ def convertPhongBlinnMaterial(material):
     cmds.setAttr(bsdf + '.shininess_u', shininess, shininess, shininess, type='float3')
     cmds.setAttr(bsdf + '.shininess_v', shininess, shininess, shininess, type='float3')
 
-    material_shading_group = cmds.listConnections(material, type='shadingEngine')[0]
-    cmds.connectAttr(new_material_node + '.outColor', material_shading_group + '.surfaceShader', force=True)
+    material_shading_group = cmds.listConnections(material, type='shadingEngine')
+    if material_shading_group != None:
+        cmds.connectAttr(new_material_node + '.outColor', material_shading_group[0] + '.surfaceShader', force=True)
 
 
 def convert_surface_shader_material(material):
@@ -603,8 +604,9 @@ def convert_surface_shader_material(material):
         print("connecting {0}.outColor to {1}.alpha_map_color".format(out_transparency_connection, new_material_node))
         cmds.connectAttr(out_transparency_connection + '.outColor', new_material_node + '.alpha_map_color')
 
-    material_shading_group = cmds.listConnections(material, type='shadingEngine')[0]
-    cmds.connectAttr(new_material_node + '.outColor', material_shading_group + '.surfaceShader', force=True)
+    material_shading_group = cmds.listConnections(material, type='shadingEngine')
+    if material_shading_group != None:
+        cmds.connectAttr(new_material_node + '.outColor', material_shading_group[0] + '.surfaceShader', force=True)
 
 
 
