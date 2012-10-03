@@ -38,7 +38,7 @@ import random
 # Constants.
 #--------------------------------------------------------------------------------------------------
 
-MAYASEED_VERSION = '0.1.7'
+MAYASEED_VERSION = '0.1.8'
 MAYASEED_URL = 'https://github.com/jonathantopf/mayaseed'
 APPLESEED_URL = 'http://appleseedhq.net/'
 ROOT_DIRECTORY = os.path.split((os.path.dirname(inspect.getfile(inspect.currentframe()))))[0]
