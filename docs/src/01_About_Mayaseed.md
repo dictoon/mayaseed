@@ -23,7 +23,7 @@ Like appleseed, Mayaseed is released under the MIT licence which means it is fre
 How it's made
 -------------
 
-Mayaseed is written mainly in Python with a little bit of MEL so it is cross platform and easy to modify. You can find more about the structure of the plugin in the **Plugin structure** section. New releases will be announced on the appleseed website here:
+Mayaseed is written mainly in Python with a little bit of MEL so it is cross platform and easy to modify. You can find more about the structure of the plugin in the **Plugin structure** section. New releases are announced on the appleseed website here:
 
 http://appleseedhq.net/blog/jon
 
