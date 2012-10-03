@@ -21,7 +21,6 @@
 # THE SOFTWARE.
 #
 
-#
 
 import sys
 import maya.OpenMaya as OpenMaya
