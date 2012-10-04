@@ -1614,5 +1614,3 @@ def export(render_settings_node):
         cProfile.run(command)
     else:
         export_container(render_settings_node)
-
-
