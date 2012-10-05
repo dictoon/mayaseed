@@ -129,14 +129,6 @@ def nodeInitializer():
     appleseed_material.addAttribute( appleseed_material.render_layer )
 
     #duplicate front attributes on back
-<<<<<<< HEAD:src/plugins/ms_appleseed_material.py
-    duplcated_front_on_back_nAttr = OpenMaya.MFnNumericAttribute()
-    appleseed_material.duplcated_front_on_back = duplcated_front_on_back_nAttr.create("duplcated_front_attributes_on_back", "duplcated_front_on_back", OpenMaya.MFnNumericData.kBoolean, True)
-    appleseed_material.addAttribute( appleseed_material.duplcated_front_on_back )
-
-    # front ***************************
-
-=======
     duplicate_front_on_back_nAttr = OpenMaya.MFnNumericAttribute()
     appleseed_material.duplicate_front_on_back = duplicate_front_on_back_nAttr.create("duplicate_front_attributes_on_back", "duplicate_front_on_back", OpenMaya.MFnNumericData.kBoolean, True)
     appleseed_material.addAttribute( appleseed_material.duplicate_front_on_back )
@@ -148,7 +140,6 @@ def nodeInitializer():
     appleseed_material.enable_front = enable_front_nAttr.create("enable_front_material", "enable_front", OpenMaya.MFnNumericData.kBoolean, True)
     appleseed_material.addAttribute( appleseed_material.enable_front )
 
->>>>>>> ac1f639b5f3988137112ec105bbe8a20f891a1d4:plugins/ms_appleseed_material.py
     #BSDF_front Attribute
     appleseed_material.BSDF_frontAttribute = numericAttributeFn.createColor( 'BSDF_front_color', 'BSDF_front' )
     numericAttributeFn.setStorable( True )
@@ -175,20 +166,16 @@ def nodeInitializer():
 
     # back ***************************
 
-<<<<<<< HEAD:src/plugins/ms_appleseed_material.py
-=======
     #enable back
     enable_back_nAttr = OpenMaya.MFnNumericAttribute()
     appleseed_material.enable_back = enable_back_nAttr.create("enable_back_material", "enable_back", OpenMaya.MFnNumericData.kBoolean, True)
     appleseed_material.addAttribute( appleseed_material.enable_back )
 
->>>>>>> ac1f639b5f3988137112ec105bbe8a20f891a1d4:plugins/ms_appleseed_material.py
     #BSDF_back Attribute
     appleseed_material.BSDF_backAttribute = numericAttributeFn.createColor( 'BSDF_back_color', 'BSDF_back' )
     numericAttributeFn.setStorable( True )
     numericAttributeFn.setDefault( 0.0,0.0,0.0 )
     appleseed_material.addAttribute( appleseed_material.BSDF_backAttribute )
-<<<<<<< HEAD:src/plugins/ms_appleseed_material.py
     
     #EDF_back Attribute
     appleseed_material.EDF_backAttribute = numericAttributeFn.createColor( 'EDF_back_color', 'EDF_back' )
@@ -200,19 +187,6 @@ def nodeInitializer():
     appleseed_material.surface_shader_backAttribute = numericAttributeFn.createColor( 'surface_shader_back_color', 'surface_shader_back' )
     numericAttributeFn.setStorable( True )
     numericAttributeFn.setDefault( 0.0,0.0,0.0 )
-=======
-    
-    #EDF_back Attribute
-    appleseed_material.EDF_backAttribute = numericAttributeFn.createColor( 'EDF_back_color', 'EDF_back' )
-    numericAttributeFn.setStorable( True )
-    numericAttributeFn.setDefault( 0.0,0.0,0.0 )
-    appleseed_material.addAttribute( appleseed_material.EDF_backAttribute )
-    
-    #surface_shader_back Attribute
-    appleseed_material.surface_shader_backAttribute = numericAttributeFn.createColor( 'surface_shader_back_color', 'surface_shader_back' )
-    numericAttributeFn.setStorable( True )
-    numericAttributeFn.setDefault( 0.0,0.0,0.0 )
->>>>>>> ac1f639b5f3988137112ec105bbe8a20f891a1d4:plugins/ms_appleseed_material.py
     appleseed_material.addAttribute( appleseed_material.surface_shader_backAttribute )
     
     #normal_map_back Attribute
