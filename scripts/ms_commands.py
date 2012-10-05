@@ -109,17 +109,16 @@ def convertConnectionToImage(shader, attribute, dest_file, resolution=1024, pass
         os.makedirs(dest_dir)
 
     if not cmds.objExists(shader+'.'+attribute):
-        print 'error converting texture, no object named {0} exists'.format(shader+'.'+attribute)
+        print '** error converting texture, no object named {0} exists'.format(shader+'.'+attribute)
     else:
         connection = cmds.listConnections(shader+'.'+attribute)
         if not connection:
-            print 'nothing connected to {0}, skipping conversion'.format(plug_name)
+            print '// nothing connected to {0}, skipping conversion'.format(plug_name)
         elif pass_through == True:
-            print '{0}: skipping conversion'.format(plug_name)
+            print '// {0}: skipping conversion'.format(plug_name)
         else:
             cmds.hyperShade(objects=shader)
             connected_object = cmds.ls(sl=True)[0]
-            print connected_object
             cmds.convertSolidTx(connection[0] ,connected_object ,fileImageName=dest_file, antiAlias=True, bm=3, fts=True, sp=True, alpha=True, doubleSided=True, resolutionX=resolution, resolutionY=resolution)
         
         return dest_file
@@ -166,21 +165,21 @@ def convertTexToExr(file_path, dest_dir, overwrite=True, pass_through=False):
     dest_file = os.path.join(dest_dir, os.path.splitext(os.path.split(file_path)[1])[0] + '.exr')
 
     if not os.path.exists(file_path):
-        print "# error: {0} does not exist".format(file_path)
+        print "** error: {0} does not exist".format(file_path)
         return dest_file
 
     if pass_through:
-        print "# skipping conversion of {0}".format(file_path)
+        print "// skipping conversion of {0}".format(file_path)
         return dest_file
 
     if os.path.exists(dest_file) and not overwrite:
-        print "# {0} already exists, skipping conversion".format(dest_file)
+        print "// {0} already exists, skipping conversion".format(dest_file)
         return dest_file
 
     imf_copy_path = findPathToImfCopy()
 
     if imf_copy_path is None:
-        print "# error: cannot convert {0}, imf_copy utility not found".format(file_path)
+        print "** error: cannot convert {0}, imf_copy utility not found".format(file_path)
         return dest_file
 
     if not os.path.exists(dest_dir):
@@ -320,7 +319,7 @@ def getEntityDefs(xml_file_path, list=False):
                                             nodes[entity.getAttribute('model')].attributes[child.getAttribute('name')].entity_types.append(node.getAttribute('name'))
 
     if list:
-        print 'Found the following appleseed nodes:\n'
+        print '// Found the following appleseed nodes:\n'
 
         for node_key in nodes.iterkeys():
             print '  ' + nodes[node_key].name
@@ -381,7 +380,6 @@ def createShadingNode(model, entity_defs_obj=False):
                     # if there is a default value, use it
                     if entity_defs[entity_key].attributes[attr_key].default_value:
                         default_value = float(entity_defs[entity_key].attributes[attr_key].default_value)
-                        print default_value
                         addColorAttr(shading_node_name, attr_key, (default_value,default_value,default_value))
                     else:
                         addColorAttr(shading_node_name, attr_key)

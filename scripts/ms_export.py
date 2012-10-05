@@ -155,7 +155,7 @@ def writeTransform(doc, scale = 1, object=False, motion=False, motion_samples=2)
 #--------------------------------------------------------------------------------------------------
 
 def get_maya_params(render_settings_node):
-    print('getting params from ui')
+    print('// getting params from ui')
 
     params = {'error':False}
 
@@ -808,11 +808,6 @@ class ShadingNode():
                         # if the node is unrecognized, bake it
                         else:
                             if self.params['convertShadingNodes']:
-                                print '***********', maya_attribute
-                                print '***********', connection
-                                print '***********', connected_node
-                                print '***********', self.name
-                                print '***********', attribute_key
                                 #convert texture and get path
                                 output_texture = os.path.join(params['tex_dir'], (connected_node + '.exr'))
                                 texture = ms_commands.convertConnectionToImage(self.name, attribute_key, output_texture, resolution=1024)
@@ -1384,7 +1379,7 @@ class Scene():
             self.texture_objects[name] = Texture(name, file_name)
 
     def writeXML(self, doc):
-        print('writing scene element')
+        print('// writing scene element')
 
         doc.startElement('scene')
 
@@ -1398,7 +1393,7 @@ class Scene():
 
         # write texture objects
         for tex in self.texture_objects:
-            print 'writing texture', self.texture_objects[tex].name
+            print '// writing texture', self.texture_objects[tex].name
             self.texture_objects[tex].writeXMLObject(doc)
 
         # write texture instances
