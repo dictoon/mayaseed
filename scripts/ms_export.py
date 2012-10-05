@@ -274,6 +274,10 @@ def get_maya_params(render_settings_node):
 
     params['verbose_output'] = cmds.getAttr(render_settings_node + '.verbose_output')
 
+    # runtime generated params
+
+    params['mesh_output_dir'] = os.path.join(params'outputDir', 'geo')
+
     return params
 
 #--------------------------------------------------------------------------------------------------
@@ -318,19 +322,19 @@ def get_maya_scene(params):
     while current_frame <= end_frame:
         cmds.currentTime(current_frame)
 
-        if params['export_transformation_blur']:
+        if params['export_transformation_blur'] or (params['export_animation'] == False):
             print '// adding transform samples, frame', current_frame
             for transform in maya_root_transforms:
                 for descendant_transform in transform.descendant_transforms:
                     descendant_transform.add_transform_sample()
 
-        if params['export_deformation_blur']:
+        if params['export_deformation_blur'] or (params['export_animation'] == False):
             print '// adding deformation samples, frame', current_frame
             for transform in maya_root_transforms:
                 for mesh in transform.descendant_meshes:
-                    mesh.add_deform_sample()
+                    mesh.add_deform_sample(params['mesh_output_dir'], current_time)
 
-        if params['export_camera_blur']:
+        if params['export_camera_blur'] or (params['export_animation'] == False):
             print '// adding camera transformation samples, frame', current_frame
             for transform in maya_root_transforms:
                 for camera in transform.descendant_cameras:
@@ -405,7 +409,8 @@ class MTransform():
                 self.descendant_transforms += new_transform.child_transforms
 
     def add_transform_sample(self):
-        self.matrix.append(cmds.xform(self.name, query=True, matrix=True))
+        self.matricies.append(cmds.xform(self.name, query=True, matrix=True))
+        self.visibility_states.append(cmds.getAttr(self.name + '.visibility'))
 
 #--------------------------------------------------------------------------------------------------
 # MTransformChild class.
