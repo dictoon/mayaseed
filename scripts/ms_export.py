@@ -272,6 +272,7 @@ def get_maya_params(render_settings_node):
         cmds.warning("no compiled obj exporter present, exporting using python obj exporter")
         params['obj_exporter'] = ms_export_obj.export
 
+    params['verbose_output'] = cmds.getAttr(render_settings_node + '.verbose_output')
 
     return params
 
@@ -354,6 +355,9 @@ class MTransform():
     """ lightweight class representing info for a maya transform node """
 
     def __init__(self, params, maya_transform_name, parent):
+        self.params = params
+        if self.params['verbose_output']:
+            print '// creating MTransform:', maya_transform_name
         self.name = maya_transform_name
         self.safe_name = ms_commands.legalizeName(self.name)
         self.parent = parent
@@ -413,6 +417,8 @@ class MTransformChild():
 
     def __init__(self, params, maya_entity_name, MTransform_object):
         self.params = params
+        if self.params['verbose_output']:
+            print '// creating ' + self.__class__.__name__ + ': ' + maya_entity_name
         self.name = maya_entity_name
         self.safe_name = ms_commands.legalizeName(self.name)
         self.transform = MTransform_object
