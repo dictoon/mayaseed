@@ -462,9 +462,9 @@ class MMesh(MTransformChild):
         self.mesh_names = []
 
     def add_deform_sample(self, mesh_dir, time):
-        file_name = '{0}_{1}.obj'.format(self.safe_name, time)
+        file_name = '%s_%.3f.obj' % (self.safe_name, time)
         output_file_path = os.path.join(mesh_dir, file_name)
-        print output_file_path
+        print '// writing file', output_file_path
         self.mesh_names.append(ms_commands.export_obj(self.safe_name, output_file_path, overwrite=True))
 
 
