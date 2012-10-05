@@ -151,10 +151,10 @@ def writeTransform(doc, scale = 1, object=False, motion=False, motion_samples=2)
 
 
 #--------------------------------------------------------------------------------------------------
-# getMayaParams function.
+# get_maya_params function.
 #--------------------------------------------------------------------------------------------------
 
-def getMayaParams(render_settings_node):
+def get_maya_params(render_settings_node):
     print('getting params from ui')
 
     params = {'error':False}
@@ -283,6 +283,8 @@ def get_maya_scene(params):
     
     """ Parses the maya scene and returns a list of root transforms with the relevant children """
 
+    print '// caching maya scene data'
+
     start_time = cmds.currentTime(query=True)
 
     # the maya scene is stored as a list of root transforms that contain mesh's/geometry/lights as children
@@ -316,25 +318,26 @@ def get_maya_scene(params):
         cmds.currentTime(current_frame)
 
         if params['export_transformation_blur']:
+            print '// adding transform samples, frame', current_frame
             for transform in maya_root_transforms:
                 for descendant_transform in transform.descendant_transforms:
                     descendant_transform.add_transform_sample()
 
         if params['export_deformation_blur']:
+            print '// adding deformation samples, frame', current_frame
             for transform in maya_root_transforms:
                 for mesh in transform.descendant_meshes:
                     mesh.add_deform_sample()
 
         if params['export_camera_blur']:
+            print '// adding camera transformation samples, frame', current_frame
             for transform in maya_root_transforms:
                 for camera in transform.descendant_cameras:
                     camera.add_matrix_sample()
 
-        print cmds.currentTime(query=True)
         current_frame += sample_increment
 
-        # add code to export textures here
-    
+        # add code to export textures here    
 
     # return to pre-export time
     cmds.currentTime(start_time)
@@ -354,7 +357,8 @@ class MTransform():
         self.name = maya_transform_name
         self.safe_name = ms_commands.legalizeName(self.name)
         self.parent = parent
-        self.matricies = []
+
+        # child attributes
         self.child_cameras = []
         self.descendant_cameras = []
         self.child_meshes = []
@@ -363,6 +367,10 @@ class MTransform():
         self.descendant_lights = []
         self.child_transforms = []
         self.descendant_transforms = []
+
+        # sample attributes
+        self.matricies = []
+        self.visibility_states = []
 
         # get children
         mesh_names = cmds.listRelatives(self.name, type='mesh')
@@ -392,8 +400,8 @@ class MTransform():
                 self.descendant_lights += new_transform.child_lights
                 self.descendant_transforms += new_transform.child_transforms
 
-    def add_transform_sample():
-        pass
+    def add_transform_sample(self):
+        self.matrix.append(cmds.xform(self.name, query=True, matrix=True))
 
 #--------------------------------------------------------------------------------------------------
 # MTransformChild class.
@@ -420,12 +428,13 @@ class MMesh(MTransformChild):
     def __init__(self, params, maya_mesh_name, MTransform_object):
         MTransformChild.__init__(self, params, maya_mesh_name, MTransform_object)        
         self.material_names = ms_commands.get_attached_materials(self.name)
+        self.mesh_names = []
 
-    def add_deform_sample():
-        pass
+    def add_deform_sample(self, mesh_dir, time):
+        file_name = '{0}_{1}.obj'.format(self.safe_name, time)
+        output_file_path = os.path.join(mesh_dir, file_name)
+        self.mesh_names.append(ms_commands.export_obj(self.safe_name, file_path, overwrite=True))
 
-    def export_obj(export_dir):
-        pass
 
 #--------------------------------------------------------------------------------------------------
 # MLight class.
@@ -457,6 +466,11 @@ class MCamera(MTransformChild):
 
     def __init__(self, params, maya_camera_name, MTransform_object):
         MTransformChild.__init__(self, params, maya_camera_name, MTransform_object)
+
+        # In Maya cameras are decendents of transforms like other objects 
+        # but in appleseed they exist outside of te main assembly 
+        # for this reason we include the worldspace matrix as an attribute of the camera's transform 
+        # even though its not a 'correct' representation of the maya scene
         self.world_space_matricies = []
 
         self.dof = (self.name + '.depthOfField' )
@@ -474,10 +488,34 @@ class MCamera(MTransformChild):
             self.film_height = float(cmds.getAttr(self.name + '.verticalFilmAperture')) * inch_to_meter
             self.film_width = self.film_height * maya_resolution_aspect 
 
-    def add_matrix_sample():
-        pass
+    def add_matrix_sample(self):
+        self.world_space_matricies.append(cmds.xform(self.transform.name, query=True, matrix=True, ws=True))
 
 
+#--------------------------------------------------------------------------------------------------
+# MMsMaterial class.
+#--------------------------------------------------------------------------------------------------
+
+class MMSMaterial():
+
+    """ lightweight class representing maya material nodes """
+
+    def __init__(self, params, maya_ms_material_name):
+        self.name = maya_ms_material_name
+        self.safe_name = ms_commandslegalizeName(self.name)
+
+
+#--------------------------------------------------------------------------------------------------
+# MMsShadingNode class.
+#--------------------------------------------------------------------------------------------------
+
+class MMsShadingNode():
+
+    """ lightweight class representing maya shading nodes """
+
+    def __init__(self, params, maya_ms_shading_node_name, entity_defs):
+        self.name = name
+        self.safe_name = ms_commands.legalizeName(self.name)
 
 
 #--------------------------------------------------------------------------------------------------
@@ -1508,7 +1546,7 @@ def safe_make_dirs(path):
         os.makedirs(path)
 
 def export_container(render_settings_node):
-    params = getMayaParams(render_settings_node)
+    params = get_maya_params(render_settings_node)
 
     # create progres bar
     params['progress_amount'] = 0
