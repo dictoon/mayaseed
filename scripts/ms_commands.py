@@ -444,6 +444,8 @@ def export_obj(object_name, file_path, overwrite=True):
     safe_file_path = file_path.replace('\\', '\\\\')
     mel.eval('ms_export_obj -mesh "{0}" -filePath "{1}"'.format(object_name, safe_file_path))
 
+    return safe_file_path
+
 
 #--------------------------------------------------------------------------------------------------
 # Legalize a name.
