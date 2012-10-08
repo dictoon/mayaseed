@@ -79,13 +79,13 @@ class WriteXml():
 
 
 #--------------------------------------------------------------------------------------------------
-# cancelExport function.
+# checkExportCancelled function.
 #--------------------------------------------------------------------------------------------------
 
 def checkExportCancelled():
     if cmds.progressWindow(query=True, isCancelled=True):
         cmds.progressWindow(endProgress=1)
-        raise RuntimeError('Export Cancelled')
+        raise RuntimeError('Export Canceled')
 
 
 #--------------------------------------------------------------------------------------------------
@@ -161,7 +161,7 @@ def get_maya_params(render_settings_node):
 
     params['entityDefs'] = ms_commands.getEntityDefs(os.path.join(ms_commands.ROOT_DIRECTORY, 'scripts', 'appleseedEntityDefs.xml'))
 
-    #main settings
+    # main settings
     params['outputDir'] = cmds.getAttr(render_settings_node + '.output_directory')
     params['fileName'] = cmds.getAttr(render_settings_node + '.output_file')
     params['convertShadingNodes'] = cmds.getAttr(render_settings_node + '.convert_shading_nodes_to_textures')
@@ -179,14 +179,14 @@ def get_maya_params(render_settings_node):
     params['animatedTextures'] = cmds.getAttr(render_settings_node + '.export_animated_textures')
     params['scene_scale'] = 1
     
-    #Advanced options
-    #scene
+    # Advanced options
+    # scene
     if cmds.listConnections(render_settings_node + '.environment'):
         params['environment'] = cmds.listRelatives(cmds.listConnections(render_settings_node + '.environment')[0])[0]
     else:
         params['environment'] = False
 
-    #cameras
+    # cameras
     # params['sceneCameraExportAllCameras'] = cmds.checkBox('ms_sceneCameraExportAllCameras', query=True, value=True)
     params['sceneCameraDefaultThinLens'] = cmds.getAttr(render_settings_node + '.export_all_cameras_as_thinlens')
     
@@ -276,8 +276,9 @@ def get_maya_params(render_settings_node):
 
     return params
 
+
 #--------------------------------------------------------------------------------------------------
-# GetMayaScene function.
+# get_maya_scene function.
 #--------------------------------------------------------------------------------------------------
 
 def get_maya_scene(params):
@@ -407,6 +408,7 @@ class MTransform():
     def add_transform_sample(self):
         self.matrix.append(cmds.xform(self.name, query=True, matrix=True))
 
+
 #--------------------------------------------------------------------------------------------------
 # MTransformChild class.
 #--------------------------------------------------------------------------------------------------
@@ -502,7 +504,7 @@ class MCamera(MTransformChild):
 # MMsMaterial class.
 #--------------------------------------------------------------------------------------------------
 
-class MMSMaterial():
+class MMsMaterial():
 
     """ lightweight class representing maya material nodes """
 
@@ -737,6 +739,7 @@ class Material():
                 if self.normal_map_back:
                     doc.appendParameter('normal_map', self.normal_map_back.name + '_inst')
                 doc.endElement('material') 
+
 
 #--------------------------------------------------------------------------------------------------
 # ShadingNode class.
@@ -1472,7 +1475,7 @@ class Configurations():
         # add base interactive config
         doc.appendElement('configuration name="interactive" base="base_interactive"')
 
-        #if 'customise final configuration' is set read customised values
+        # if 'customise final configuration' is set read customised values
         if self.params['customFinalConfigCheck']:
             print('writing custom final config')
             doc.startElement('configuration name="final" base="base_final"')
@@ -1536,7 +1539,7 @@ class Configurations():
 
             doc.endElement("configuration")
 
-        else:# otherwise add default configurations
+        else:   # otherwise add default configurations
             print('writing default final config')
             doc.appendElement('configuration name="final" base="base_final"')
 
@@ -1554,10 +1557,9 @@ def safe_make_dirs(path):
 def export_container(render_settings_node):
     params = get_maya_params(render_settings_node)
 
-    # create progres bar
+    # create progress bar
     params['progress_amount'] = 0
     cmds.progressWindow(title='Exporting', progress=params['progress_amount'], status='Exporting ' + render_settings_node, isInterruptable=True)
-
 
     if params['error']:
         cmds.error("error validating UI attributes")
@@ -1566,9 +1568,11 @@ def export_container(render_settings_node):
     # compute the base output directory
     scene_filepath = cmds.file(q=True, sceneName=True)
     scene_basename = os.path.splitext(os.path.basename(scene_filepath))[0]
+    if len(scene_basename) == 0:
+        scene_basename = "Untitled"
     project_directory = cmds.workspace(q=True, rd=True)
     params['outputDir'] = params['outputDir'].replace("<ProjectDir>", project_directory)
-    params['outputDir'] = os.path.join(params['outputDir'], scene_basename)
+    params['outputDir'] = params['outputDir'].replace("<SceneName>", scene_basename)
 
     if params['export_animation']:
         start_frame = params['animation_start_frame']
@@ -1592,7 +1596,7 @@ def export_container(render_settings_node):
 
         # compute the output file path
         filename = params['fileName']
-        filename = filename.replace("<FileName>", scene_basename)
+        filename = filename.replace("<SceneName>", scene_basename)
         filename = filename.replace("#", frame_name)
         filepath = os.path.join(params['outputDir'], filename)
 
@@ -1649,7 +1653,6 @@ def export_container(render_settings_node):
     cmds.progressWindow(endProgress=1)
 
     cmds.confirmDialog(title="Export Completed", icon='information', message=export_message, button="OK")
-
 
 def export(render_settings_node):
     if cmds.getAttr(render_settings_node + '.profile_export'):
