@@ -81,20 +81,19 @@ def export(object_name, file_path, overwrite=True):
         file_object.write("f")
 
         for i in range(poly_it.polygonVertexCount()):
-            # To get uv index we need to create an int pointer because the API is just wrappers for C++.
-            util = OpenMaya.MScriptUtil()
-            util.createFromInt(0)
-            uv_pInt = util.asIntPtr()
-            uv_index = OpenMaya.MScriptUtil()
-            uv_index.createFromInt(0)
-            poly_it.getUVIndex(i, uv_pInt)
-
             file_object.write(" {0}".format(poly_it.vertexIndex(i) + 1))
 
             if us.length() > 0 or normals.length() > 0:
                 file_object.write("/")
 
             if us.length() > 0:
+                # To get uv index we need to create an int pointer because the API is just wrappers for C++.
+                util = OpenMaya.MScriptUtil()
+                util.createFromInt(0)
+                uv_pInt = util.asIntPtr()
+                uv_index = OpenMaya.MScriptUtil()
+                uv_index.createFromInt(0)
+                poly_it.getUVIndex(i, uv_pInt)
                 file_object.write("{0}".format(uv_index.getInt(uv_pInt) + 1))
 
             if normals.length() > 0:
