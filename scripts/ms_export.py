@@ -396,19 +396,16 @@ class MTransform():
             for mesh_name in mesh_names:
                 if ms_commands.shapeIsExportable(mesh_name):
                     self.child_meshes.append(MMesh(params, mesh_name, self))
-        self.descendant_meshes = list(self.child_meshes)
 
         light_names = cmds.listRelatives(self.name, type='light')
         if light_names != None:
             for light_name in light_names:
                 self.child_lights.append(MLight(params, light_name, self))
-        self.descendant_lights = list(self.child_lights)
 
         camera_names = cmds.listRelatives(self.name, type='camera')
         if camera_names != None:
             for camera_name in camera_names:
                 self.child_cameras.append(MCamera(params, camera_name, self))
-        self.descendant_cameras = list(self.child_cameras)
 
         transform_names = cmds.listRelatives(self.name, type='transform')
         if transform_names != None:
@@ -416,17 +413,20 @@ class MTransform():
                 new_transform = MTransform(params, transform_name, self)
                 self.child_transforms.append(new_transform)
 
-        # add descendents
-        self.descendant_transforms = list(self.child_transforms)
+        # add descendants
+        self.descendant_cameras = self.child_cameras
+        self.descendant_meshes = self.child_meshes
+        self.descendant_lights = self.child_lights
+        self.descendant_transforms = self.child_transforms
 
-        for transform in self.child_transforms:
-            self.descendant_transforms += transform.descendant_transforms
-            self.descendant_meshes += transform.descendant_meshes
-            self.descendant_lights += transform.descendant_lights
-            self.descendant_cameras += transform.descendant_cameras
+        # for transform in self.child_transforms:
+        #     self.descendant_cameras += new_transform.child_cameras
+        #     self.descendant_meshes += new_transform.child_meshes
+        #     self.descendant_lights += new_transform.child_lights
+        #     self.descendant_transforms += new_transform.child_transforms
 
-        # print '?? child_meshes =', self.child_meshes
-        # print '?? decendent meshes =', self.descendant_meshes
+        print '?? child_meshes =', self.child_meshes
+        print '?? decendent meshes =', self.descendant_meshes
 
     def add_transform_sample(self):
         self.matricies.append(cmds.xform(self.name, query=True, matrix=True))
