@@ -57,38 +57,29 @@ def export(object_name, file_path, overwrite=True):
     iter_polys = OpenMaya.MItMeshPolygon(mesh.object())
 
     # Write vertices.
-    point_array = OpenMaya.MPointArray() 
-    mesh.getPoints(point_array)
-    i = 0
-    while i < point_array.length():
-        point = point_array[i]
-        file_object.write("v {0} {1} {2}\n".format(point.x, point.y, point.z))
-        i += 1
-
+    points = OpenMaya.MPointArray() 
+    mesh.getPoints(points)
+    for i in range(points.length()):
+        file_object.write("v {0} {1} {2}\n".format(points[i].x, points[i].y, points[i].z))
+    
     # Write UV coordinates.
-    u_array = OpenMaya.MFloatArray()
-    v_array = OpenMaya.MFloatArray()
-    mesh.getUVs(u_array, v_array)
-    i = 0
-    while i < u_array.length():
-        file_object.write("vt {0} {1}\n".format(u_array[i], v_array[i]))
-        i += 1
+    us = OpenMaya.MFloatArray()
+    vs = OpenMaya.MFloatArray()
+    mesh.getUVs(us, vs)
+    for i in range(us.length()):
+        file_object.write("vt {0} {1}\n".format(us[i], vs[i]))
 
     # Write normals.
-    normal_array = OpenMaya.MFloatVectorArray()
-    mesh.getNormals(normal_array, 2)    # 2 = object space
-    i = 0
-    while i < normal_array.length():
-        normal = normal_array[i]
-        file_object.write("vn {0} {1} {2}\n".format(normal.x, normal.y, normal.z))
-        i += 1
+    normals = OpenMaya.MFloatVectorArray()
+    mesh.getNormals(normals, 2) # 2 = object space
+    for i in range(normals.length()):
+        file_object.write("vn {0} {1} {2}\n".format(normals[i].x, normals[i].y, normals[i].z))
 
     # iterate over polys
     while not iter_polys.isDone():
         file_object.write("f")
 
-        i = 0
-        while i < iter_polys.polygonVertexCount():
+        for i in range(iter_polys.polygonVertexCount()):
             # To get uv index we need to create an int pointer because the API is just wrappers for C++.
             util = OpenMaya.MScriptUtil()
             util.createFromInt(0)
@@ -96,10 +87,7 @@ def export(object_name, file_path, overwrite=True):
             uv_index = OpenMaya.MScriptUtil()
             uv_index.createFromInt(0)
             iter_polys.getUVIndex(i, uv_pInt)
-
             file_object.write(" {0}/{1}/{2}".format(iter_polys.vertexIndex(i) + 1, uv_index.getInt(uv_pInt) + 1, iter_polys.normalIndex(i) + 1))
-
-            i += 1
 
         file_object.write("\n")
         iter_polys.next()
