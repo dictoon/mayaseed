@@ -561,7 +561,7 @@ class Color():
 #--------------------------------------------------------------------------------------------------
 
 class Texture():
-    def __init__(self, name, file_name, color_space='srgb', alpha_as_luminance=False):
+    def __init__(self, name, file_name, color_space='srgb', alpha_mode='alpha_channel'):
         self.name = name
 
         directory = ms_commands.legalizeName(os.path.split(file_name)[0])
@@ -569,11 +569,7 @@ class Texture():
         self.filepath = os.path.join(directory, filename)
 
         self.color_space = color_space
-
-        if alpha_as_luminance:
-            self.alpha_mode = 'luminance'
-        else:
-            self.alpha_mode = 'alpha_channel'
+        self.alpha_mode = alpha_mode
 
     def writeXMLObject(self, doc):
         print('writing texture object {0}'.format(self.name))
@@ -585,7 +581,7 @@ class Texture():
     def writeXMLInstance(self, doc):
         print('writing texture instance {0}_inst'.format(self.name))
         doc.startElement('texture_instance name="{0}_inst" texture="{0}"'.format(self.name, self.name))
-        doc.appendParameter('addressing_mode', 'clamp')
+        doc.appendParameter('addressing_mode', 'wrap')
         doc.appendParameter('filtering_mode', 'bilinear')
         doc.appendParameter('alpha_mode', self.alpha_mode)
         doc.endElement('texture_instance')
@@ -643,10 +639,8 @@ class Material():
         self.surface_shader_front = self.getMayaAttr(self.name + '.surface_shader_front_color')
         self.normal_map_front = self.getMayaAttr(self.name + '.normal_map_front_color')
         self.alpha_map = self.getMayaAttr(self.name + '.alpha_map_color')
-        if self.alpha_map != None:
-            self.alpha_map.alpha_mode = 'luminance'
 
-        #only use front shaders on back if box is checked
+        # only use front shaders on back if box is checked
         if not self.duplicate_shaders:
             self.bsdf_back = self.getMayaAttr(self.name + '.BSDF_back_color')
             self.edf_back = self.getMayaAttr(self.name + '.EDF_back_color')
@@ -686,8 +680,8 @@ class Material():
             elif cmds.nodeType(connection[0]) == 'file':
                 maya_texture_file = ms_commands.getFileTextureName(connection[0])
                 texture = ms_commands.convertTexToExr(maya_texture_file, self.params['absolute_tex_dir'], overwrite=self.params['overwrite_existing_textures'], pass_through=False)
-                texture_node = Texture((connection[0] + '_texture'), (os.path.join(self.params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
-                attribute_value = (texture_node.name + '_inst')
+                texture_node = Texture(connection[0] + '_texture', os.path.join(self.params['tex_dir'], os.path.split(texture)[1]))
+                attribute_value = texture_node.name + '_inst'
                 self.textures += [texture_node]
                 return texture_node
 
@@ -773,26 +767,24 @@ class ShadingNode():
             for attribute_key in self.attributes.keys():
                 maya_attribute = self.name + '.' + attribute_key
 
-                #create variable to story the final string value
+                # create variable to store the final string value
                 attribute_value = ''
 
-                #if the attribute is a color/entity 
-
+                # if the attribute is a color/entity
                 if params['entityDefs'][self.model].attributes[attribute_key].type == 'entity_picker':
 
-                    #get attribute color value
+                    # get attribute color value
                     attribute_color = cmds.getAttr(maya_attribute)[0]
                     connected_node = None
 
-                    #check for connected node
+                    # check for connected node
                     connection = cmds.listConnections(maya_attribute, destination=False, source=True)
                     if connection:
                         connected_node = connection[0]
 
-                    #if there is a node connected
+                    # if there is a node connected
                     if connected_node:
-
-                        #if the node is an appleseed shading node
+                        # if the node is an appleseed shading node
                         if cmds.nodeType(connected_node) == 'ms_appleseed_shading_node':
                             shading_node = ShadingNode(self.params, connected_node)
                             attribute_value = shading_node.name
@@ -800,37 +792,31 @@ class ShadingNode():
                             self.colors += shading_node.colors
                             self.textures = self.textures + shading_node.textures
 
-                        #else if its a maya texture node
+                        # else if it's a Maya texture node
                         elif cmds.nodeType(connected_node) == 'file':
                             maya_texture_file = ms_commands.getFileTextureName(connected_node)
                             texture = ms_commands.convertTexToExr(maya_texture_file, params['absolute_tex_dir'], overwrite=self.params['overwrite_existing_textures'], pass_through=False)
-                            texture_node = Texture((connected_node + '_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
-                            attribute_value = (texture_node.name + '_inst')
+                            texture_node = Texture(connected_node + '_texture', os.path.join(params['tex_dir'], os.path.split(texture)[1]))
+                            attribute_value = texture_node.name + '_inst'
                             self.textures += [texture_node]
 
                         # if the node is unrecognized, bake it
-                        else:
-                            if self.params['convertShadingNodes']:
-                                print '***********', maya_attribute
-                                print '***********', connection
-                                print '***********', connected_node
-                                print '***********', self.name
-                                print '***********', attribute_key
-                                #convert texture and get path
-                                output_texture = os.path.join(params['tex_dir'], (connected_node + '.exr'))
-                                texture = ms_commands.convertConnectionToImage(self.name, attribute_key, output_texture, resolution=1024)
-                                texture_node = Texture((connected_node + '_texture'), (os.path.join(params['tex_dir'], os.path.split(texture)[1])), color_space='srgb')
-                                attribute_value = (texture_node.name + '_inst')
-                                self.textures += [texture_node]
+                        elif self.params['convertShadingNodes']:
+                            # convert texture and get path
+                            output_texture = os.path.join(params['tex_dir'], connected_node + '.exr')
+                            texture = ms_commands.convertConnectionToImage(self.name, attribute_key, output_texture, resolution=1024)
+                            texture_node = Texture(connected_node + '_texture', os.path.join(params['tex_dir'], os.path.split(texture)[1]))
+                            attribute_value = texture_node.name + '_inst'
+                            self.textures += [texture_node]
 
                     # no node is connected, just use the color value
                     else:
                         # if that color is gray interpret the R value as a 1-dimensional value
-                        if (attribute_color[0] == attribute_color[1]) and (attribute_color[0] == attribute_color[2]):
+                        if attribute_color[0] == attribute_color[1] and attribute_color[0] == attribute_color[2]:
                             attribute_value = str(attribute_color[0])
 
-                        # if its not black it must be a color so create a color node
-                        elif attribute_color != (0,0,0):
+                        # if it's not black it must be a color so create a color node
+                        elif attribute_color != (0, 0, 0):
                             color_name = self.name + '_' + attribute_key + '_color'
                             normalized_color = ms_commands.normalizeRGB(attribute_color)
                             color_node = Color(color_name, normalized_color[:3], normalized_color[3])
