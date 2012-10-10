@@ -522,8 +522,22 @@ class MMsShadingNode():
     """ lightweight class representing maya shading nodes """
 
     def __init__(self, params, maya_ms_shading_node_name, entity_defs):
-        self.name = name
+        self.name = maya_ms_shading_node_name
         self.safe_name = ms_commands.legalizeName(self.name)
+
+#--------------------------------------------------------------------------------------------------
+# MFile class.
+#--------------------------------------------------------------------------------------------------
+
+class MFile():
+
+    """ lightweight class representing maya file nodes """
+
+    def __init__(self, params, maya_file_node):
+        self.name = maya_file_node
+        self.safe_name = ms_commands.legalizeName(self.name)
+        self.image_name = cmds.getAttr(self.name + '.fileTextureName')
+        self.resolved_image_name = ms_commands.getFileTextureName(self.name)
 
 
 #--------------------------------------------------------------------------------------------------
