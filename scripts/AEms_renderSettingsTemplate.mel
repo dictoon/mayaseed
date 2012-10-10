@@ -246,7 +246,7 @@ global proc AEms_renderSettingsTemplate(string $nodeName) {
             editorTemplate -addSeparator;
             editorTemplate -addControl "export_all_cameras_as_thinlens";
         editorTemplate -endLayout;
-      
+
         editorTemplate -beginLayout "Assembly Settings" -collapse true;
             editorTemplate -addControl "interpret_sets_as_assemblies";
             editorTemplate -addSeparator;
@@ -254,8 +254,6 @@ global proc AEms_renderSettingsTemplate(string $nodeName) {
 
         editorTemplate -beginLayout "Configuration Settings" -collapse true;
             editorTemplate -addControl "export_custom_final_config";
-            editorTemplate -addControl "min_samples";
-            editorTemplate -addControl "max_samples";
             editorTemplate -addControl "gtr_sampler";
             editorTemplate -addControl "gtr_filter_size";
             editorTemplate -addControl "gtr_min_samples";
