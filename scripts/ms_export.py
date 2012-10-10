@@ -287,8 +287,8 @@ def get_maya_scene(params):
     maya_root_transforms = []
 
     # find all root transforms and create Mtransforms from them
-    for maya_transform in cmds.ls(tr=True):
-        if not cmds.listRelatives(maya_transform, ap=True):
+    for maya_transform in cmds.ls(tr=True, long=True):
+        if not cmds.listRelatives(maya_transform, ap=True, fullPath=True):
             maya_root_transforms.append(MTransform(params, maya_transform, None))
 
     motion_samples = params['motion_samples']
@@ -372,22 +372,22 @@ class MTransform():
         self.visibility_states = []
 
         # get children
-        mesh_names = cmds.listRelatives(self.name, type='mesh')
+        mesh_names = cmds.listRelatives(self.name, type='mesh', fullPath=True)
         if mesh_names != None:
             for mesh_name in mesh_names:
                 self.child_meshes.append(MMesh(params, mesh_name, self))
 
-        light_names = cmds.listRelatives(self.name, type='light')
+        light_names = cmds.listRelatives(self.name, type='light', fullPath=True)
         if light_names != None:
             for light_name in light_names:
                 self.child_lights.append(MLight(params, light_name, self))
 
-        camera_names = cmds.listRelatives(self.name, type='camera')
+        camera_names = cmds.listRelatives(self.name, type='camera', fullPath=True)
         if camera_names != None:
             for camera_name in camera_names:
                 self.child_cameras.append(MCamera(params, camera_name, self))
 
-        transform_names = cmds.listRelatives(self.name, type='transform')
+        transform_names = cmds.listRelatives(self.name, type='transform', fullPath=True)
         if transform_names != None:
             for transform_name in transform_names:
                 new_transform = MTransform(params, transform_name, self)
@@ -1020,14 +1020,14 @@ class Geometry():
 
         current_object = name
         while cmds.listRelatives(current_object, parent=True):
-            current_object = cmds.listRelatives(current_object, parent=True)[0]
+            current_object = cmds.listRelatives(current_object, parent=True, fullPath=True)[0]
             self.hierarchy_name = current_object + ' ' + self.hierarchy_name
         self.output_file = output_file
         self.assembly = assembly
 
 
         # get material name
-        shape_node = cmds.listRelatives(self.name, shapes=True)[0]
+        shape_node = cmds.listRelatives(self.name, shapes=True, fullPath=True)[0]
 
         #get list of unique shading engines
         shading_engines = set(cmds.listConnections(shape_node, t='shadingEngine')) 
@@ -1104,19 +1104,19 @@ class Assembly():
         if object_list:
             for object in object_list:
                 if cmds.nodeType(object) == 'mesh':
-                    geo_transform = cmds.listRelatives(object, ad=True, ap=True)[0]
+                    geo_transform = cmds.listRelatives(object, ad=True, ap=True, fullPath=True)[0]
                     if not (geo_transform in self.geo_objects):
                         geo_filename = self.name + '.obj'
                         geo_filepath = os.path.join(self.params['geo_dir'], geo_filename)
                         self.geo_objects.append(Geometry(self.params, geo_transform, geo_filepath, self.name))
                 elif (cmds.nodeType(object) == 'pointLight') and self.params['exportMayaLights']:
-                    light_transform = cmds.listRelatives(object, ad=True, ap=True)[0]
+                    light_transform = cmds.listRelatives(object, ad=True, ap=True, fullPath=True)[0]
                     if not (light_transform in self.light_objects):
-                        self.light_objects.append(Light(self.params, cmds.listRelatives(object, ad=True, ap=True)[0]))
+                        self.light_objects.append(Light(self.params, cmds.listRelatives(object, ad=True, ap=True, fullPath=True)[0]))
                 elif (cmds.nodeType(object) == 'spotLight') and self.params['exportMayaLights']:
-                    light_transform = cmds.listRelatives(object, ad=True, ap=True)[0]
+                    light_transform = cmds.listRelatives(object, ad=True, ap=True, fullPath=True)[0]
                     if not (light_transform in self.light_objects):
-                        light_object = Light(self.params, cmds.listRelatives(object, ad=True, ap=True)[0])
+                        light_object = Light(self.params, cmds.listRelatives(object, ad=True, ap=True, fullPath=True)[0])
                         light_object.model = 'spot_light'
                         light_object.inner_angle = cmds.getAttr(object + '.coneAngle')
                         light_object.outer_angle = cmds.getAttr(object + '.coneAngle') + cmds.getAttr(object + '.penumbraAngle')
@@ -1395,8 +1395,8 @@ class Scene():
             self.environment.writeXML(doc)
 
         # write assemblies
-        shape_list = cmds.ls(g=True, v=True, noIntermediate=True)
-        light_list = cmds.ls(lt=True, v=True)
+        shape_list = cmds.ls(g=True, v=True, long=True, noIntermediate=True)
+        light_list = cmds.ls(lt=True, v=True, long=True)
 
         self.params['progress_bar_incriments'] = 100.0 / len(shape_list)
         self.params['progress_bar_progress'] = 0
@@ -1406,12 +1406,12 @@ class Scene():
                 checkExportCancelled()
                 if ms_commands.shapeIsExportable(geo):
                     # add first connected transform to the list
-                    geo_transform = cmds.listRelatives(geo, ad=True, ap=True)[0]
+                    geo_transform = cmds.listRelatives(geo, ad=True, ap=True, fullPath=True)[0]
                     geo_assembly = Assembly(self.params, geo_transform + '_assembly', [geo], geo_transform)
                     geo_assembly.writeXML(doc)
 
             for light in light_list:
-                    light_transform = cmds.listRelatives(light, ad=True, ap=True)[0]
+                    light_transform = cmds.listRelatives(light, ad=True, ap=True, fullPath=True)[0]
                     light_assembly = Assembly(self.params, light_transform + '_assembly', [light], light_transform)
                     light_assembly.writeXML(doc)
         else:
