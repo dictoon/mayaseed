@@ -1404,9 +1404,6 @@ class Scene():
         shape_list = cmds.ls(g=True, v=True, long=True, noIntermediate=True)
         light_list = cmds.ls(lt=True, v=True, long=True)
 
-        print '??', shape_list
-        print '??', light_list
-
         self.params['progress_bar_incriments'] = 100.0 / len(shape_list)
         self.params['progress_bar_progress'] = 0
 
