@@ -88,15 +88,15 @@ def ms_renderSettings_nodeInitializer():
 
     # export camera blur
     export_camera_blur_nAttr = OpenMaya.MFnNumericAttribute()
-    ms_renderSettings.export_camera_blur = export_camera_blur_nAttr.create("export_camera_blur", "camera_blur", OpenMaya.MFnNumericData.kBoolean, True)
+    ms_renderSettings.export_camera_blur = export_camera_blur_nAttr.create("export_camera_blur", "camera_blur", OpenMaya.MFnNumericData.kBoolean, False)
 
     # export transformation blur
     export_transformation_blur_nAttr = OpenMaya.MFnNumericAttribute()
-    ms_renderSettings.export_transformation_blur = export_transformation_blur_nAttr.create("export_transformation_blur", "transformation_blur", OpenMaya.MFnNumericData.kBoolean, True)
+    ms_renderSettings.export_transformation_blur = export_transformation_blur_nAttr.create("export_transformation_blur", "transformation_blur", OpenMaya.MFnNumericData.kBoolean, False)
 
     # export deformation blur
     export_deformation_blur_nAttr = OpenMaya.MFnNumericAttribute()
-    ms_renderSettings.export_deformation_blur = export_deformation_blur_nAttr.create("export_deformation_blur", "deformation_blur", OpenMaya.MFnNumericData.kBoolean, True)
+    ms_renderSettings.export_deformation_blur = export_deformation_blur_nAttr.create("export_deformation_blur", "deformation_blur", OpenMaya.MFnNumericData.kBoolean, False)
 
     # motion samples
     motion_samples_AttrInt = OpenMaya.MFnNumericAttribute()
