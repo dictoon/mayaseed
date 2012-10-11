@@ -347,7 +347,7 @@ def get_maya_scene(params):
 
 class MTransform():
 
-    """ lightweight class representing info for a maya transform node """
+    """ lightweight class representing info for a Maya transform node """
 
     def __init__(self, params, maya_transform_name, parent):
         self.params = params
@@ -409,7 +409,7 @@ class MTransform():
 
 class MTransformChild():
 
-    """ base class for all classes representing maya scene entities """
+    """ base class for all classes representing Maya scene entities """
 
     def __init__(self, params, maya_entity_name, MTransform_object):
         self.params = params
@@ -425,7 +425,7 @@ class MTransformChild():
 
 class MMesh(MTransformChild):
 
-    """ lightweight class representing maya mesh data """
+    """ lightweight class representing Maya mesh data """
 
     def __init__(self, params, maya_mesh_name, MTransform_object):
         MTransformChild.__init__(self, params, maya_mesh_name, MTransform_object)        
@@ -444,7 +444,7 @@ class MMesh(MTransformChild):
 
 class MLight(MTransformChild):
 
-    """ lightweight class representing maya light data """
+    """ lightweight class representing Maya light data """
 
     def __init__(self, params, maya_light_name, MTransform_object):
         MTransformChild.__init__(self, params, maya_light_name, MTransform_object)
@@ -464,7 +464,7 @@ class MLight(MTransformChild):
 
 class MCamera(MTransformChild):
 
-    """ lightweight class representing maya camera data """
+    """ lightweight class representing Maya camera data """
 
     def __init__(self, params, maya_camera_name, MTransform_object):
         MTransformChild.__init__(self, params, maya_camera_name, MTransform_object)
@@ -500,7 +500,7 @@ class MCamera(MTransformChild):
 
 class MMsMaterial():
 
-    """ lightweight class representing maya material nodes """
+    """ lightweight class representing Maya material nodes """
 
     def __init__(self, params, maya_ms_material_name):
         self.name = maya_ms_material_name
@@ -513,7 +513,7 @@ class MMsMaterial():
 
 class MMsShadingNode():
 
-    """ lightweight class representing maya shading nodes """
+    """ lightweight class representing Maya shading nodes """
 
     def __init__(self, params, maya_ms_shading_node_name, entity_defs):
         self.name = maya_ms_shading_node_name
@@ -525,7 +525,7 @@ class MMsShadingNode():
 
 class MFile():
 
-    """ lightweight class representing maya file nodes """
+    """ lightweight class representing Maya file nodes """
 
     def __init__(self, params, maya_file_node):
         self.name = maya_file_node
