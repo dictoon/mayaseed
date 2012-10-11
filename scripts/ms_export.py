@@ -157,11 +157,11 @@ def writeTransform(doc, scale = 1, object=False, motion=False, motion_samples=2)
 def get_maya_params(render_settings_node):
     print('getting params from ui')
 
-    params = {'error':False}
+    params = {'error': False}
 
     params['entityDefs'] = ms_commands.getEntityDefs(os.path.join(ms_commands.ROOT_DIRECTORY, 'scripts', 'appleseedEntityDefs.xml'))
 
-    # main settings
+    # Main settings.
     params['outputDir'] = cmds.getAttr(render_settings_node + '.output_directory')
     params['fileName'] = cmds.getAttr(render_settings_node + '.output_file')
     params['convertShadingNodes'] = cmds.getAttr(render_settings_node + '.convert_shading_nodes_to_textures')
@@ -179,19 +179,17 @@ def get_maya_params(render_settings_node):
     params['animatedTextures'] = cmds.getAttr(render_settings_node + '.export_animated_textures')
     params['scene_scale'] = 1
     
-    # Advanced options
-    # scene
+    # Advanced options.
     if cmds.listConnections(render_settings_node + '.environment'):
         params['environment'] = cmds.listRelatives(cmds.listConnections(render_settings_node + '.environment')[0])[0]
     else:
         params['environment'] = False
 
-    # cameras
+    # Cameras.
     # params['sceneCameraExportAllCameras'] = cmds.checkBox('ms_sceneCameraExportAllCameras', query=True, value=True)
     params['sceneCameraDefaultThinLens'] = cmds.getAttr(render_settings_node + '.export_all_cameras_as_thinlens')
     
-    #assemblies
-    #materials
+    # Materials.
     params['matLambertBSDF'] = 'Lambertian'
     params['matLambertEDF'] = 'None'
     params['matLambertSurfaceShader'] = 'Physical'
@@ -208,13 +206,13 @@ def get_maya_params(render_settings_node):
     params['matDefaultEDF'] = 'None'
     params['matDefaultSurfaceShader'] = 'Physical'
 
-    # output 
+    # Output.
     if cmds.listConnections(render_settings_node + '.camera'):
         params['outputCamera'] = cmds.listConnections(render_settings_node + '.camera')[0]
     else:
         cmds.warning("no camera connected to {0}, using \"persp\"".format(render_settings_node))
         params['outputCamera'] = 'persp'
-    
+
     if cmds.getAttr(render_settings_node + '.color_space') == 1:
         params['outputColorSpace'] = 'linear_rgb'
     elif cmds.getAttr(render_settings_node + '.color_space') == 2:
@@ -227,14 +225,10 @@ def get_maya_params(render_settings_node):
     params['output_res_width'] = cmds.getAttr(render_settings_node + '.width')
     params['output_res_height'] = cmds.getAttr(render_settings_node + '.height')
 
-    # configuration
-    # custom Final config
+    # Custom final configuration.
+
     params['customFinalConfigCheck'] = cmds.getAttr(render_settings_node + '.export_custom_final_config')
     params['customFinalConfigEngine'] = cmds.getAttr(render_settings_node + '.final_lighting_engine')
-
-    params['customFinalConfigMinSamples'] = cmds.getAttr(render_settings_node + '.min_samples')
-    params['customFinalConfigMaxSamples'] = cmds.getAttr(render_settings_node + '.max_samples')
-
 
     params['drtDLBSDFSamples'] = cmds.getAttr(render_settings_node + '.drt_dl_bsdf_samples')
     params['drtDLLightSamples'] = cmds.getAttr(render_settings_node + '.drt_dl_light_samples')
@@ -265,11 +259,11 @@ def get_maya_params(render_settings_node):
     else:
         params['gtrSampler'] = 'adaptive'
 
-    # select obj exporter
-    if cmds.pluginInfo(('ms_export_obj_' + str(int(mel.eval('getApplicationVersionAsFloat()')))), query=True, r=True):
+    # Select obj exporter.
+    if cmds.pluginInfo('ms_export_obj_' + str(int(mel.eval('getApplicationVersionAsFloat()'))), query=True, r=True):
         params['obj_exporter'] = ms_commands.export_obj
     else:
-        cmds.warning("no compiled obj exporter present, exporting using python obj exporter")
+        cmds.warning("no native obj exporter found, exporting using Python obj exporter.")
         params['obj_exporter'] = ms_export_obj.export
 
     params['verbose_output'] = cmds.getAttr(render_settings_node + '.verbose_output')
@@ -1458,21 +1452,17 @@ class Configurations():
 
         doc.startElement("configurations")
 
-        # add base interactive config
+        # Emit interactive configuration.
         doc.appendElement('configuration name="interactive" base="base_interactive"')
 
-        # if 'customise final configuration' is set read customised values
+        # Emit final configuration.
         if self.params['customFinalConfigCheck']:
-            print('writing custom final config')
             doc.startElement('configuration name="final" base="base_final"')
 
             if self.params['customFinalConfigEngine'] == 0:
-                engine = 'pt'
+                doc.appendParameter('lighting_engine', 'pt')
             else:
-                engine = 'drt'
-            doc.appendParameter('lighting_engine', engine)
-            doc.appendParameter('min_samples', self.params['customFinalConfigMaxSamples'])
-            doc.appendParameter('max_samples', self.params['customFinalConfigMaxSamples'])
+                doc.appendParameter('lighting_engine', 'drt')
             
             doc.startElement('parameters name="drt"')
             doc.appendParameter('dl_bsdf_samples', self.params['drtDLBSDFSamples'])
@@ -1516,17 +1506,16 @@ class Configurations():
 
             doc.startElement('parameters name="generic_tile_renderer"')
             doc.appendParameter('filter_size', self.params['gtrFilterSize'])
-            doc.appendParameter('max_contrast', self.params['gtrMaxContrast'])
-            doc.appendParameter('max_samples', self.params['gtrMaxSamples'])
-            doc.appendParameter('max_variation', self.params['gtrMaxVariation'])
-            doc.appendParameter('min_samples', self.params['gtrMinSamples'])
             doc.appendParameter('sampler', self.params['gtrSampler'])
+            doc.appendParameter('min_samples', self.params['gtrMinSamples'])
+            doc.appendParameter('max_samples', self.params['gtrMaxSamples'])
+            doc.appendParameter('max_contrast', self.params['gtrMaxContrast'])
+            doc.appendParameter('max_variation', self.params['gtrMaxVariation'])
             doc.endElement('parameters')
 
             doc.endElement("configuration")
 
-        else:   # otherwise add default configurations
-            print('writing default final config')
+        else:
             doc.appendElement('configuration name="final" base="base_final"')
 
         doc.endElement('configurations')
