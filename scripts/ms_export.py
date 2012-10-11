@@ -162,12 +162,11 @@ def get_maya_params(render_settings_node):
     params['entityDefs'] = ms_commands.getEntityDefs(os.path.join(ms_commands.ROOT_DIRECTORY, 'scripts', 'appleseedEntityDefs.xml'))
 
     # Main settings.
-    params['outputDir'] = cmds.getAttr(render_settings_node + '.output_directory')
-    params['fileName'] = cmds.getAttr(render_settings_node + '.output_file')
+    params['output_directory'] = cmds.getAttr(render_settings_node + '.output_directory')
+    params['file_name'] = cmds.getAttr(render_settings_node + '.output_file')
     params['convertShadingNodes'] = cmds.getAttr(render_settings_node + '.convert_shading_nodes_to_textures')
     params['convertTexturesToExr'] = cmds.getAttr(render_settings_node + '.convert_textures_to_exr')
     params['overwrite_existing_textures'] = cmds.getAttr(render_settings_node + '.overwrite_existing_textures')
-    params['fileName'] = cmds.getAttr(render_settings_node + '.output_file')
     params['export_camera_blur'] = cmds.getAttr(render_settings_node + '.export_camera_blur')
     params['exportMayaLights'] = cmds.getAttr(render_settings_node + '.export_maya_lights')
     params['export_transformation_blur'] = cmds.getAttr(render_settings_node + '.export_transformation_blur')
@@ -267,7 +266,6 @@ def get_maya_params(render_settings_node):
         params['obj_exporter'] = ms_export_obj.export
 
     params['verbose_output'] = cmds.getAttr(render_settings_node + '.verbose_output')
-
     return params
 
 
@@ -307,28 +305,49 @@ def get_maya_scene(params):
     if params['export_transformation_blur'] or params['export_deformation_blur'] or params['export_camera_blur']:
         end_frame += 1
 
+    # compute the base output directory
+    scene_filepath = cmds.file(q=True, sceneName=True)
+    scene_basename = os.path.splitext(os.path.basename(scene_filepath))[0]
+    if len(scene_basename) == 0:
+        scene_basename = "Untitled"
+    project_directory = cmds.workspace(q=True, rd=True)
+    params['output_directory'] = params['output_directory'].replace("<ProjectDir>", project_directory)
+    params['output_directory'] = params['output_directory'].replace("<SceneName>", scene_basename)
+
+    texture_dir = ms_commands.create_dir(os.path.join(params['output_directory'], 'textures'))
+
     # add motion samples
     current_frame = start_frame
 
     while current_frame <= end_frame:
         cmds.currentTime(current_frame)
+        rounded_time = '%.6f' % current_frame
 
-        if params['export_transformation_blur']:
+        # create frame output directories
+        frame_dir = ms_commands.create_dir(os.path.join(params['output_directory'], rounded_time))
+        geo_dir = ms_commands.create_dir(os.path.join(frame_dir, 'geometry'))
+
+        if params['export_transformation_blur'] or (current_frame == start_frame):
             print '// adding transform samples, frame', current_frame
             for transform in maya_root_transforms:
+                transform.add_transform_sample()
                 for descendant_transform in transform.descendant_transforms:
                     descendant_transform.add_transform_sample()
 
-        if params['export_deformation_blur']:
+        if params['export_deformation_blur'] or (current_frame == start_frame):
             print '// adding deformation samples, frame', current_frame
             for transform in maya_root_transforms:
                 for mesh in transform.descendant_meshes:
-                    mesh.add_deform_sample()
+                    mesh.add_deform_sample(geo_dir, current_frame)
+                for mesh in transform.child_meshes:
+                    mesh.add_deform_sample(geo_dir, current_frame)
 
-        if params['export_camera_blur']:
+        if params['export_camera_blur'] or (current_frame == start_frame):
             print '// adding camera transformation samples, frame', current_frame
             for transform in maya_root_transforms:
                 for camera in transform.descendant_cameras:
+                    camera.add_matrix_sample()
+                for camera in transform.child_cameras:
                     camera.add_matrix_sample()
 
         current_frame += sample_increment
@@ -400,7 +419,7 @@ class MTransform():
                 self.descendant_transforms += new_transform.child_transforms
 
     def add_transform_sample(self):
-        self.matrix.append(cmds.xform(self.name, query=True, matrix=True))
+        self.matricies.append(cmds.xform(self.name, query=True, matrix=True))
 
 
 #--------------------------------------------------------------------------------------------------
@@ -435,7 +454,7 @@ class MMesh(MTransformChild):
     def add_deform_sample(self, mesh_dir, time):
         file_name = '{0}_{1}.obj'.format(self.safe_name, time)
         output_file_path = os.path.join(mesh_dir, file_name)
-        self.mesh_names.append(ms_commands.export_obj(self.safe_name, file_path, overwrite=True))
+        self.mesh_names.append(ms_commands.export_obj(self.safe_name, output_file_path, overwrite=True))
 
 
 #--------------------------------------------------------------------------------------------------
@@ -532,6 +551,24 @@ class MFile():
         self.safe_name = ms_commands.legalizeName(self.name)
         self.image_name = cmds.getAttr(self.name + '.fileTextureName')
         self.resolved_image_name = ms_commands.getFileTextureName(self.name)
+        self.resolved_image_names = []
+
+    def add_image_sample(self):
+        self.resolved_image_names.append(ms_commands.getFileTextureName(self.name))
+
+#--------------------------------------------------------------------------------------------------
+# MMsEnvironment class.
+#--------------------------------------------------------------------------------------------------
+
+class MMsEnvironment():
+
+    """ lightweight class representing Maya ms_environment nodes """
+
+    def __init__(self, maya_ms_environment_node):
+        self.name = maya_ms_environment_node
+        self.safe_name = ms_commands.legalizeName(self.name)
+
+
 
 
 #--------------------------------------------------------------------------------------------------
@@ -1561,8 +1598,8 @@ def export_container(render_settings_node):
     if len(scene_basename) == 0:
         scene_basename = "Untitled"
     project_directory = cmds.workspace(q=True, rd=True)
-    params['outputDir'] = params['outputDir'].replace("<ProjectDir>", project_directory)
-    params['outputDir'] = params['outputDir'].replace("<SceneName>", scene_basename)
+    params['output_directory'] = params['output_directory'].replace("<ProjectDir>", project_directory)
+    params['output_directory'] = params['output_directory'].replace("<SceneName>", scene_basename)
 
     if params['export_animation']:
         start_frame = params['animation_start_frame']
@@ -1585,20 +1622,20 @@ def export_container(render_settings_node):
         frame_name = '{0:04}'.format(int(current_frame))
 
         # compute the output file path
-        filename = params['fileName']
+        filename = params['file_name']
         filename = filename.replace("<SceneName>", scene_basename)
         filename = filename.replace("#", frame_name)
-        filepath = os.path.join(params['outputDir'], filename)
+        filepath = os.path.join(params['output_directory'], filename)
 
         # directory for geometry
         params['geo_dir'] = os.path.join(frame_name, "geometry")
-        params['absolute_geo_dir'] = os.path.join(params['outputDir'], params['geo_dir'])
+        params['absolute_geo_dir'] = os.path.join(params['output_directory'], params['geo_dir'])
 
         # directory for textures
         params['tex_dir'] = 'textures'
         if params['animatedTextures']:
             params['tex_dir'] = os.path.join(frame_name, params['tex_dir'])
-        params['absolute_tex_dir'] = os.path.join(params['outputDir'], params['tex_dir'])
+        params['absolute_tex_dir'] = os.path.join(params['output_directory'], params['tex_dir'])
 
         # create directories if they don't exist yet
         safe_make_dirs(params['absolute_geo_dir'])
