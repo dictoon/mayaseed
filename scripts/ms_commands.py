@@ -662,3 +662,16 @@ def get_attached_materials(mesh_name):
         return cmds.listConnections(shading_engine[0] + ".surfaceShader")
     else:
         return None
+
+#--------------------------------------------------------------------------------------------------
+# creates a directory if it doesnt already exist
+#--------------------------------------------------------------------------------------------------
+
+def create_dir(path):
+
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    return path
+
+
