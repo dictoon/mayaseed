@@ -1024,6 +1024,7 @@ class Geometry():
         checkExportCancelled()
         self.params = params
         self.name = name
+        self.short_name = ms_commands.legalizeName(self.name.split('|')[-1])
         self.safe_name = ms_commands.legalizeName(name)
 
         self.hierarchy_name = name
@@ -1075,7 +1076,7 @@ class Geometry():
 
     def writeXMLInstance(self, doc):
         print('writing object instance: '+ self.name)
-        doc.startElement('object_instance name="{0}.0_inst" object="{1}.0"'.format(self.safe_name, self.safe_name))
+        doc.startElement('object_instance name="{0}.0_inst" object="{1}.0"'.format(self.short_name, self.short_name))
 
         if self.params['export_transformation_blur']:
             # write 0 transform as the assembly will handle that
@@ -1222,7 +1223,7 @@ class Assembly():
 
         # export and write objects
         for geo in self.geo_objects:
-            file_name = ms_commands.legalizeName(geo.name)
+            file_name = ms_commands.legalizeName(geo.short_name)
 
             doc.startElement('object name="{0}" model="mesh_object"'.format(file_name))
 
