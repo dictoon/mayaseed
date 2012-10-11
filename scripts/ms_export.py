@@ -323,7 +323,7 @@ def get_maya_scene(params):
 
 class MTransform():
 
-    """ lightweight class representing info for a maya transform node """
+    """ lightweight class representing info for a Maya transform node """
 
     def __init__(self, params, maya_transform_name, parent):
         self.params = params
@@ -385,7 +385,7 @@ class MTransform():
 
 class MTransformChild():
 
-    """ base class for all classes representing maya scene entities """
+    """ base class for all classes representing Maya scene entities """
 
     def __init__(self, params, maya_entity_name, MTransform_object):
         self.params = params
@@ -402,7 +402,7 @@ class MTransformChild():
 
 class MMesh(MTransformChild):
 
-    """ lightweight class representing maya mesh data """
+    """ lightweight class representing Maya mesh data """
 
     def __init__(self, params, maya_mesh_name, MTransform_object):
         MTransformChild.__init__(self, params, maya_mesh_name, MTransform_object)        
@@ -421,7 +421,7 @@ class MMesh(MTransformChild):
 
 class MLight(MTransformChild):
 
-    """ lightweight class representing maya light data """
+    """ lightweight class representing Maya light data """
 
     def __init__(self, params, maya_light_name, MTransform_object):
         MTransformChild.__init__(self, params, maya_light_name, MTransform_object)
@@ -440,7 +440,7 @@ class MLight(MTransformChild):
 
 class MCamera(MTransformChild):
 
-    """ lightweight class representing maya camera data """
+    """ lightweight class representing Maya camera data """
 
     def __init__(self, params, maya_camera_name, MTransform_object):
         MTransformChild.__init__(self, params, maya_camera_name, MTransform_object)
@@ -476,7 +476,7 @@ class MCamera(MTransformChild):
 
 class MMsMaterial():
 
-    """ lightweight class representing maya material nodes """
+    """ lightweight class representing Maya material nodes """
 
     def __init__(self, params, maya_ms_material_name):
         self.name = maya_ms_material_name
@@ -489,11 +489,25 @@ class MMsMaterial():
 
 class MMsShadingNode():
 
-    """ lightweight class representing maya shading nodes """
+    """ lightweight class representing Maya shading nodes """
 
     def __init__(self, params, maya_ms_shading_node_name, entity_defs):
-        self.name = name
+        self.name = maya_ms_shading_node_name
         self.safe_name = ms_commands.legalizeName(self.name)
+
+#--------------------------------------------------------------------------------------------------
+# MFile class.
+#--------------------------------------------------------------------------------------------------
+
+class MFile():
+
+    """ lightweight class representing Maya file nodes """
+
+    def __init__(self, params, maya_file_node):
+        self.name = maya_file_node
+        self.safe_name = ms_commands.legalizeName(self.name)
+        self.image_name = cmds.getAttr(self.name + '.fileTextureName')
+        self.resolved_image_name = ms_commands.getFileTextureName(self.name)
 
 
 #--------------------------------------------------------------------------------------------------
@@ -983,6 +997,7 @@ class Geometry():
         check_export_cancelled()
         self.params = params
         self.name = name
+        self.short_name = ms_commands.legalizeName(self.name.split('|')[-1])
         self.safe_name = ms_commands.legalizeName(name)
 
         self.hierarchy_name = name
@@ -1027,7 +1042,7 @@ class Geometry():
         return self.shading_nodes
 
     def writeXMLInstance(self, doc):
-        object_name = self.safe_name + ".0"
+        object_name = self.short_name + ".0"
         instance_name = object_name + "_inst"
 
         print("Writing object instance {0}...".format(instance_name))
@@ -1177,7 +1192,7 @@ class Assembly():
 
         # export and write objects
         for geo in self.geo_objects:
-            file_name = ms_commands.legalizeName(geo.name)
+            file_name = ms_commands.legalizeName(geo.short_name)
 
             doc.startElement('object name="{0}" model="mesh_object"'.format(file_name))
 
