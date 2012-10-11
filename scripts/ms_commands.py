@@ -394,7 +394,7 @@ def createShadingNode(model, entity_defs_obj=False):
 
 
 #--------------------------------------------------------------------------------------------------
-# Get file texture node file name with correct frame number.
+# Get file texture node file name with correct frame number. DEPRECIATED in favor of get_file_textureName
 #--------------------------------------------------------------------------------------------------
 
 def getFileTextureName(file_node):
@@ -428,6 +428,45 @@ def getFileTextureName(file_node):
         file_texture_name = split_file_texture_name[0] + '.' + frame_number + '.' + split_file_texture_name[2]
 
     return file_texture_name 
+
+
+#--------------------------------------------------------------------------------------------------
+# Get file texture node file name with correct frame number.
+#--------------------------------------------------------------------------------------------------
+
+def get_file_textureName(file_node, frame):
+    maya_file_texture_name = cmds.getAttr(file_node + '.fileTextureName')
+
+    if sys.platform == 'darwin':
+        maya_file_texture_name = maya_file_texture_name.replace('\\', '/')
+    elif sys.platform == 'win32':
+        maya_file_texture_name = maya_file_texture_name.replace('/', '\\')
+
+    if os.path.exists(maya_file_texture_name):
+        file_texture_name = maya_file_texture_name
+    else:
+        project_directory = cmds.workspace(q=True, rd=True)
+        file_name = os.path.split(maya_file_texture_name)[1]
+        project_relative_path = os.path.join(project_directory, 'sourceimages', file_name)
+        if os.path.exists(project_relative_path):
+            file_texture_name = project_relative_path
+            cmds.warning("file not found: {0}, using equivalent texture from sourceimages".format(maya_file_texture_name))
+        else:
+            error_msg = "file not found: {0}".format(maya_file_texture_name)
+            cmds.error(error_msg)
+            raise RuntimeError(error_msg)
+
+    if cmds.getAttr(file_node + '.useFrameExtension'):
+        split_file_texture_name = maya_file_texture_name.split('.')
+        frame_ofset = cmds.getAttr(file_node + '.frameOffset')
+        frame_padding = len(split_file_texture_name[1])
+        frame_number = str(int(frame + frame_ofset)).zfill(frame_padding)
+        file_texture_name = split_file_texture_name[0] + '.' + frame_number + '.' + split_file_texture_name[2]
+
+    return file_texture_name 
+
+
+
 
 
 #--------------------------------------------------------------------------------------------------

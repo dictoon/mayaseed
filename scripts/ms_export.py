@@ -337,18 +337,26 @@ def get_maya_scene(params):
         if params['export_deformation_blur'] or (current_frame == start_frame):
             print '// adding deformation samples, frame', current_frame
             for transform in maya_root_transforms:
-                for mesh in transform.descendant_meshes:
-                    mesh.add_deform_sample(geo_dir, current_frame)
-                for mesh in transform.child_meshes:
+                for mesh in (transform.descendant_meshes + transform.child_meshes):
                     mesh.add_deform_sample(geo_dir, current_frame)
 
         if params['export_camera_blur'] or (current_frame == start_frame):
             print '// adding camera transformation samples, frame', current_frame
             for transform in maya_root_transforms:
-                for camera in transform.descendant_cameras:
+                for camera in (transform.descendant_cameras + transform.child_cameras):
                     camera.add_matrix_sample()
-                for camera in transform.child_cameras:
-                    camera.add_matrix_sample()
+
+        # output textures
+        for transform in maya_root_transforms:
+            for mesh in (transform.child_meshes + transform.descendant_meshes):
+                for material in mesh.materials:
+                    for texture in material.textures:
+                        # if its the first frame of the animation force a sample
+                        # otherwise only add samples for animated textures
+                        if texture.is_animated:
+                            texture.add_image_sample(texture_dir, current_frame)
+                        elif current_frame == start_frame:
+                            texture.add_image_sample(texture_dir, current_frame)
 
         current_frame += sample_increment
 
@@ -447,14 +455,21 @@ class MMesh(MTransformChild):
     """ lightweight class representing Maya mesh data """
 
     def __init__(self, params, maya_mesh_name, MTransform_object):
-        MTransformChild.__init__(self, params, maya_mesh_name, MTransform_object)        
-        self.material_names = ms_commands.get_attached_materials(self.name)
-        self.mesh_names = []
+        MTransformChild.__init__(self, params, maya_mesh_name, MTransform_object)                
+        self.mesh_file_names = []
+        self.materials = []
+
+        attached_material_names = ms_commands.get_attached_materials(self.name)
+
+        if attached_material_names is not None:
+            for material_name in attached_material_names:
+                if cmds.nodeType(material_name) == 'ms_appleseed_material':
+                    self.materials.append(MMsMaterial(self.params, material_name))
 
     def add_deform_sample(self, mesh_dir, time):
         file_name = '{0}_{1}.obj'.format(self.safe_name, time)
         output_file_path = os.path.join(mesh_dir, file_name)
-        self.mesh_names.append(ms_commands.export_obj(self.safe_name, output_file_path, overwrite=True))
+        self.mesh_file_names.append(ms_commands.export_obj(self.safe_name, output_file_path, overwrite=True))
 
 
 #--------------------------------------------------------------------------------------------------
@@ -514,6 +529,86 @@ class MCamera(MTransformChild):
 
 
 #--------------------------------------------------------------------------------------------------
+# MFile class.
+#--------------------------------------------------------------------------------------------------
+
+class MFile():
+
+    """ lightweight class representing Maya file nodes """
+
+    def __init__(self, params, maya_file_node):
+        self.params = params
+        self.name = maya_file_node
+        self.safe_name = ms_commands.legalizeName(self.name)
+        self.image_name = cmds.getAttr(self.name + '.fileTextureName')
+        self.resolved_image_name = ms_commands.getFileTextureName(self.name)
+        self.image_file_names = []
+        self.is_animated = cmds.getAttr(self.name + '.useFrameExtension')
+        self.alpha_is_luminance = cmds.getAttr(self.name + '.alphaIsLuminance')
+
+        texture_placement_node = ms_commands.getConnectedNode(self.name + '.uvCoord')
+        if texture_placement_node is not None:
+            self.has_uv_placement = True
+            self.repeat_u = cmds.getAttr(texture_placement_node + '.repeatU')
+            self.repeat_v = cmds.getAttr(texture_placement_node + '.repeatV')
+        else:
+            self.has_uv_placement = False
+
+    def add_image_sample(self, output_directory, time):
+        image_name = ms_commands.get_file_textureName(self.name, time)
+
+        if self.params['convertTexturesToExr']:
+            converted_image = ms_commands.convertTexToExr(image_name, output_directory, overwrite=self.params['overwrite_existing_textures'], pass_through=False)
+            self.image_file_names.append(converted_image)
+        else:
+            self.image_file_names.append(image_name)
+
+#--------------------------------------------------------------------------------------------------
+# MMsEnvironment class.
+#--------------------------------------------------------------------------------------------------
+
+class MMsEnvironment():
+
+    """ lightweight class representing Maya ms_environment nodes """
+
+    def __init__(self, params, maya_ms_environment_node):
+        self.name = maya_ms_environment_node
+        self.safe_name = ms_commands.legalizeName(self.name)
+
+        self.model = cmds.getAttr(self.name + '.model')
+
+        # ********** key *************
+        # Constant Environment = 0
+        # Gradient Environment = 1
+        # Latitude Longitude Map = 2
+        # Mirrorball Map = 3
+
+        self.constant_exitance = cmds.getAttr(self.name + '.constant_exitance')
+        self.gradient_horizon_exitance = cmds.getAttr(self.name + '.gradient_horizon_exitance')
+        self.gradient_zenith_exitance = cmds.getAttr(self.name + '.gradient_zenith_exitance')
+        self.latitude_longitude_exitance = cmds.getAttr(self.name + '.latitude_longitude_exitance')
+        self.mirrorball_exitance = cmds.getAttr(self.name + '.mirrorball_exitance')
+        self.exitance_multiplier = cmds.getAttr(self.name + '.exitance_multiplier')
+
+#--------------------------------------------------------------------------------------------------
+# MColor class.
+#--------------------------------------------------------------------------------------------------
+
+class MColorConnection():
+
+        """ lightweight class representing Maya color connections, although these are not Maya nodes we define an M class for ease of use"""
+
+        def __init__(self, params, color_connection):
+            self.name = color_connection
+            self.safe_name = ms_commands.legalizeName(self.name)
+            self.color_value = cmds.getAttr(self.name)
+            self.normalized_color = ms_commands.normalizeRGB(cmds.getAttr(self.name)[0])[:3]
+            self.multiplier = ms_commands.normalizeRGB(cmds.getAttr(self.name)[0])[3]
+            self.connected_node = ms_commands.getConnectedNode(self.name)
+            if self.connected_node is not None:
+                self.connected_node_type = cmds.nodeType(self.connected_node)
+
+#--------------------------------------------------------------------------------------------------
 # MMsMaterial class.
 #--------------------------------------------------------------------------------------------------
 
@@ -522,8 +617,76 @@ class MMsMaterial():
     """ lightweight class representing Maya material nodes """
 
     def __init__(self, params, maya_ms_material_name):
+        self.params = params
         self.name = maya_ms_material_name
-        self.safe_name = ms_commandslegalizeName(self.name)
+        self.safe_name = ms_commands.legalizeName(self.name)
+
+        self.shading_nodes = []
+        self.colors = []
+        self.textures = []
+
+        self.duplicate_shaders = cmds.getAttr(self.name + '.duplicate_front_attributes_on_back')
+
+        self.enable_front = cmds.getAttr(self.name + '.enable_front_material')
+        self.enable_back = cmds.getAttr(self.name + '.enable_back_material')
+
+        self.bsdf_front = self.get_connections(self.name + '.BSDF_front_color')
+        self.edf_front = self.get_connections(self.name + '.EDF_front_color')
+        self.surface_shader_front = self.get_connections(self.name + '.surface_shader_front_color')
+        self.normal_map_front = self.get_connections(self.name + '.normal_map_front_color')
+        self.alpha_map = self.get_connections(self.name + '.alpha_map_color')
+
+        # only use front shaders on back if box is checked
+        if not self.duplicate_shaders:
+            self.bsdf_back = self.get_connections(self.name + '.BSDF_back_color')
+            self.edf_back = self.get_connections(self.name + '.EDF_back_color')
+            self.surface_shader_back = self.get_connections(self.name + '.surface_shader_back_color')
+            self.normal_map_back = self.get_connections(self.name + '.normal_map_back_color')
+
+            self.shading_nodes += [self.bsdf_front,
+                                   self.bsdf_back,
+                                   self.edf_front,
+                                   self.edf_back,
+                                   self.surface_shader_front,
+                                   self.surface_shader_back]
+
+            self.textures = self.textures + [self.normal_map_front,
+                                             self.normal_map_back,
+                                             self.alpha_map]
+
+        else: 
+            self.bsdf_back, self.edf_back, self.surface_shader_back, self.normal_map_back = self.bsdf_front, self.edf_front, self.surface_shader_front, self.normal_map_front
+
+            self.shading_nodes += [self.bsdf_front,
+                                   self.edf_front,
+                                   self.surface_shader_front]
+
+            if self.normal_map_front is not None:
+                  self.textures.append(self.normal_map_front)
+            if self.alpha_map is not None:
+                self.textures.append(self.alpha_map)
+
+
+    def get_connections (self, attr_name):
+        connection = MColorConnection(self.params, attr_name)
+
+        if connection.connected_node is not None:
+            if cmds.nodeType(connection.connected_node) == 'ms_appleseed_shading_node':
+                shading_node = MMsShadingNode(self.params, connection.connected_node)
+                self.shading_nodes = self.shading_nodes + [shading_node] + shading_node.child_shading_nodes
+                self.colors += shading_node.colors
+                self.textures += shading_node.textures
+                return shading_node
+
+            elif cmds.nodeType(connection.connected_node) == 'file':
+                texture_node = MFile(self.params, connection.connected_node)
+                self.textures += [texture_node]
+                return texture_node
+
+        else:
+            return None
+
+
 
 
 #--------------------------------------------------------------------------------------------------
@@ -534,41 +697,62 @@ class MMsShadingNode():
 
     """ lightweight class representing Maya shading nodes """
 
-    def __init__(self, params, maya_ms_shading_node_name, entity_defs):
+    def __init__(self, params, maya_ms_shading_node_name):
+        self.params = params
         self.name = maya_ms_shading_node_name
         self.safe_name = ms_commands.legalizeName(self.name)
 
-#--------------------------------------------------------------------------------------------------
-# MFile class.
-#--------------------------------------------------------------------------------------------------
+        self.type = cmds.getAttr(self.name + '.node_type')    #bsdf, edf etc
+        self.model = cmds.getAttr(self.name + '.node_model')  #lambertian etc
 
-class MFile():
+        self.child_shading_nodes = []
+        self.attributes = dict()
+        self.colors = []
+        self.textures = []
 
-    """ lightweight class representing Maya file nodes """
+        #add the correct attributes based on the entity defs xml
+        for attribute_key in params['entityDefs'][self.model].attributes.keys():
+            self.attributes[attribute_key] = ''
 
-    def __init__(self, params, maya_file_node):
-        self.name = maya_file_node
-        self.safe_name = ms_commands.legalizeName(self.name)
-        self.image_name = cmds.getAttr(self.name + '.fileTextureName')
-        self.resolved_image_name = ms_commands.getFileTextureName(self.name)
-        self.resolved_image_names = []
+        for attribute_key in self.attributes.keys():
+            maya_attribute = self.name + '.' + attribute_key
 
-    def add_image_sample(self):
-        self.resolved_image_names.append(ms_commands.getFileTextureName(self.name))
+            # create variable to store the final string value
+            attribute_value = ''
 
-#--------------------------------------------------------------------------------------------------
-# MMsEnvironment class.
-#--------------------------------------------------------------------------------------------------
+            # if the attribute is a color/entity
+            if params['entityDefs'][self.model].attributes[attribute_key].type == 'entity_picker':
 
-class MMsEnvironment():
+                color_connection = MColorConnection(self.params, maya_attribute)
 
-    """ lightweight class representing Maya ms_environment nodes """
+                if color_connection.connected_node:
 
-    def __init__(self, maya_ms_environment_node):
-        self.name = maya_ms_environment_node
-        self.safe_name = ms_commands.legalizeName(self.name)
+                    # if the node is an appleseed shading node
+                    if color_connection.connected_node_type == 'ms_appleseed_shading_node':
+                        shading_node = MMsShadingNode(self.params, color_connection.connected_node)
+                        attribute_value = shading_node
+                        self.child_shading_nodes = self.child_shading_nodes + [shading_node] + shading_node.child_shading_nodes
+                        self.colors += shading_node.colors
+                        self.textures = self.textures + shading_node.textures
 
+                    # else if it's a Maya texture node
+                    elif color_connection.connected_node_type == 'file':
+                        texture_node = MFile(self.params, color_connection.connected_node)
+                        attribute_value = texture_node
+                        self.textures += [texture_node]
 
+                # no node is connected, just use the color value
+                else:
+                    attribute_value = color_connection
+
+            elif params['entityDefs'][self.model].attributes[attribute_key].type == 'dropdown_list': 
+                pass
+            # the node must be a text entity
+            else:
+                attribute_value = str(cmds.getAttr(maya_attribute))
+
+            # add attribute to dict
+            self.attributes[attribute_key] = attribute_value
 
 
 #--------------------------------------------------------------------------------------------------
