@@ -344,7 +344,7 @@ class MTransform():
         self.descendant_transforms = []
 
         # sample attributes
-        self.matricies = []
+        self.matrices = []
         self.visibility_states = []
 
         # get children
@@ -445,11 +445,10 @@ class MCamera(MTransformChild):
     def __init__(self, params, maya_camera_name, MTransform_object):
         MTransformChild.__init__(self, params, maya_camera_name, MTransform_object)
 
-        # In Maya cameras are decendents of transforms like other objects 
-        # but in appleseed they exist outside of te main assembly 
-        # for this reason we include the worldspace matrix as an attribute of the camera's transform 
-        # even though its not a 'correct' representation of the maya scene
-        self.world_space_matricies = []
+        # In Maya cameras are descendents of transforms like other objects but in appleseed they exist outside
+        # of the main assembly. For this reason we include the world space matrix as an attribute of the camera's
+        # transform even though it's not a 'correct' representation of the Maya scene.
+        self.world_space_matrices = []
 
         self.dof = (self.name + '.depthOfField' )
         self.focal_distance = cmds.getAttr(self.name + '.focusDistance') 
@@ -467,7 +466,7 @@ class MCamera(MTransformChild):
             self.film_width = self.film_height * maya_resolution_aspect 
 
     def add_matrix_sample(self):
-        self.world_space_matricies.append(cmds.xform(self.transform.name, query=True, matrix=True, ws=True))
+        self.world_space_matrices.append(cmds.xform(self.transform.name, query=True, matrix=True, ws=True))
 
 
 #--------------------------------------------------------------------------------------------------
@@ -494,6 +493,7 @@ class MMsShadingNode():
     def __init__(self, params, maya_ms_shading_node_name, entity_defs):
         self.name = maya_ms_shading_node_name
         self.safe_name = ms_commands.legalizeName(self.name)
+
 
 #--------------------------------------------------------------------------------------------------
 # MFile class.
