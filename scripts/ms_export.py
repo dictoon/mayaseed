@@ -54,21 +54,21 @@ class WriteXml():
             cmds.error(error_msg)
             raise RuntimeError(error_msg)
 
-    def startElement(self, str):
-        self.appendLine("<" + str + ">")
+    def start_element(self, str):
+        self.append_line("<" + str + ">")
         self.indentation_level += 1
         
-    def endElement(self, str):
+    def end_element(self, str):
         self.indentation_level -= 1
-        self.appendLine("</" + str + ">")
+        self.append_line("</" + str + ">")
         
-    def appendElement(self, str):
-        self.appendLine("<" + str + "/>")
+    def append_element(self, str):
+        self.append_line("<" + str + "/>")
 
-    def appendParameter(self, name, value):
-        self.appendLine('<parameter name="{0}" value="{1}" />'.format(name, value))
+    def append_parameter(self, name, value):
+        self.append_line('<parameter name="{0}" value="{1}" />'.format(name, value))
 
-    def appendLine(self, str):
+    def append_line(self, str):
         self.file_object.write(self.indentation_string() + str + "\n")
 
     def close(self):
@@ -115,17 +115,17 @@ def writeTransform(doc, scale = 1, object=False, motion=False, motion_samples=2)
             else:
                 transform = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
 
-            doc.startElement('transform time="{0:03}"'.format(i))
-            doc.appendElement('scaling value="{0}"'.format(scale))
-            doc.startElement('matrix')
+            doc.start_element('transform time="{0:03}"'.format(i))
+            doc.append_element('scaling value="{0}"'.format(scale))
+            doc.start_element('matrix')
 
-            doc.appendLine('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][0], transform[1][0], transform[2][0], transform[3][0]))
-            doc.appendLine('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][1], transform[1][1], transform[2][1], transform[3][1]))
-            doc.appendLine('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][2], transform[1][2], transform[2][2], transform[3][2]))
-            doc.appendLine('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][3], transform[1][3], transform[2][3], transform[3][3]))    
+            doc.append_line('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][0], transform[1][0], transform[2][0], transform[3][0]))
+            doc.append_line('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][1], transform[1][1], transform[2][1], transform[3][1]))
+            doc.append_line('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][2], transform[1][2], transform[2][2], transform[3][2]))
+            doc.append_line('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][3], transform[1][3], transform[2][3], transform[3][3]))    
 
-            doc.endElement('matrix')
-            doc.endElement('transform')
+            doc.end_element('matrix')
+            doc.end_element('transform')
 
         cmds.currentTime(start_time)
         cmds.select(cl=True)
@@ -137,17 +137,17 @@ def writeTransform(doc, scale = 1, object=False, motion=False, motion_samples=2)
             m = cmds.xform(object, query=True, ws=True, matrix=True)
             transform = [m[0],m[1],m[2],m[3]], [m[4],m[5],m[6],m[7]], [m[8],m[9],m[10],m[11]], [m[12],m[13],m[14],m[15]]
 
-        doc.startElement('transform')
-        doc.appendElement('scaling value="{0}"'.format(scale))
-        doc.startElement('matrix')
+        doc.start_element('transform')
+        doc.append_element('scaling value="{0}"'.format(scale))
+        doc.start_element('matrix')
 
-        doc.appendLine('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][0], transform[1][0], transform[2][0], transform[3][0]))
-        doc.appendLine('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][1], transform[1][1], transform[2][1], transform[3][1]))
-        doc.appendLine('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][2], transform[1][2], transform[2][2], transform[3][2]))
-        doc.appendLine('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][3], transform[1][3], transform[2][3], transform[3][3]))    
+        doc.append_line('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][0], transform[1][0], transform[2][0], transform[3][0]))
+        doc.append_line('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][1], transform[1][1], transform[2][1], transform[3][1]))
+        doc.append_line('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][2], transform[1][2], transform[2][2], transform[3][2]))
+        doc.append_line('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][3], transform[1][3], transform[2][3], transform[3][3]))    
 
-        doc.endElement('matrix')
-        doc.endElement('transform')
+        doc.end_element('matrix')
+        doc.end_element('transform')
 
 
 #--------------------------------------------------------------------------------------------------
@@ -374,7 +374,7 @@ def get_maya_scene(params):
 
 class MTransform():
 
-    """ lightweight class representing info for a Maya transform node """
+    """ Lightweight class representing info for a Maya transform node """
 
     def __init__(self, params, maya_transform_name, parent):
         self.params = params
@@ -436,7 +436,7 @@ class MTransform():
 
 class MTransformChild():
 
-    """ base class for all classes representing Maya scene entities """
+    """ Base class for all classes representing Maya scene entities """
 
     def __init__(self, params, maya_entity_name, MTransform_object):
         self.params = params
@@ -452,7 +452,7 @@ class MTransformChild():
 
 class MMesh(MTransformChild):
 
-    """ lightweight class representing Maya mesh data """
+    """ Lightweight class representing Maya mesh data """
 
     def __init__(self, params, maya_mesh_name, MTransform_object):
         MTransformChild.__init__(self, params, maya_mesh_name, MTransform_object)                
@@ -478,7 +478,7 @@ class MMesh(MTransformChild):
 
 class MLight(MTransformChild):
 
-    """ lightweight class representing Maya light data """
+    """ Lightweight class representing Maya light data """
 
     def __init__(self, params, maya_light_name, MTransform_object):
         MTransformChild.__init__(self, params, maya_light_name, MTransform_object)
@@ -498,7 +498,7 @@ class MLight(MTransformChild):
 
 class MCamera(MTransformChild):
 
-    """ lightweight class representing Maya camera data """
+    """ Lightweight class representing Maya camera data """
 
     def __init__(self, params, maya_camera_name, MTransform_object):
         MTransformChild.__init__(self, params, maya_camera_name, MTransform_object)
@@ -534,7 +534,7 @@ class MCamera(MTransformChild):
 
 class MFile():
 
-    """ lightweight class representing Maya file nodes """
+    """ Lightweight class representing Maya file nodes """
 
     def __init__(self, params, maya_file_node):
         self.params = params
@@ -569,7 +569,7 @@ class MFile():
 
 class MMsEnvironment():
 
-    """ lightweight class representing Maya ms_environment nodes """
+    """ Lightweight class representing Maya ms_environment nodes """
 
     def __init__(self, params, maya_ms_environment_node):
         self.name = maya_ms_environment_node
@@ -596,7 +596,7 @@ class MMsEnvironment():
 
 class MColorConnection():
 
-        """ lightweight class representing Maya color connections, although these are not Maya nodes we define an M class for ease of use"""
+        """ Lightweight class representing Maya color connections, although these are not Maya nodes we define an M class for ease of use"""
 
         def __init__(self, params, color_connection):
             self.name = color_connection
@@ -614,7 +614,7 @@ class MColorConnection():
 
 class MMsMaterial():
 
-    """ lightweight class representing Maya material nodes """
+    """ Lightweight class representing Maya material nodes """
 
     def __init__(self, params, maya_ms_material_name):
         self.params = params
@@ -695,7 +695,7 @@ class MMsMaterial():
 
 class MMsShadingNode():
 
-    """ lightweight class representing Maya shading nodes """
+    """ Lightweight class representing Maya shading nodes """
 
     def __init__(self, params, maya_ms_shading_node_name):
         self.params = params
@@ -756,6 +756,39 @@ class MMsShadingNode():
 
 
 #--------------------------------------------------------------------------------------------------
+# AsColor class.
+#--------------------------------------------------------------------------------------------------
+
+class AsColor():
+
+    """ Class representing an appleseed Color entity """
+
+    def __init__(self):
+        self.name = None
+        self.RGB_color = [0.5,0.5,0.5]
+        self.alpha = 1
+        self.multiplier = 1
+        self.color_space = 'srgb'
+        self.wavelength_range = '400.0, 700.0'
+
+    def emit_xml(self, doc):
+        print '// Writing color %s' % self.name
+        doc.start_element('color name="{0}"'.format(self.name))       
+        doc.append_parameter('color', '{0:.6f} {1:.6f} {2:.6f}'.format(self.RGB_color[0], self.RGB_color[1], self.RGB_color[2]))
+        doc.append_parameter('color_space', self.color_space)
+        doc.append_parameter('multiplier', self.multiplier)
+        doc.append_parameter('alpha', self.alpha)
+
+        doc.start_element('values')
+        doc.append_line('{0:.6f} {1:.6f} {2:.6f}'.format(self.RGB_color[0], self.RGB_color[1], self.RGB_color[2]))
+        doc.end_element('values')
+        doc.start_element('alpha')
+        doc.append_line('{0:.6f}'.format(self.alpha))
+        doc.end_element('alpha')
+        doc.end_element('color')
+
+
+#--------------------------------------------------------------------------------------------------
 # Color class.
 #--------------------------------------------------------------------------------------------------
 
@@ -770,19 +803,19 @@ class Color():
 
     def writeXML(self, doc):
         print('writing color {0}'.format(self.name))
-        doc.startElement('color name="{0}"'.format(self.name))       
-        doc.appendParameter('color', '{0:.6f} {1:.6f} {2:.6f}'.format(self.color[0], self.color[1], self.color[2]))
-        doc.appendParameter('color_space', self.color_space)
-        doc.appendParameter('multiplier', self.multiplier)
-        doc.appendParameter('alpha', self.alpha)
+        doc.start_element('color name="{0}"'.format(self.name))       
+        doc.append_parameter('color', '{0:.6f} {1:.6f} {2:.6f}'.format(self.color[0], self.color[1], self.color[2]))
+        doc.append_parameter('color_space', self.color_space)
+        doc.append_parameter('multiplier', self.multiplier)
+        doc.append_parameter('alpha', self.alpha)
 
-        doc.startElement('values')
-        doc.appendLine('{0:.6f} {1:.6f} {2:.6f}'.format(self.color[0], self.color[1], self.color[2]))
-        doc.endElement('values')
-        doc.startElement('alpha')
-        doc.appendLine('{0:.6f}'.format(self.alpha))
-        doc.endElement('alpha')
-        doc.endElement('color')
+        doc.start_element('values')
+        doc.append_line('{0:.6f} {1:.6f} {2:.6f}'.format(self.color[0], self.color[1], self.color[2]))
+        doc.end_element('values')
+        doc.start_element('alpha')
+        doc.append_line('{0:.6f}'.format(self.alpha))
+        doc.end_element('alpha')
+        doc.end_element('color')
 
 
 #--------------------------------------------------------------------------------------------------
@@ -802,18 +835,18 @@ class Texture():
 
     def writeXMLObject(self, doc):
         print('writing texture object {0}'.format(self.name))
-        doc.startElement('texture name="{0}" model="disk_texture_2d"'.format(self.name))
-        doc.appendParameter('color_space', self.color_space)
-        doc.appendParameter('filename', self.filepath)
-        doc.endElement('texture')
+        doc.start_element('texture name="{0}" model="disk_texture_2d"'.format(self.name))
+        doc.append_parameter('color_space', self.color_space)
+        doc.append_parameter('filename', self.filepath)
+        doc.end_element('texture')
 
     def writeXMLInstance(self, doc):
         print('writing texture instance {0}_inst'.format(self.name))
-        doc.startElement('texture_instance name="{0}_inst" texture="{0}"'.format(self.name, self.name))
-        doc.appendParameter('addressing_mode', 'wrap')
-        doc.appendParameter('filtering_mode', 'bilinear')
-        doc.appendParameter('alpha_mode', self.alpha_mode)
-        doc.endElement('texture_instance')
+        doc.start_element('texture_instance name="{0}_inst" texture="{0}"'.format(self.name, self.name))
+        doc.append_parameter('addressing_mode', 'wrap')
+        doc.append_parameter('filtering_mode', 'bilinear')
+        doc.append_parameter('alpha_mode', self.alpha_mode)
+        doc.end_element('texture_instance')
 
 
 #--------------------------------------------------------------------------------------------------
@@ -834,17 +867,17 @@ class Light():
 
     def writeXML(self, doc):
         print('writing light: {0}'.format(self.name))
-        doc.startElement('light name="{0}" model="{1}"'.format(self.name, self.model))
+        doc.start_element('light name="{0}" model="{1}"'.format(self.name, self.model))
 
         # add spot light attribs if they exist
         if self.model == 'spot_light':
-            doc.appendParameter('inner_angle', self.inner_angle)
-            doc.appendParameter('outer_angle', self.outer_angle)
+            doc.append_parameter('inner_angle', self.inner_angle)
+            doc.append_parameter('outer_angle', self.outer_angle)
 
-        doc.appendParameter('exitance', self.color_name)
+        doc.append_parameter('exitance', self.color_name)
 
         writeTransform(doc, self.params['scene_scale'], self.name, self.params['export_transformation_blur'], self.params['motion_samples'])
-        doc.endElement('light')
+        doc.end_element('light')
 
 
 #--------------------------------------------------------------------------------------------------
@@ -924,44 +957,44 @@ class Material():
         if self.duplicate_shaders:
             if self.enable_front:
                 print('writing material {0}'.format(self.name))
-                doc.startElement('material name="{0}" model="generic_material"'.format(self.name))
+                doc.start_element('material name="{0}" model="generic_material"'.format(self.name))
                 if self.bsdf_front:
-                    doc.appendParameter('bsdf', self.bsdf_front.name)
+                    doc.append_parameter('bsdf', self.bsdf_front.name)
                 if self.edf_front:
-                    doc.appendParameter('edf', self.edf_front.name)
-                doc.appendParameter('surface_shader', self.surface_shader_front.name)
+                    doc.append_parameter('edf', self.edf_front.name)
+                doc.append_parameter('surface_shader', self.surface_shader_front.name)
                 if self.alpha_map:
-                    doc.appendParameter('alpha_map', self.alpha_map.name + '_inst')
+                    doc.append_parameter('alpha_map', self.alpha_map.name + '_inst')
                 if self.normal_map_front:
-                    doc.appendParameter('normal_map', self.normal_map_front.name + '_inst')
-                doc.endElement('material')
+                    doc.append_parameter('normal_map', self.normal_map_front.name + '_inst')
+                doc.end_element('material')
         else:
             if self.enable_front:
                 print('writing material {0}_front'.format(self.name))
-                doc.startElement('material name="{0}_front" model="generic_material"'.format(self.name))
+                doc.start_element('material name="{0}_front" model="generic_material"'.format(self.name))
                 if self.bsdf_front:
-                    doc.appendParameter('bsdf', self.bsdf_front.name)
+                    doc.append_parameter('bsdf', self.bsdf_front.name)
                 if self.edf_front:
-                    doc.appendParameter('edf', self.edf_front.name)
-                doc.appendParameter('surface_shader', self.surface_shader_front.name)
+                    doc.append_parameter('edf', self.edf_front.name)
+                doc.append_parameter('surface_shader', self.surface_shader_front.name)
                 if self.alpha_map:
-                    doc.appendParameter('alpha_map', self.alpha_map.name + '_inst')
+                    doc.append_parameter('alpha_map', self.alpha_map.name + '_inst')
                 if self.normal_map_front:
-                    doc.appendParameter('normal_map', self.normal_map_front.name + '_inst')
-                doc.endElement('material')    
+                    doc.append_parameter('normal_map', self.normal_map_front.name + '_inst')
+                doc.end_element('material')    
             if self.enable_back:
                 print('writing material {0}_back'.format(self.name))
-                doc.startElement('material name="{0}_back" model="generic_material"'.format(self.name))
+                doc.start_element('material name="{0}_back" model="generic_material"'.format(self.name))
                 if self.bsdf_back:
-                    doc.appendParameter('bsdf', self.bsdf_back.name)
+                    doc.append_parameter('bsdf', self.bsdf_back.name)
                 if self.edf_back:
-                    doc.appendParameter('edf', self.edf_back.name)
-                doc.appendParameter('surface_shader', self.surface_shader_back.name)
+                    doc.append_parameter('edf', self.edf_back.name)
+                doc.append_parameter('surface_shader', self.surface_shader_back.name)
                 if self.alpha_map:
-                    doc.appendParameter('alpha_map', self.alpha_map.name + '_inst')
+                    doc.append_parameter('alpha_map', self.alpha_map.name + '_inst')
                 if self.normal_map_back:
-                    doc.appendParameter('normal_map', self.normal_map_back.name + '_inst')
-                doc.endElement('material') 
+                    doc.append_parameter('normal_map', self.normal_map_back.name + '_inst')
+                doc.end_element('material') 
 
 
 #--------------------------------------------------------------------------------------------------
@@ -1066,15 +1099,15 @@ class ShadingNode():
 
     def writeXML(self, doc):
         print('writing shading node {0}'.format(self.name))
-        doc.startElement('{0} name="{1}" model="{2}"'.format(self.type, self.name, self.model))
+        doc.start_element('{0} name="{1}" model="{2}"'.format(self.type, self.name, self.model))
 
         #add the relevant parameters
         for attribute_key in self.attributes.keys():
             #only output the attribute if it has a value
             if self.attributes[attribute_key]:
-                doc.appendParameter(attribute_key, self.attributes[attribute_key])
+                doc.append_parameter(attribute_key, self.attributes[attribute_key])
 
-        doc.endElement(self.type)
+        doc.end_element(self.type)
 
 
 #--------------------------------------------------------------------------------------------------
@@ -1089,10 +1122,10 @@ class Bsdf():
 
     def writeXML(self, doc):
         print('writing bsdf {0}'.format(self.name))
-        doc.startElement('bsdf name="{0}" model="{1}"'.format(self.name, self.model))
+        doc.start_element('bsdf name="{0}" model="{1}"'.format(self.name, self.model))
         for param in self.bsdf_params:
-            doc.appendParameter(param, self.bsdf_params[param])
-        doc.endElement('bsdf')
+            doc.append_parameter(param, self.bsdf_params[param])
+        doc.end_element('bsdf')
 
 
 #--------------------------------------------------------------------------------------------------
@@ -1107,10 +1140,10 @@ class Edf():
 
     def writeXML(self, doc):
         print('writing bsdf {0}'.format(self.name))
-        doc.startElement('edf name="{0}" model="{1}"'.format(self.name, self.model))
+        doc.start_element('edf name="{0}" model="{1}"'.format(self.name, self.model))
         for param in self.edf_params:
-            doc.appendParameter(param, self.edf_params[param])
-        doc.endElement('edf')
+            doc.append_parameter(param, self.edf_params[param])
+        doc.end_element('edf')
 
 
 #--------------------------------------------------------------------------------------------------
@@ -1124,11 +1157,11 @@ class SurfaceShader():
         self.surface_shader_params = surface_shader_params
 
     def writeXML(self, doc):
-        doc.startElement('surface_shader name="{0}" model="{1}"'.format(self.name, self.model))
+        doc.start_element('surface_shader name="{0}" model="{1}"'.format(self.name, self.model))
         if self.model == 'constant_surface_shader':
             for param in self.surface_shader_params:
-                doc.appendParameter(param, self.surface_shader_params[param])
-        doc.endElement('surface_shader')
+                doc.append_parameter(param, self.surface_shader_params[param])
+        doc.end_element('surface_shader')
 
 
 #--------------------------------------------------------------------------------------------------
@@ -1166,22 +1199,22 @@ class Camera():
    
     def writeXML(self, doc):
         print('writing camera: {0}'.format(self.name))
-        doc.startElement('camera name="{0}" model="{1}"'.format(self.name, self.model))
+        doc.start_element('camera name="{0}" model="{1}"'.format(self.name, self.model))
 
-        doc.appendParameter('film_dimensions', '{0} {1}'.format(self.film_width, self.film_height))
-        doc.appendParameter('focal_length', self.focal_length)
+        doc.append_parameter('film_dimensions', '{0} {1}'.format(self.film_width, self.film_height))
+        doc.append_parameter('focal_length', self.focal_length)
 
         if self.model == 'thinlens_camera':
             print('exporting ' + self.name + ' as thinlens camera')
-            doc.appendParameter('focal_distance', self.focal_distance)
-            doc.appendParameter('f_stop', self.f_stop)
-            doc.appendParameter('diaphragm_blades', self.diaphragm_blades)
-            doc.appendParameter('diaphragm_tilt_angle', self.diaphragm_tilt_angle)
+            doc.append_parameter('focal_distance', self.focal_distance)
+            doc.append_parameter('f_stop', self.f_stop)
+            doc.append_parameter('diaphragm_blades', self.diaphragm_blades)
+            doc.append_parameter('diaphragm_tilt_angle', self.diaphragm_tilt_angle)
 
         #output transform matrix
         writeTransform(doc, self.params['scene_scale'], self.name, self.params['export_camera_blur'], self.params['motion_samples'])
 
-        doc.endElement('camera')
+        doc.end_element('camera')
 
 
 #--------------------------------------------------------------------------------------------------
@@ -1197,9 +1230,9 @@ class Environment():
 
     def writeXML(self, doc):
         print('writing environment: ' + self.name)
-        doc.startElement('environment name="{0}" model="generic_environment"'.format(self.name))
-        doc.appendParameter('environment_edf', self.environment_edf)
-        doc.endElement('environment')
+        doc.start_element('environment name="{0}" model="generic_environment"'.format(self.name))
+        doc.append_parameter('environment_edf', self.environment_edf)
+        doc.end_element('environment')
 
 
 #--------------------------------------------------------------------------------------------------
@@ -1213,9 +1246,9 @@ class EnvironmentShader():
 
     def writeXML(self, doc):
         print('writing environment shader: ' + self.name)
-        doc.startElement('environment_shader name="{0}" model="edf_environment_shader"'.format(self.name))
-        doc.appendParameter('environment_edf', self.edf)
-        doc.endElement('environment_shader')
+        doc.start_element('environment_shader name="{0}" model="edf_environment_shader"'.format(self.name))
+        doc.append_parameter('environment_edf', self.edf)
+        doc.end_element('environment_shader')
 
 
 #--------------------------------------------------------------------------------------------------
@@ -1230,10 +1263,10 @@ class EnvironmentEdf():
 
     def writeXML(self, doc):
         print('writing environment edf: ' + self.name)
-        doc.startElement('environment_edf name="{0}" model="{1}"'.format(self.name, self.model))
+        doc.start_element('environment_edf name="{0}" model="{1}"'.format(self.name, self.model))
         for param in self.edf_params:
-            doc.appendParameter(param, self.edf_params[param])
-        doc.endElement('environment_edf')
+            doc.append_parameter(param, self.edf_params[param])
+        doc.end_element('environment_edf')
 
 
 #--------------------------------------------------------------------------------------------------
@@ -1297,7 +1330,7 @@ class Geometry():
 
     def writeXMLInstance(self, doc):
         print('writing object instance: '+ self.name)
-        doc.startElement('object_instance name="{0}.0_inst" object="{1}.0"'.format(self.short_name, self.short_name))
+        doc.start_element('object_instance name="{0}.0_inst" object="{1}.0"'.format(self.short_name, self.short_name))
 
         if self.params['export_transformation_blur']:
             # write 0 transform as the assembly will handle that
@@ -1308,15 +1341,15 @@ class Geometry():
         for material in self.material_nodes:
             if material.duplicate_shaders:
                 if material.enable_front:
-                    doc.appendElement('assign_material slot="{0}" side="front" material="{1}"'.format(material.name, material.name))
+                    doc.append_element('assign_material slot="{0}" side="front" material="{1}"'.format(material.name, material.name))
                 if material.enable_back:
-                    doc.appendElement('assign_material slot="{0}" side="back" material="{1}"'.format(material.name, material.name))
+                    doc.append_element('assign_material slot="{0}" side="back" material="{1}"'.format(material.name, material.name))
             else:
                 if material.enable_front:
-                    doc.appendElement('assign_material slot="{0}" side="front" material="{1}_front"'.format(material.name, material.name))
+                    doc.append_element('assign_material slot="{0}" side="front" material="{1}_front"'.format(material.name, material.name))
                 if material.enable_back:
-                    doc.appendElement('assign_material slot="{0}" side="back" material="{1}_back"'.format(material.name, material.name))
-        doc.endElement('object_instance')
+                    doc.append_element('assign_material slot="{0}" side="back" material="{1}_back"'.format(material.name, material.name))
+        doc.end_element('object_instance')
 
 
 #--------------------------------------------------------------------------------------------------
@@ -1409,7 +1442,7 @@ class Assembly():
 
     def writeXML(self, doc):
         print('writing assembly: {0}'.format(self.name))
-        doc.startElement('assembly name="{0}"'.format(self.name))
+        doc.start_element('assembly name="{0}"'.format(self.name))
 
         # write colors
         for col in self.color_objects:
@@ -1446,7 +1479,7 @@ class Assembly():
         for geo in self.geo_objects:
             file_name = ms_commands.legalizeName(geo.short_name)
 
-            doc.startElement('object name="{0}" model="mesh_object"'.format(file_name))
+            doc.start_element('object name="{0}" model="mesh_object"'.format(file_name))
 
             if  self.params['export_deformation_blur']:
                 # store the start time of the export
@@ -1459,7 +1492,7 @@ class Assembly():
 
                 cmds.currentTime(cmds.currentTime(query=True) - 1)
 
-                doc.startElement('parameters name="filename"')
+                doc.start_element('parameters name="filename"')
 
                 for i in range(motion_samples):
                     frame = start_time + sample_interval * i
@@ -1469,19 +1502,19 @@ class Assembly():
                     cmds.refresh()
 
                     obj_filename = "{0}.{1:03}.obj".format(file_name, i)
-                    doc.appendParameter("{0:03}".format(i), "{0}/{1}".format(self.params['geo_dir'], obj_filename))
+                    doc.append_parameter("{0:03}".format(i), "{0}/{1}".format(self.params['geo_dir'], obj_filename))
 
                     # write the OBJ file to disk
                     obj_filepath = os.path.join(self.params['absolute_geo_dir'], obj_filename)
                     checkExportCancelled()
                     self.params['obj_exporter'](geo.name, obj_filepath, overwrite=True)
 
-                doc.endElement('parameters')
+                doc.end_element('parameters')
 
                 cmds.currentTime(start_time)
             else:
                 obj_filename = file_name + ".obj"
-                doc.appendParameter('filename', os.path.join(self.params['geo_dir'], obj_filename))
+                doc.append_parameter('filename', os.path.join(self.params['geo_dir'], obj_filename))
 
                 # write the OBJ file to disk
                 obj_filepath = os.path.join(self.params['absolute_geo_dir'], obj_filename)
@@ -1491,7 +1524,7 @@ class Assembly():
             self.params['progress_bar_progress'] += self.params['progress_bar_incriments']
             cmds.progressWindow(edit=True, progress=self.params['progress_bar_progress'])
 
-            doc.endElement('object')
+            doc.end_element('object')
 
         # write lights
         for light_object in self.light_objects:
@@ -1501,15 +1534,15 @@ class Assembly():
         for geo in self.geo_objects:
             geo.writeXMLInstance(doc)
 
-        doc.endElement('assembly')
-        doc.startElement('assembly_instance name="{0}_inst" assembly="{1}"'.format(self.name, self.name))
+        doc.end_element('assembly')
+        doc.start_element('assembly_instance name="{0}_inst" assembly="{1}"'.format(self.name, self.name))
 
         # if transformation blur is set output the transform with motion from the position_from_object variable
         if self.params['export_transformation_blur']:
             writeTransform(doc, self.params['scene_scale'], self.position_from_object, True, self.params['motion_samples'])
         else:
             writeTransform(doc, self.params['scene_scale'])
-        doc.endElement('assembly_instance')
+        doc.end_element('assembly_instance')
 
 
 #--------------------------------------------------------------------------------------------------
@@ -1605,7 +1638,7 @@ class Scene():
     def writeXML(self, doc):
         print('writing scene element')
 
-        doc.startElement('scene')
+        doc.start_element('scene')
 
         # write current camera
         camera_instance = Camera(self.params, self.params['outputCamera'])
@@ -1654,7 +1687,7 @@ class Scene():
             assembly = Assembly(self.params, "assembly", light_list + shape_list)
             assembly.writeXML(doc)
 
-        doc.endElement('scene')
+        doc.end_element('scene')
 
 
 #--------------------------------------------------------------------------------------------------
@@ -1666,13 +1699,13 @@ class Output():
         self.params = params
 
     def writeXML(self, doc):
-        doc.startElement('output')
-        doc.startElement('frame name="beauty"')
-        doc.appendParameter('camera', self.params['outputCamera'])
-        doc.appendParameter('color_space', self.params['outputColorSpace'])
-        doc.appendParameter('resolution', '{0} {1}'.format(self.params['output_res_width'], self.params['output_res_height']))
-        doc.endElement('frame')
-        doc.endElement('output')
+        doc.start_element('output')
+        doc.start_element('frame name="beauty"')
+        doc.append_parameter('camera', self.params['outputCamera'])
+        doc.append_parameter('color_space', self.params['outputColorSpace'])
+        doc.append_parameter('resolution', '{0} {1}'.format(self.params['output_res_width'], self.params['output_res_height']))
+        doc.end_element('frame')
+        doc.end_element('output')
 
 
 #--------------------------------------------------------------------------------------------------
@@ -1686,75 +1719,75 @@ class Configurations():
     def writeXML(self, doc):
         print('writing configurations')
 
-        doc.startElement("configurations")
+        doc.start_element("configurations")
 
         # Emit interactive configuration.
-        doc.appendElement('configuration name="interactive" base="base_interactive"')
+        doc.append_element('configuration name="interactive" base="base_interactive"')
 
         # Emit final configuration.
         if self.params['customFinalConfigCheck']:
-            doc.startElement('configuration name="final" base="base_final"')
+            doc.start_element('configuration name="final" base="base_final"')
 
             if self.params['customFinalConfigEngine'] == 0:
-                doc.appendParameter('lighting_engine', 'pt')
+                doc.append_parameter('lighting_engine', 'pt')
             else:
-                doc.appendParameter('lighting_engine', 'drt')
+                doc.append_parameter('lighting_engine', 'drt')
             
-            doc.startElement('parameters name="drt"')
-            doc.appendParameter('dl_bsdf_samples', self.params['drtDLBSDFSamples'])
-            doc.appendParameter('dl_light_samples', self.params['drtDLLightSamples'])
-            doc.appendParameter('enable_ibl', self.params['drtEnableIBL'])
-            doc.appendParameter('ibl_bsdf_samples', self.params['drtIBLBSDFSamples'])
-            doc.appendParameter('ibl_env_samples', self.params['drtIBLEnvSamples'])
-            doc.appendParameter('max_path_length', self.params['drtMaxPathLength'])
-            doc.appendParameter('rr_min_path_length', self.params['drtRRMinPathLength'])
-            doc.endElement("parameters")
+            doc.start_element('parameters name="drt"')
+            doc.append_parameter('dl_bsdf_samples', self.params['drtDLBSDFSamples'])
+            doc.append_parameter('dl_light_samples', self.params['drtDLLightSamples'])
+            doc.append_parameter('enable_ibl', self.params['drtEnableIBL'])
+            doc.append_parameter('ibl_bsdf_samples', self.params['drtIBLBSDFSamples'])
+            doc.append_parameter('ibl_env_samples', self.params['drtIBLEnvSamples'])
+            doc.append_parameter('max_path_length', self.params['drtMaxPathLength'])
+            doc.append_parameter('rr_min_path_length', self.params['drtRRMinPathLength'])
+            doc.end_element("parameters")
 
-            doc.startElement('parameters name="pt"')
-            doc.appendParameter('dl_light_samples', self.params['ptDLLightSamples'])
+            doc.start_element('parameters name="pt"')
+            doc.append_parameter('dl_light_samples', self.params['ptDLLightSamples'])
 
             if self.params['ptEnableCaustics']:
-                doc.appendParameter('enable_caustics', 'true')
+                doc.append_parameter('enable_caustics', 'true')
             else:
-                doc.appendParameter('enable_caustics', 'false')
+                doc.append_parameter('enable_caustics', 'false')
 
             if self.params['ptEnableDL']:
-                doc.appendParameter('enable_dl', 'true')
+                doc.append_parameter('enable_dl', 'true')
             else:
-                doc.appendParameter('enable_dl', 'false')
+                doc.append_parameter('enable_dl', 'false')
 
             if self.params['ptEnableIBL']:
-                doc.appendParameter('enable_ibl', 'true')
+                doc.append_parameter('enable_ibl', 'true')
             else:
-                doc.appendParameter('enable_ibl', 'false')
+                doc.append_parameter('enable_ibl', 'false')
 
-            doc.appendParameter('ibl_bsdf_samples', self.params['ptIBLBSDFSamples'])
-            doc.appendParameter('ibl_env_samples', self.params['ptIBLEnvSamples'])
-            doc.appendParameter('max_path_length', self.params['ptMaxPathLength'])
+            doc.append_parameter('ibl_bsdf_samples', self.params['ptIBLBSDFSamples'])
+            doc.append_parameter('ibl_env_samples', self.params['ptIBLEnvSamples'])
+            doc.append_parameter('max_path_length', self.params['ptMaxPathLength'])
 
             if self.params['ptNextEventEstimation']:
-                doc.appendParameter('next_event_estimation', 'true')
+                doc.append_parameter('next_event_estimation', 'true')
             else:
-                doc.appendParameter('next_event_estimation', 'false')
+                doc.append_parameter('next_event_estimation', 'false')
 
-            doc.appendParameter('rr_min_path_length', self.params['ptRRMinPathLength'])
-            doc.endElement("parameters")
+            doc.append_parameter('rr_min_path_length', self.params['ptRRMinPathLength'])
+            doc.end_element("parameters")
 
-            doc.startElement('parameters name="generic_tile_renderer"')
-            doc.appendParameter('filter_size', self.params['gtrFilterSize'])
-            doc.appendParameter('sampler', self.params['gtrSampler'])
-            doc.appendParameter('min_samples', self.params['gtrMinSamples'])
-            doc.appendParameter('max_samples', self.params['gtrMaxSamples'])
-            doc.appendParameter('max_contrast', self.params['gtrMaxContrast'])
-            doc.appendParameter('max_variation', self.params['gtrMaxVariation'])
-            doc.endElement('parameters')
+            doc.start_element('parameters name="generic_tile_renderer"')
+            doc.append_parameter('filter_size', self.params['gtrFilterSize'])
+            doc.append_parameter('sampler', self.params['gtrSampler'])
+            doc.append_parameter('min_samples', self.params['gtrMinSamples'])
+            doc.append_parameter('max_samples', self.params['gtrMaxSamples'])
+            doc.append_parameter('max_contrast', self.params['gtrMaxContrast'])
+            doc.append_parameter('max_variation', self.params['gtrMaxVariation'])
+            doc.end_element('parameters')
 
-            doc.endElement("configuration")
+            doc.end_element("configuration")
 
         else:
-            doc.appendElement('configuration name="final" base="base_final"')
+            doc.append_element('configuration name="final" base="base_final"')
 
-        doc.endElement('configurations')
+        doc.end_element('configurations')
 
 
 #--------------------------------------------------------------------------------------------------
@@ -1831,11 +1864,11 @@ def export_container(render_settings_node):
         print('opening output file {0}'.format(filepath))
 
         doc = WriteXml(filepath)
-        doc.appendLine('<?xml version="1.0" encoding="UTF-8"?>')
-        doc.appendLine('<!-- File generated by Mayaseed version {0} -->'.format(ms_commands.MAYASEED_VERSION))
+        doc.append_line('<?xml version="1.0" encoding="UTF-8"?>')
+        doc.append_line('<!-- File generated by Mayaseed version {0} -->'.format(ms_commands.MAYASEED_VERSION))
 
         print('writing project element')
-        doc.startElement('project')
+        doc.start_element('project')
         scene_element = Scene(params)
         scene_element.writeXML(doc)
         output_element = Output(params)
@@ -1843,7 +1876,7 @@ def export_container(render_settings_node):
         config_element = Configurations(params)
         config_element.writeXML(doc)
     
-        doc.endElement('project')
+        doc.end_element('project')
         doc.close()
 
         current_frame += 1
