@@ -805,23 +805,24 @@ class AsColor():
 
     def emit_xml(self, doc):
         print '// Writing color %s' % self.name
-        doc.start_element('color name="{0}"'.format(self.name))       
+        doc.start_element('color name="%s"' % (self.name))  
         doc.append_parameter('color_space', self.color_space)
         doc.append_parameter('multiplier', self.multiplier)
 
         doc.start_element('values')
-        doc.append_line('%.6f %.6f %.6f' % (self.RGB_color[0], self.RGB_color[1], self.RGB_color[2])
+        doc.append_line('%.6f %.6f %.6f' % (self.RGB_color[0], self.RGB_color[1], self.RGB_color[2]))
         doc.end_element('values')
         doc.start_element('alpha')
-        doc.append_line('%6f' % self.alpha)
+        doc.append_line('%.6f' % self.alpha)
         doc.end_element('alpha')
         doc.end_element('color')
+
 
 #--------------------------------------------------------------------------------------------------
 # AsTransform class.
 #--------------------------------------------------------------------------------------------------
 
-class AsTransform(self):
+class AsTransform():
 
     """ Class representing an appleseed Transform entity """
 
@@ -838,13 +839,17 @@ class AsTransform(self):
         doc.append_element('scaling value="%s"' % self.scaling_value)
         doc.start_element('matrix')
 
-        doc.append_line('%.15f %.15f %.15f %.15f' % (self.matrix[0], self.matrix[4], self.matrix[8],  self.matrix[12])
-        doc.append_line('%.15f %.15f %.15f %.15f' % (self.matrix[1], self.matrix[5], self.matrix[9],  self.matrix[13])
-        doc.append_line('%.15f %.15f %.15f %.15f' % (self.matrix[2], self.matrix[6], self.matrix[10], self.matrix[14])
-        doc.append_line('%.15f %.15f %.15f %.15f' % (self.matrix[3], self.matrix[7], self.matrix[11], self.matrix[15])
+        doc.append_line('%.15f %.15f %.15f %.15f' % (self.matrix[0], self.matrix[4], self.matrix[8],  self.matrix[12]))
+        doc.append_line('%.15f %.15f %.15f %.15f' % (self.matrix[1], self.matrix[5], self.matrix[9],  self.matrix[13]))
+        doc.append_line('%.15f %.15f %.15f %.15f' % (self.matrix[2], self.matrix[6], self.matrix[10], self.matrix[14]))
+        doc.append_line('%.15f %.15f %.15f %.15f' % (self.matrix[3], self.matrix[7], self.matrix[11], self.matrix[15]))
 
         doc.end_element('matrix')
-        doc.end_element('transform')  
+        doc.end_element('transform') 
+
+
+
+
 
 
 #--------------------------------------------------------------------------------------------------
