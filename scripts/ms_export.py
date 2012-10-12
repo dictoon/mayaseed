@@ -762,9 +762,9 @@ class AsParameter():
 
     """ Class representing an appleseed Parameter entity """
 
-    def __init__(self):
-        self.name = None
-        self.value = None
+    def __init__(self, name=None, value=None):
+        self.name = name
+        self.value = value
 
     def emit_xml(self, doc):
         doc.append_parameter(self.name, self.value)
