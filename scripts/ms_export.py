@@ -767,7 +767,7 @@ class AsParameter():
         self.value = value
 
     def emit_xml(self, doc):
-        doc.append_parameter(self.name, self.value)
+        doc.append_parameter(self.name, str(self.value))
 
 #--------------------------------------------------------------------------------------------------
 # AsParameters class.
@@ -777,8 +777,8 @@ class AsParameters():
 
     """ Class representing an appleseed Parameters entity """
 
-    def __init__(self):
-        self.name = None
+    def __init__(self, name=None):
+        self.name = name
         self.parameters = []
 
     def emit_xml(self, doc):
@@ -799,15 +799,15 @@ class AsColor():
         self.name = None
         self.RGB_color = [0.5,0.5,0.5]
         self.alpha = 1
-        self.multiplier = 1
-        self.color_space = 'srgb'
+        self.multiplier = AsParameter('multiplier', 1)
+        self.color_space = AsParameter('color_space', 'srgb')
         self.wavelength_range = '400.0, 700.0'
 
     def emit_xml(self, doc):
         print '// Writing color %s' % self.name
         doc.start_element('color name="%s"' % (self.name))  
-        doc.append_parameter('color_space', self.color_space)
-        doc.append_parameter('multiplier', self.multiplier)
+        self.color_space.emit_xml(doc)
+        self.multiplier.emit_xml(doc)
 
         doc.start_element('values')
         doc.append_line('%.6f %.6f %.6f' % (self.RGB_color[0], self.RGB_color[1], self.RGB_color[2]))
@@ -848,9 +848,53 @@ class AsTransform():
         doc.end_element('transform') 
 
 
+#--------------------------------------------------------------------------------------------------
+# AsTexture class.
+#--------------------------------------------------------------------------------------------------
 
+class AsTexture():
 
+    """ Class representing an appleseed Texture entity """
 
+    def __init__(self):
+        self.name = None
+        self.model = 'disk_texture_2d'
+        self.color_space = AsParameter('color_space', 'srgb')
+        self.file_name = AsParameter('filename', None)
+        self.instances = []
+
+    def instantiate():
+        texture_instance = AsTextureInstance(self)
+        self.instances.append(texture_instance)
+        return texture_instance
+
+    def emit_xml(self, doc):
+        doc.start_element('texture name="%s" model="%s"' % (self.name, self.model))
+        self.color_space.emit_xml(doc)
+        self.file_name.emit_xml(doc)
+        doc.end_element('model')
+
+#--------------------------------------------------------------------------------------------------
+# AsTextureInstance class.
+#--------------------------------------------------------------------------------------------------
+
+class AsTextureInstance():
+
+    """ Class representing an appleseed Texture Instance entity """
+
+    def __init__(self, as_texture):
+        self.name = '%s_instance_%i' % (as_texture.name, len(as_texture.instances))
+        self.texture = as_texture
+        self.addressing_mode = AsParameter('addressing_mode', 'wrap')
+        self.filtering_mode = AsParameter('filtering_mode', 'bilinear')
+        self.alpha_mode = AsParameter('alpha_mode', 'alpha_channel')
+
+    def emit_xml(doc):
+        doc.start_element('texture_instance name="%s" texture="%s"' % (self.name, self.texture.name)
+        self.addressing_mode.emit_xml(doc)
+        self.filtering_mode.emit_xml(doc)
+        self.alpha_mode.emit_xml(doc)
+        doc.end_element('texture_instance')
 
 #--------------------------------------------------------------------------------------------------
 # Color class.
