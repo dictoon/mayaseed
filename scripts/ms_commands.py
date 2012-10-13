@@ -413,10 +413,9 @@ def getFileTextureName(file_node):
         project_relative_path = os.path.join(project_directory, 'sourceimages', file_name)
         if os.path.exists(project_relative_path):
             file_texture_name = project_relative_path
-            cmds.warning("file not found: {0}, using equivalent texture from sourceimages".format(maya_file_texture_name))
+            cmds.warning("File not found: {0}, using equivalent texture from sourceimages".format(maya_file_texture_name))
         else:
-            error_msg = "file not found: {0}".format(maya_file_texture_name)
-            cmds.error(error_msg)
+            cmds.error("File not found: {0}".format(maya_file_texture_name))
             raise RuntimeError(error_msg)
 
     if cmds.getAttr(file_node + '.useFrameExtension'):
@@ -428,7 +427,6 @@ def getFileTextureName(file_node):
         file_texture_name = split_file_texture_name[0] + '.' + frame_number + '.' + split_file_texture_name[2]
 
     return file_texture_name 
-
 
 #--------------------------------------------------------------------------------------------------
 # Get file texture node file name with correct frame number.

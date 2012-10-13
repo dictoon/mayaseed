@@ -353,9 +353,7 @@ def get_maya_scene(params):
                     for texture in material.textures:
                         # if its the first frame of the animation force a sample
                         # otherwise only add samples for animated textures
-                        if texture.is_animated:
-                            texture.add_image_sample(texture_dir, current_frame)
-                        elif current_frame == start_frame:
+                        if texture.is_animated or (current_frame == start_frame):
                             texture.add_image_sample(texture_dir, current_frame)
 
         current_frame += sample_increment
@@ -667,7 +665,7 @@ class MMsMaterial():
                 self.textures.append(self.alpha_map)
 
 
-    def get_connections (self, attr_name):
+    def get_connections(self, attr_name):
         connection = MColorConnection(self.params, attr_name)
 
         if connection.connected_node is not None:
