@@ -831,7 +831,7 @@ class AsTransform():
         self.scaling_value = 1
 
         # matrix format = [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]
-        self.matrix = None
+        self.matrix = [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]
 
     def emit_xml(self, doc):
         doc.start_element('transform time="%s"' % self.time)
