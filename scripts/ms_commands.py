@@ -416,7 +416,6 @@ def getFileTextureName(file_node):
             cmds.warning("File not found: {0}, using equivalent texture from sourceimages".format(maya_file_texture_name))
         else:
             cmds.error("File not found: {0}".format(maya_file_texture_name))
-            raise RuntimeError(error_msg)
 
     if cmds.getAttr(file_node + '.useFrameExtension'):
         split_file_texture_name = maya_file_texture_name.split('.')
