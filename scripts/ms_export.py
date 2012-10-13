@@ -684,9 +684,6 @@ class MMsMaterial():
         else:
             return None
 
-
-
-
 #--------------------------------------------------------------------------------------------------
 # MMsShadingNode class.
 #--------------------------------------------------------------------------------------------------
@@ -797,7 +794,7 @@ class AsColor():
         self.name = None
         self.RGB_color = [0.5,0.5,0.5]
         self.alpha = 1
-        self.multiplier = AsParameter('multiplier', 1)
+        self.multiplier = AsParameter('multiplier', '1')
         self.color_space = AsParameter('color_space', 'srgb')
         self.wavelength_range = '400.0, 700.0'
 
@@ -815,7 +812,6 @@ class AsColor():
         doc.end_element('alpha')
         doc.end_element('color')
 
-
 #--------------------------------------------------------------------------------------------------
 # AsTransform class.
 #--------------------------------------------------------------------------------------------------
@@ -827,8 +823,6 @@ class AsTransform():
     def __init__(self):
         self.time = '000'
         self.scaling_value = 1
-
-        # matrix format = [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]
         self.matrix = [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]
 
     def emit_xml(self, doc):
@@ -845,7 +839,6 @@ class AsTransform():
         doc.end_element('matrix')
         doc.end_element('transform') 
 
-
 #--------------------------------------------------------------------------------------------------
 # AsTexture class.
 #--------------------------------------------------------------------------------------------------
@@ -858,7 +851,7 @@ class AsTexture():
         self.name = None
         self.model = 'disk_texture_2d'
         self.color_space = AsParameter('color_space', 'srgb')
-        self.file_name = AsParameter('filename', None)
+        self.file_name = None
         self.instances = []
 
     def instantiate():
@@ -887,7 +880,7 @@ class AsTextureInstance():
         self.filtering_mode = AsParameter('filtering_mode', 'bilinear')
         self.alpha_mode = AsParameter('alpha_mode', 'alpha_channel')
 
-    def emit_xml(doc):
+    def emit_xml(self, doc):
         doc.start_element('texture_instance name="%s" texture="%s"' % (self.name, self.texture.name))
         self.addressing_mode.emit_xml(doc)
         self.filtering_mode.emit_xml(doc)
@@ -905,7 +898,7 @@ class AsObject():
     def __init__(self):
         self.name = None
         self.model = 'mesh_object'
-        self.file_name = AsParameters('filename')
+        self.file_name = None
         self.instances = []
 
     def instantiate(self):
@@ -913,7 +906,7 @@ class AsObject():
         self.instances.append(object_inatsnce)
         return object_inatsnce
 
-    def emit_xml(doc):
+    def emit_xml(self, doc):
         doc.start_element('object name="%s" model="%s"' % (self.name, self.model))
         self.file_name.emit_xml(doc)
         doc.end_element('object')
@@ -931,7 +924,7 @@ class AsObjectInstanceMaterialAssignment():
         self.side = side
         self.material = material
 
-    def emit_xml(doc):
+    def emit_xml(self, doc):
         doc.append_element('assign_material slot="%s" side="%s" material="%s"' % (self.slot, self.side, self.material))
 
 #--------------------------------------------------------------------------------------------------
@@ -948,7 +941,7 @@ class AsObjectInstance():
         self.transforms = []
         self.material_assignments = []
 
-    def emit_xml(doc):
+    def emit_xml(self, doc):
         doc.start_element('object_inatsnce name="%s" object="%s"' % (self.name, self.object.name))
         for transform in self.transforms:
             transform.emit_xml(doc)
@@ -956,19 +949,72 @@ class AsObjectInstance():
             material_assignment.emit_xml(doc)
         doc.end_element('object')
 
+#--------------------------------------------------------------------------------------------------
+# AsMaterial class.
+#--------------------------------------------------------------------------------------------------
 
+class AsMaterial():
 
+    """ Class representing appleseed Material entity """
 
+    def __init__(self):
+        self.name = None
+        self.model = 'generic_material'
+        self.bsdf = None
+        self.edf = None
+        self.surface_shader = None
+        self.alpha_map = None
+        self.normal_map = None
 
+    def emit_xml(self, doc):
+        doc.start_element('material name="%s" model="%s"' % (self.name, self.model))
 
+        if self.bsdf is not None:
+            self.bsdf.emit_xml(doc)
 
+        if self.edf is not None:
+            self.edf.emit_xml(doc)
 
+        if self.surface_shader is not None:
+            self.surface_shader.emit_xml(doc)
 
+        if self.alpha_map is not None:
+            self.alpha_map.emit_xml(doc)
 
+        if self.normal_map is not None:
+            self.normal_map.emit_xml(doc)
 
+        doc.end_element('material')
 
+#--------------------------------------------------------------------------------------------------
+# AsCamera class.
+#--------------------------------------------------------------------------------------------------
 
+class AsCamera():
 
+    """ Class representing appleseed Camera entity """
+
+    def __init__(self):
+        self.name = None
+        self.model = None
+        self.film_dimensions = None
+        self.focal_length = None
+        self.f_stop = None
+        self.diaphragm_blades = AsParameter('diaphragm_blades', '0')
+        self.diaphragm_tilt_angle = AsParameter('diaphragm_tilt_angle', '0.0')
+        self.transforms = []
+    
+    def emit_xml(self, doc):
+        doc.start_element('camera name="%s" model="%s"' % (self.name, self.model))
+
+        self.film_dimensions.emit_xml(doc)
+        self.focal_length.emit_xml(doc)
+
+        if self.model == 'thinlens_camera':
+            self.diaphragm_blades.emit_xml(doc)
+            self.diaphragm_tilt_angle.emit_xml(doc)
+            self.f_stop.emit_xml(doc)
+        doc.end_element('camera')
 
 
 #--------------------------------------------------------------------------------------------------
