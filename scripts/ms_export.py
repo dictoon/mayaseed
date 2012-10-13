@@ -890,11 +890,88 @@ class AsTextureInstance():
         self.alpha_mode = AsParameter('alpha_mode', 'alpha_channel')
 
     def emit_xml(doc):
-        doc.start_element('texture_instance name="%s" texture="%s"' % (self.name, self.texture.name)
+        doc.start_element('texture_instance name="%s" texture="%s"' % (self.name, self.texture.name))
         self.addressing_mode.emit_xml(doc)
         self.filtering_mode.emit_xml(doc)
         self.alpha_mode.emit_xml(doc)
         doc.end_element('texture_instance')
+
+#--------------------------------------------------------------------------------------------------
+# AsObject class.
+#--------------------------------------------------------------------------------------------------
+
+class AsObject():
+
+    """ Class representing appleseed Object entity """
+
+    def __init__(self):
+        self.name = None
+        self.model = 'mesh_object'
+        self.file_name = AsParameters('filename')
+        self.instances = []
+
+    def instantiate(self):
+        object_inatsnce = AsObjectInstance(self)
+        self.instances.append(object_inatsnce)
+        return object_inatsnce
+
+    def emit_xml(doc):
+        doc.start_element('object name="%s" model="%s"' % (self.name, self.model))
+        self.file_name.emit_xml(doc)
+        doc.end_element('object')
+
+#--------------------------------------------------------------------------------------------------
+# AsObjectInstanceMaterialAssignment class.
+#--------------------------------------------------------------------------------------------------
+
+class AsObjectInstanceMaterialAssignment():
+
+    """ Class representing appleseed Object Instance Material Assignment entity """
+
+    def __init__(self, slot=None, side=None, material=None):
+        self.slot = slot
+        self.side = side
+        self.material = material
+
+    def emit_xml(doc):
+        doc.append_element('assign_material slot="%s" side="%s" material="%s"' % (self.slot, self.side, self.material))
+
+#--------------------------------------------------------------------------------------------------
+# AsObjectInstance class.
+#--------------------------------------------------------------------------------------------------
+
+class AsObjectInstance():
+
+    """ Class representing appleseed Object Instance entity """
+
+    def __init__(self, as_object):
+        self.name = self.name = '%s_instance_%i' % (as_object.name, len(as_object.instances))
+        self.object = as_object
+        self.transforms = []
+        self.material_assignments = []
+
+    def emit_xml(doc):
+        doc.start_element('object_inatsnce name="%s" object="%s"' % (self.name, self.object.name))
+        for transform in self.transforms:
+            transform.emit_xml(doc)
+        for material_assignment in self.material_assignments:
+            material_assignment.emit_xml(doc)
+        doc.end_element('object')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #--------------------------------------------------------------------------------------------------
 # Color class.
