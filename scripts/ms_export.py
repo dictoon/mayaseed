@@ -800,7 +800,7 @@ class AsColor():
 
     def emit_xml(self, doc):
         print '// Writing color %s' % self.name
-        doc.start_element('color name="%s"' % (self.name))  
+        doc.start_element('color name="%s"' % self.name)  
         self.color_space.emit_xml(doc)
         self.multiplier.emit_xml(doc)
 
@@ -902,9 +902,9 @@ class AsObject():
         self.instances = []
 
     def instantiate(self):
-        object_inatsnce = AsObjectInstance(self)
-        self.instances.append(object_inatsnce)
-        return object_inatsnce
+        object_instance = AsObjectInstance(self)
+        self.instances.append(object_instance)
+        return object_instance
 
     def emit_xml(self, doc):
         doc.start_element('object name="%s" model="%s"' % (self.name, self.model))
@@ -1020,6 +1020,61 @@ class AsCamera():
 
         doc.end_element('camera')
 
+#--------------------------------------------------------------------------------------------------
+# AsEnvironment class.
+#--------------------------------------------------------------------------------------------------
+
+class AsEnvironment():
+
+    """ Class representing appleseed Environment entity """
+
+    def __init__(self):
+        self.name = None
+        self.environment_shader = None
+        self.environment_edf = None
+
+    def emit_xml(self, doc):
+        doc.start_element('environment name="%s" model="edf_environment_shader"' % self.name)
+        if self.environment_shader is not None:
+            self.environment_shader.emit_xml(doc)
+        self.environment_edf.emit_xml(doc)
+        doc.end_element('environment')
+
+#--------------------------------------------------------------------------------------------------
+# AsEnvironmentShader class.
+#--------------------------------------------------------------------------------------------------
+
+class AsEnvironmentShader():
+
+    """ Class representing appleseed Environment Shader entity """
+
+    def __init__(self):
+        self.name = None
+        self.edf = None
+
+    def emit_xml(self, doc):
+        doc.start_element('environment_shader name="%s" model="edf_environment_shader"' % self.name)
+        self.edf.emit_xml(doc)
+        doc.end_element('environment_shader')
+
+#--------------------------------------------------------------------------------------------------
+# AsEnvironmentEdf class.
+#--------------------------------------------------------------------------------------------------
+
+class AsEnvironmentEdf():
+
+    """ Class representing appleseed Environment EDF entity """
+
+    def __init__(self):
+        self.name = None
+        self.model = None
+        self.parameters = []
+
+    def emit_xml(self, doc):
+        doc.start_element('environment_edf name="%s" model="%s"' % (self.name, self.model))
+        for parameter in self.parameters:
+            parameter.emit_xml(doc)
+        doc.end_element('environment')
 
 #--------------------------------------------------------------------------------------------------
 # Color class.
@@ -1031,7 +1086,6 @@ class Color():
         self.color = color
         self.multiplier = multiplier
         self.color_space = 'srgb'
-        self.wavelength_range = '400.0 700.0'
         self.alpha = 1.0
 
     def writeXML(self, doc):
