@@ -1014,6 +1014,10 @@ class AsCamera():
             self.diaphragm_blades.emit_xml(doc)
             self.diaphragm_tilt_angle.emit_xml(doc)
             self.f_stop.emit_xml(doc)
+
+        for transform in self.transforms:
+            transform.emit_xml(doc)
+
         doc.end_element('camera')
 
 
