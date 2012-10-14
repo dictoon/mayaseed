@@ -1154,6 +1154,8 @@ class AsAssembly():
         self.lights = []
         self.objects = []
         self.object_instances = []
+        self.assemblies = []
+        self.assembly_instances = []
 
         self.instances = []
 
@@ -1194,6 +1196,12 @@ class AsAssembly():
 
         for object_instance in self.object_instances:
             object_instance.emit_xml(doc)
+
+        for assembly in self.assemblies:
+            assembly.emit_xml(doc)
+
+        for assembly_instance in self.assembly_instances:
+            assembly_instance.emit_xml(doc)
 
         doc.end_element('assembly')
 
@@ -1250,9 +1258,129 @@ class AsOutput():
 
     def emit_xml(self, doc):
         doc.start_element('output')
-            for frame in self.frames:
-                frame.emit_xml(doc)
+        for frame in self.frames:
+            frame.emit_xml(doc)
         doc.end_element('output')
+
+#--------------------------------------------------------------------------------------------------
+# AsConfiguration class.
+#--------------------------------------------------------------------------------------------------
+
+class AsConfiguration():
+
+    """ Class representing appleseed Configuration entity """
+
+    def  __init__(self):
+        self.name = None
+        self.base = None
+        self.parameters = []
+
+    def emit_xml(self, doc):
+        doc.start_element('configuration')
+        doc.end_element('configuration')
+
+
+
+#--------------------------------------------------------------------------------------------------
+# AsConfigurations class.
+#--------------------------------------------------------------------------------------------------
+
+class AsConfigurations():
+
+    """ Class representing appleseed Configurations entity """
+
+    def __init__(self):
+        self.configurations = []
+
+    def emit_xml(self, doc):
+        doc.start_element('configurations')
+        for configuration in self.configurations:
+            configuration.emit_xml(doc)
+        doc.end_element('configurations')
+
+#--------------------------------------------------------------------------------------------------
+# AsScene class.
+#--------------------------------------------------------------------------------------------------
+
+class asScene():
+
+    """ Class representing appleseed Scene entity """
+
+    def __init__(self):
+        self.cameras = []
+        self.colors = []
+        self.textures = []
+        self.texture_instances = []
+        self.environment_edfs = []
+        self.environment_shaders = []
+        self.environment = None
+        self.output = None
+        self.configurations = None
+        self.assemblies = []
+        self.assembly_instances = []
+
+    def emit_xml(doc):
+        doc.start_element('scene')
+
+        for camera in self.cameras:
+            camera.emit_xml(doc)
+
+        for color in self.colors:
+            color.emit_xml(doc)
+
+        for texture in self.textures:
+            texture.emit_xml(doc)
+
+        for texture_instance in self.texture_instances:
+            texture_instance.emit_xml(doc)
+
+        for environment_edf in self.environment_edfs:
+            environment_edf.emit_xml(doc)
+
+        for environment_shader in self.environment_shaders:
+            environment_shader.emit_xml(doc)
+
+        if self.environment is not None:
+            self.environment.emit_xml(doc)
+
+        if self.output is not None:
+            self.output.emit_xml(doc)
+
+        if self.configurations is not None:
+            self.configurations.emit_xml(doc)
+
+        for assembly in self.assemblies:
+            assembly.emit_xml(doc)
+
+        for assembly_instance in self.assembly_instances:
+            assembly_instance.emit_xml(doc)
+
+        doc.end_element('scene')
+
+#--------------------------------------------------------------------------------------------------
+# AsProject class.
+#--------------------------------------------------------------------------------------------------
+
+class asProject():
+
+    """ Class representing appleseed Project entity """
+
+    def __init__(self):
+        scene = None
+
+    def emit_xml(self, doc):
+        scene.emit_xml(doc)
+
+#--------------------------------------------------------------------------------------------------
+# traslate_maya_scene class.
+#--------------------------------------------------------------------------------------------------
+
+def translate_maya_scene():
+
+    """ Main function for converting a cached maya scene into an appleseed object heirarchy """
+
+    pass
+
 
 #--------------------------------------------------------------------------------------------------
 # Color class.
