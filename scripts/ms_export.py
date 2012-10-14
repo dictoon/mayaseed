@@ -1217,6 +1217,44 @@ class AsAssemblyInstance():
         doc.end_element('assembly_instance')
 
 #--------------------------------------------------------------------------------------------------
+# AsFrame class.
+#--------------------------------------------------------------------------------------------------
+
+class AsFrame():
+
+    """ Class representing appleseed Frame entity """
+
+    def __init__(self):
+        self.name = 'beauty'
+        self.camera = None
+        self.color_space = AsParameter('camera', 'srgb')
+        self.resolution = None
+
+    def emit_xml(self, doc):
+        doc.start_element('frame name="%s"' % self.name)
+        self.camera.emit_xml(doc)
+        self.color_space.emit_xml(doc)
+        self.resolution.emit_xml(doc)
+        doc.end_element('frame')
+
+#--------------------------------------------------------------------------------------------------
+# AsOutput class.
+#--------------------------------------------------------------------------------------------------
+
+class AsOutput():
+
+    """ Class representing appleseed Output entity """
+
+    def __init__(self):
+        self.frames = []
+
+    def emit_xml(self, doc):
+        doc.start_element('output')
+            for frame in self.frames:
+                frame.emit_xml(doc)
+        doc.end_element('output')
+
+#--------------------------------------------------------------------------------------------------
 # Color class.
 #--------------------------------------------------------------------------------------------------
 
