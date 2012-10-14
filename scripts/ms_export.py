@@ -50,9 +50,7 @@ class WriteXml():
         try:
             self.file_object = open(file_path, 'w')
         except IOError:
-            error_msg = "IO error: failed to open {0} for writing.".format(file_path)
-            cmds.error(error_msg)
-            raise RuntimeError(error_msg)
+            cmds.error("IO error: failed to open {0} for writing.".format(file_path))
 
     def start_element(self, str):
         self.append_line("<" + str + ">")
@@ -79,75 +77,53 @@ class WriteXml():
 
 
 #--------------------------------------------------------------------------------------------------
-# checkExportCancelled function.
+# check_export_cancelled function.
 #--------------------------------------------------------------------------------------------------
 
-def checkExportCancelled():
+def check_export_cancelled():
     if cmds.progressWindow(query=True, isCancelled=True):
         cmds.progressWindow(endProgress=1)
-        raise RuntimeError('Export Canceled')
+        raise RuntimeError('Export Cancelled.')
 
 
 #--------------------------------------------------------------------------------------------------
-# writeTransform function.
+# write_transform function.
 #--------------------------------------------------------------------------------------------------
 
-def writeTransform(doc, scale = 1, object=False, motion=False, motion_samples=2):
+def write_transform(doc, scale, object=False, motion=False, motion_samples=2):
     if motion:
-        start_time = cmds.currentTime(query=True)
-
-        if motion_samples < 2:
-            print('Motion samples is set too low, must be at least 2, using 2.')
-            motion_samples = 2
-
         sample_interval = 1.0 / (motion_samples - 1)
 
+        start_time = cmds.currentTime(query=True)
         cmds.select(object)
 
         for i in range(motion_samples):
-            new_time = start_time + (sample_interval * i)
-            cmds.currentTime(new_time)
+            cmds.currentTime(start_time + sample_interval * i)
             cmds.refresh()
-
-            if object:
-                m = cmds.xform(object, query=True, ws=True, matrix=True)
-                transform = [m[0],m[1],m[2],m[3]], [m[4],m[5],m[6],m[7]], [m[8],m[9],m[10],m[11]], [m[12],m[13],m[14],m[15]]
-            else:
-                transform = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
-
-            doc.start_element('transform time="{0:03}"'.format(i))
-            doc.append_element('scaling value="{0}"'.format(scale))
-            doc.start_element('matrix')
-
-            doc.append_line('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][0], transform[1][0], transform[2][0], transform[3][0]))
-            doc.append_line('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][1], transform[1][1], transform[2][1], transform[3][1]))
-            doc.append_line('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][2], transform[1][2], transform[2][2], transform[3][2]))
-            doc.append_line('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][3], transform[1][3], transform[2][3], transform[3][3]))    
-
-            doc.end_element('matrix')
-            doc.end_element('transform')
+            write_single_transform(doc, object, i, scale)
 
         cmds.currentTime(start_time)
         cmds.select(cl=True)
-
     else:
+        write_single_transform(doc, object, 0, scale)
 
-        transform = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
-        if (object):
-            m = cmds.xform(object, query=True, ws=True, matrix=True)
-            transform = [m[0],m[1],m[2],m[3]], [m[4],m[5],m[6],m[7]], [m[8],m[9],m[10],m[11]], [m[12],m[13],m[14],m[15]]
+def write_single_transform(doc, object, time, scale):
+    doc.start_element('transform time="{0}"'.format(time))
 
-        doc.start_element('transform')
+    if scale != 1.0:
         doc.append_element('scaling value="{0}"'.format(scale))
+
+    if object:
+        m = cmds.xform(object, query=True, ws=True, matrix=True)
+
         doc.start_element('matrix')
-
-        doc.append_line('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][0], transform[1][0], transform[2][0], transform[3][0]))
-        doc.append_line('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][1], transform[1][1], transform[2][1], transform[3][1]))
-        doc.append_line('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][2], transform[1][2], transform[2][2], transform[3][2]))
-        doc.append_line('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(transform[0][3], transform[1][3], transform[2][3], transform[3][3]))    
-
+        doc.append_line('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(m[0], m[4], m[ 8], m[12]))
+        doc.append_line('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(m[1], m[5], m[ 9], m[13]))
+        doc.append_line('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(m[2], m[6], m[10], m[14]))
+        doc.append_line('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(m[3], m[7], m[11], m[15]))
         doc.end_element('matrix')
-        doc.end_element('transform')
+
+    doc.end_element('transform')
 
 
 #--------------------------------------------------------------------------------------------------
@@ -155,9 +131,9 @@ def writeTransform(doc, scale = 1, object=False, motion=False, motion_samples=2)
 #--------------------------------------------------------------------------------------------------
 
 def get_maya_params(render_settings_node):
-    print('getting params from ui')
+    print("Retrieving settings from UI...")
 
-    params = {'error': False}
+    params = {}
 
     params['entityDefs'] = ms_commands.getEntityDefs(os.path.join(ms_commands.ROOT_DIRECTORY, 'scripts', 'appleseedEntityDefs.xml'))
 
@@ -176,8 +152,12 @@ def get_maya_params(render_settings_node):
     params['animation_start_frame'] = cmds.getAttr(render_settings_node + '.animation_start_frame')
     params['animation_end_frame'] = cmds.getAttr(render_settings_node + '.animation_end_frame')
     params['animatedTextures'] = cmds.getAttr(render_settings_node + '.export_animated_textures')
-    params['scene_scale'] = 1
-    
+    params['scene_scale'] = 1.0
+
+    if params['motion_samples'] < 2:
+        cmds.warning('Motion samples must be >= 2, using 2.')
+        params['motion_samples'] = 2
+
     # Advanced options.
     if cmds.listConnections(render_settings_node + '.environment'):
         params['environment'] = cmds.listRelatives(cmds.listConnections(render_settings_node + '.environment')[0])[0]
@@ -209,7 +189,7 @@ def get_maya_params(render_settings_node):
     if cmds.listConnections(render_settings_node + '.camera'):
         params['outputCamera'] = cmds.listConnections(render_settings_node + '.camera')[0]
     else:
-        cmds.warning("no camera connected to {0}, using \"persp\"".format(render_settings_node))
+        cmds.warning("No camera connected to {0}, using \"persp\".".format(render_settings_node))
         params['outputCamera'] = 'persp'
 
     if cmds.getAttr(render_settings_node + '.color_space') == 1:
@@ -262,7 +242,7 @@ def get_maya_params(render_settings_node):
     if cmds.pluginInfo('ms_export_obj_' + str(int(mel.eval('getApplicationVersionAsFloat()'))), query=True, r=True):
         params['obj_exporter'] = ms_commands.export_obj
     else:
-        cmds.warning("no native obj exporter found, exporting using Python obj exporter.")
+        cmds.warning("No native obj exporter found, exporting using Python obj exporter.")
         params['obj_exporter'] = ms_export_obj.export
 
     params['verbose_output'] = cmds.getAttr(render_settings_node + '.verbose_output')
@@ -277,7 +257,7 @@ def get_maya_scene(params):
     
     """ Parses the maya scene and returns a list of root transforms with the relevant children """
 
-    print '// caching maya scene data'
+    print("Caching Maya scene data...")
 
     start_time = cmds.currentTime(query=True)
 
@@ -289,14 +269,10 @@ def get_maya_scene(params):
         if not cmds.listRelatives(maya_transform, ap=True, fullPath=True):
             maya_root_transforms.append(MTransform(params, maya_transform, None))
 
-    motion_samples = params['motion_samples']
-    if motion_samples < 2:
-        motion_samples = 2
-
     start_time = cmds.currentTime(query=True)
     start_frame = int(start_time)
     end_frame = start_frame
-    sample_increment = 1.0 / (motion_samples - 1)
+    sample_increment = 1.0 / (params['motion_samples'] - 1)
 
     if params['export_animation']:
         start_frame = params['animation_start_frame']
@@ -328,20 +304,20 @@ def get_maya_scene(params):
         geo_dir = ms_commands.create_dir(os.path.join(frame_dir, 'geometry'))
 
         if params['export_transformation_blur'] or (current_frame == start_frame):
-            print '// adding transform samples, frame', current_frame
+            print("Adding transform samples, frame {0}...".format(current_frame))
             for transform in maya_root_transforms:
                 transform.add_transform_sample()
                 for descendant_transform in transform.descendant_transforms:
                     descendant_transform.add_transform_sample()
 
         if params['export_deformation_blur'] or (current_frame == start_frame):
-            print '// adding deformation samples, frame', current_frame
+            print("Adding deformation samples, frame {0}...".format(current_frame))
             for transform in maya_root_transforms:
                 for mesh in (transform.descendant_meshes + transform.child_meshes):
                     mesh.add_deform_sample(geo_dir, current_frame)
 
         if params['export_camera_blur'] or (current_frame == start_frame):
-            print '// adding camera transformation samples, frame', current_frame
+            print("Adding camera transformation samples, frame {0}...".format(current_frame))
             for transform in maya_root_transforms:
                 for camera in (transform.descendant_cameras + transform.child_cameras):
                     camera.add_matrix_sample()
@@ -377,7 +353,7 @@ class MTransform():
     def __init__(self, params, maya_transform_name, parent):
         self.params = params
         if self.params['verbose_output']:
-            print '// creating MTransform:', maya_transform_name
+            print("Creating MTransform {0}...".format(maya_transform_name))
         self.name = maya_transform_name
         self.safe_name = ms_commands.legalizeName(self.name)
         self.parent = parent
@@ -393,7 +369,7 @@ class MTransform():
         self.descendant_transforms = []
 
         # sample attributes
-        self.matricies = []
+        self.matrices = []
         self.visibility_states = []
 
         # get children
@@ -439,10 +415,11 @@ class MTransformChild():
     def __init__(self, params, maya_entity_name, MTransform_object):
         self.params = params
         if self.params['verbose_output']:
-            print '// creating ' + self.__class__.__name__ + ': ' + maya_entity_name
+            print("Creating {0}: {1}...".format(self.__class__.__name__, maya_entity_name))
         self.name = maya_entity_name
         self.safe_name = ms_commands.legalizeName(self.name)
         self.transform = MTransform_object
+
 
 #--------------------------------------------------------------------------------------------------
 # MMesh class.
@@ -489,7 +466,6 @@ class MLight(MTransformChild):
             self.outer_angle = cmds.getAttr(self.name + '.coneAngle') + cmds.getAttr(self.name + '.penumbraAngle')
 
 
-
 #--------------------------------------------------------------------------------------------------
 # MCamera class.
 #--------------------------------------------------------------------------------------------------
@@ -501,11 +477,10 @@ class MCamera(MTransformChild):
     def __init__(self, params, maya_camera_name, MTransform_object):
         MTransformChild.__init__(self, params, maya_camera_name, MTransform_object)
 
-        # In Maya cameras are decendents of transforms like other objects 
-        # but in appleseed they exist outside of te main assembly 
-        # for this reason we include the worldspace matrix as an attribute of the camera's transform 
-        # even though its not a 'correct' representation of the maya scene
-        self.world_space_matricies = []
+        # In Maya cameras are descendents of transforms like other objects but in appleseed they exist outside
+        # of the main assembly. For this reason we include the world space matrix as an attribute of the camera's
+        # transform even though it's not a 'correct' representation of the Maya scene.
+        self.world_space_matrices = []
 
         self.dof = (self.name + '.depthOfField' )
         self.focal_distance = cmds.getAttr(self.name + '.focusDistance') 
@@ -523,7 +498,7 @@ class MCamera(MTransformChild):
             self.film_width = self.film_height * maya_resolution_aspect 
 
     def add_matrix_sample(self):
-        self.world_space_matricies.append(cmds.xform(self.transform.name, query=True, matrix=True, ws=True))
+        self.world_space_matrices.append(cmds.xform(self.transform.name, query=True, matrix=True, ws=True))
 
 
 #--------------------------------------------------------------------------------------------------
@@ -1089,7 +1064,7 @@ class Color():
         self.alpha = 1.0
 
     def writeXML(self, doc):
-        print('writing color {0}'.format(self.name))
+        print('Writing color {0}'.format(self.name))
         doc.start_element('color name="{0}"'.format(self.name))       
         doc.append_parameter('color', '{0:.6f} {1:.6f} {2:.6f}'.format(self.color[0], self.color[1], self.color[2]))
         doc.append_parameter('color_space', self.color_space)
@@ -1121,14 +1096,14 @@ class Texture():
         self.alpha_mode = alpha_mode
 
     def writeXMLObject(self, doc):
-        print('writing texture object {0}'.format(self.name))
+        print('Writing texture object {0}'.format(self.name))
         doc.start_element('texture name="{0}" model="disk_texture_2d"'.format(self.name))
         doc.append_parameter('color_space', self.color_space)
         doc.append_parameter('filename', self.filepath)
         doc.end_element('texture')
 
     def writeXMLInstance(self, doc):
-        print('writing texture instance {0}_inst'.format(self.name))
+        print('Writing texture instance {0}_inst'.format(self.name))
         doc.start_element('texture_instance name="{0}_inst" texture="{0}"'.format(self.name, self.name))
         doc.append_parameter('addressing_mode', 'wrap')
         doc.append_parameter('filtering_mode', 'bilinear')
@@ -1153,7 +1128,7 @@ class Light():
         self.outer_angle = None
 
     def writeXML(self, doc):
-        print('writing light: {0}'.format(self.name))
+        print('Writing light: {0}'.format(self.name))
         doc.start_element('light name="{0}" model="{1}"'.format(self.name, self.model))
 
         # add spot light attribs if they exist
@@ -1163,7 +1138,7 @@ class Light():
 
         doc.append_parameter('exitance', self.color_name)
 
-        writeTransform(doc, self.params['scene_scale'], self.name, self.params['export_transformation_blur'], self.params['motion_samples'])
+        write_transform(doc, self.params['scene_scale'], self.name, self.params['export_transformation_blur'], self.params['motion_samples'])
         doc.end_element('light')
 
 
@@ -1243,7 +1218,7 @@ class Material():
     def writeXML(self, doc):
         if self.duplicate_shaders:
             if self.enable_front:
-                print('writing material {0}'.format(self.name))
+                print("Writing material {0}...".format(self.name))
                 doc.start_element('material name="{0}" model="generic_material"'.format(self.name))
                 if self.bsdf_front:
                     doc.append_parameter('bsdf', self.bsdf_front.name)
@@ -1257,7 +1232,7 @@ class Material():
                 doc.end_element('material')
         else:
             if self.enable_front:
-                print('writing material {0}_front'.format(self.name))
+                print("Writing material {0}_front...".format(self.name))
                 doc.start_element('material name="{0}_front" model="generic_material"'.format(self.name))
                 if self.bsdf_front:
                     doc.append_parameter('bsdf', self.bsdf_front.name)
@@ -1270,7 +1245,7 @@ class Material():
                     doc.append_parameter('normal_map', self.normal_map_front.name + '_inst')
                 doc.end_element('material')    
             if self.enable_back:
-                print('writing material {0}_back'.format(self.name))
+                print("Writing material {0}_back...".format(self.name))
                 doc.start_element('material name="{0}_back" model="generic_material"'.format(self.name))
                 if self.bsdf_back:
                     doc.append_parameter('bsdf', self.bsdf_back.name)
@@ -1291,7 +1266,7 @@ class Material():
 class ShadingNode():
     def __init__(self, params, name, attributes=False, node_type=False, model=False):
         self.params = params
-        self.name = name                
+        self.name = name
         self.type = node_type           # bsdf etc
         self.model = model              # ashikhmin-shirley etc
         self.child_shading_nodes = []
@@ -1299,17 +1274,16 @@ class ShadingNode():
         self.colors = []
         self.textures = []
 
-        #if the node comes with attributes to initialize with then use them
+        # if the node comes with attributes to initialize with then use them
         if attributes:
             self.attributes = attributes
 
-        #else find them from maya
+        # else find them from Maya
         else:
-            self.type = cmds.getAttr(self.name + '.node_type') #bsdf, edf etc
-            self.model = cmds.getAttr(self.name + '.node_model') #lambertian etc
+            self.type = cmds.getAttr(self.name + '.node_type')      # bsdf, edf...
+            self.model = cmds.getAttr(self.name + '.node_model')    # lambertian...
 
-
-            #add the correct attributes based on the entity defs xml
+            # add the correct attributes based on the entity defs XML
             for attribute_key in params['entityDefs'][self.model].attributes.keys():
                 self.attributes[attribute_key] = ''
 
@@ -1374,6 +1348,7 @@ class ShadingNode():
 
                 elif params['entityDefs'][self.model].attributes[attribute_key].type == 'dropdown_list': 
                     pass
+
                 # the node must be a text entity
                 else:
                     attribute_value = str(cmds.getAttr(maya_attribute))
@@ -1385,7 +1360,7 @@ class ShadingNode():
         return self.child_shading_nodes
 
     def writeXML(self, doc):
-        print('writing shading node {0}'.format(self.name))
+        print("Writing shading node {0}...".format(self.name))
         doc.start_element('{0} name="{1}" model="{2}"'.format(self.type, self.name, self.model))
 
         #add the relevant parameters
@@ -1408,7 +1383,7 @@ class Bsdf():
         self.bsdf_params = bsdf_params
 
     def writeXML(self, doc):
-        print('writing bsdf {0}'.format(self.name))
+        print("Writing BSDF {0}...".format(self.name))
         doc.start_element('bsdf name="{0}" model="{1}"'.format(self.name, self.model))
         for param in self.bsdf_params:
             doc.append_parameter(param, self.bsdf_params[param])
@@ -1426,7 +1401,7 @@ class Edf():
         self.edf_params = edf_params
 
     def writeXML(self, doc):
-        print('writing bsdf {0}'.format(self.name))
+        print("Writing EDF {0}...".format(self.name))
         doc.start_element('edf name="{0}" model="{1}"'.format(self.name, self.model))
         for param in self.edf_params:
             doc.append_parameter(param, self.edf_params[param])
@@ -1480,26 +1455,22 @@ class Camera():
 
         self.focal_length = float(cmds.getAttr(self.name+'.focalLength')) / 1000
 
-        # transpose camera matrix -> XXX0, YYY0, ZZZ0, XYZ1
-        m = cmds.xform(cam, query=True, ws=True, matrix=True)
-        self.transform = [m[0],m[1],m[2],m[3]], [m[4],m[5],m[6],m[7]], [m[8],m[9],m[10],m[11]], [m[12],m[13],m[14],m[15]]
-   
     def writeXML(self, doc):
-        print('writing camera: {0}'.format(self.name))
+        print("Writing camera {0}...".format(self.name))
         doc.start_element('camera name="{0}" model="{1}"'.format(self.name, self.model))
 
         doc.append_parameter('film_dimensions', '{0} {1}'.format(self.film_width, self.film_height))
         doc.append_parameter('focal_length', self.focal_length)
 
         if self.model == 'thinlens_camera':
-            print('exporting ' + self.name + ' as thinlens camera')
+            print("Exporting {0} as thin lens camera...".format(self.name))
             doc.append_parameter('focal_distance', self.focal_distance)
             doc.append_parameter('f_stop', self.f_stop)
             doc.append_parameter('diaphragm_blades', self.diaphragm_blades)
             doc.append_parameter('diaphragm_tilt_angle', self.diaphragm_tilt_angle)
 
         #output transform matrix
-        writeTransform(doc, self.params['scene_scale'], self.name, self.params['export_camera_blur'], self.params['motion_samples'])
+        write_transform(doc, self.params['scene_scale'], self.name, self.params['export_camera_blur'], self.params['motion_samples'])
 
         doc.end_element('camera')
 
@@ -1516,7 +1487,7 @@ class Environment():
         self.environment_edf = edf
 
     def writeXML(self, doc):
-        print('writing environment: ' + self.name)
+        print("Writing environment {0}...".format(self.name))
         doc.start_element('environment name="{0}" model="generic_environment"'.format(self.name))
         doc.append_parameter('environment_edf', self.environment_edf)
         doc.end_element('environment')
@@ -1532,7 +1503,7 @@ class EnvironmentShader():
         self.edf = edf
 
     def writeXML(self, doc):
-        print('writing environment shader: ' + self.name)
+        print("Writing environment shader {0}...".format(self.name))
         doc.start_element('environment_shader name="{0}" model="edf_environment_shader"'.format(self.name))
         doc.append_parameter('environment_edf', self.edf)
         doc.end_element('environment_shader')
@@ -1549,7 +1520,7 @@ class EnvironmentEdf():
         self.edf_params = edf_params
 
     def writeXML(self, doc):
-        print('writing environment edf: ' + self.name)
+        print("Writing environment EDF {0}...".format(self.name))
         doc.start_element('environment_edf name="{0}" model="{1}"'.format(self.name, self.model))
         for param in self.edf_params:
             doc.append_parameter(param, self.edf_params[param])
@@ -1562,7 +1533,7 @@ class EnvironmentEdf():
 
 class Geometry():
     def __init__(self, params, name, output_file, assembly='main_assembly'):
-        checkExportCancelled()
+        check_export_cancelled()
         self.params = params
         self.name = name
         self.short_name = ms_commands.legalizeName(self.name.split('|')[-1])
@@ -1581,11 +1552,10 @@ class Geometry():
         self.output_file = output_file
         self.assembly = assembly
 
-
         # get material name
         shape_node = cmds.listRelatives(self.name, shapes=True, fullPath=True)[0]
 
-        #get list of unique shading engines
+        # get list of unique shading engines
         shading_engines = set(cmds.listConnections(shape_node, t='shadingEngine')) 
 
         if shading_engines:
@@ -1600,14 +1570,9 @@ class Geometry():
                         self.colors = self.colors + new_material.colors
                         self.textures = self.textures + new_material.textures
                     else: 
-                        cmds.warning("no appleseed material or shader translation connected to {0}".format(self.name))
+                        cmds.warning("No appleseed material or shader translation connected to {0}.".format(self.name))
         else:
-            cmds.warning("no shading engine connected to {0}".format(self.name))
-
-        # transpose matrix -> XXX0, YYY0, ZZZ0, XYZ1
-        m = cmds.xform(name, query=True, ws=True, matrix=True)
-        self.transform = [m[0],m[1],m[2],m[3]], [m[4],m[5],m[6],m[7]], [m[8],m[9],m[10],m[11]], [m[12],m[13],m[14],m[15]]
-        
+            cmds.warning("No shading engine connected to {0}.".format(self.name))
 
     def getMaterials(self):
         return self.material_nodes
@@ -1618,12 +1583,16 @@ class Geometry():
     def writeXMLInstance(self, doc):
         print('writing object instance: '+ self.name)
         doc.start_element('object_instance name="{0}.0_inst" object="{1}.0"'.format(self.short_name, self.short_name))
+        
+        object_name = self.safe_name + ".0"
+        instance_name = object_name + "_inst"
 
-        if self.params['export_transformation_blur']:
-            # write 0 transform as the assembly will handle that
-            writeTransform(doc)
-        else:
-            writeTransform(doc, self.params['scene_scale'], self.name)
+        print("Writing object instance {0}...".format(instance_name))
+
+        doc.start_element('object_instance name="{0}" object="{1}"'.format(instance_name, object_name))
+
+        if not self.params['export_transformation_blur']:
+            write_transform(doc, self.params['scene_scale'], self.name)
 
         for material in self.material_nodes:
             if material.duplicate_shaders:
@@ -1645,7 +1614,7 @@ class Geometry():
 
 class Assembly():
     def __init__(self, params, name='main_assembly', object_list=False, position_from_object=False):
-        checkExportCancelled()
+        check_export_cancelled()
         self.params = params
         self.name = ms_commands.legalizeName(name)
         self.position_from_object = position_from_object
@@ -1688,7 +1657,7 @@ class Assembly():
             if geo.getMaterials() != None:
                 self.material_objects = self.material_objects + geo.getMaterials()
             else:
-                cmds.warning("no material connected to {0}".format(geo.name))
+                cmds.warning("No material connected to {0}.".format(geo.name))
             self.shading_node_objects = self.shading_node_objects + geo.getShadingNodes()
             self.color_objects = self.color_objects + geo.colors
             self.texture_objects = self.texture_objects + geo.textures
@@ -1728,7 +1697,7 @@ class Assembly():
         self.texture_objects = self.texture_objects.values()
 
     def writeXML(self, doc):
-        print('writing assembly: {0}'.format(self.name))
+        print("Writing assembly {0}...".format(self.name))
         doc.start_element('assembly name="{0}"'.format(self.name))
 
         # write colors
@@ -1768,22 +1737,18 @@ class Assembly():
 
             doc.start_element('object name="{0}" model="mesh_object"'.format(file_name))
 
-            if  self.params['export_deformation_blur']:
+            if self.params['export_deformation_blur']:
                 # store the start time of the export
                 start_time = cmds.currentTime(query=True)
-                motion_samples = self.params['motion_samples']
-                if motion_samples < 2:
-                    cmds.warning("motion samples is set too low, must be at least 2; using 2")
-                    motion_samples = 2
-                sample_interval = 1.0 / (motion_samples - 1)
 
-                cmds.currentTime(cmds.currentTime(query=True) - 1)
+                motion_samples = self.params['motion_samples']
+                sample_interval = 1.0 / (motion_samples - 1)
 
                 doc.start_element('parameters name="filename"')
 
                 for i in range(motion_samples):
                     frame = start_time + sample_interval * i
-                    print("exporting frame {0}".format(frame))
+                    print("Exporting pose {0}...".format(frame))
 
                     cmds.currentTime(frame)
                     cmds.refresh()
@@ -1793,7 +1758,7 @@ class Assembly():
 
                     # write the OBJ file to disk
                     obj_filepath = os.path.join(self.params['absolute_geo_dir'], obj_filename)
-                    checkExportCancelled()
+                    check_export_cancelled()
                     self.params['obj_exporter'](geo.name, obj_filepath, overwrite=True)
 
                 doc.end_element('parameters')
@@ -1805,10 +1770,10 @@ class Assembly():
 
                 # write the OBJ file to disk
                 obj_filepath = os.path.join(self.params['absolute_geo_dir'], obj_filename)
-                checkExportCancelled()
+                check_export_cancelled()
                 self.params['obj_exporter'](geo.name, obj_filepath)
 
-            self.params['progress_bar_progress'] += self.params['progress_bar_incriments']
+            self.params['progress_bar_progress'] += self.params['progress_bar_increments']
             cmds.progressWindow(edit=True, progress=self.params['progress_bar_progress'])
 
             doc.end_element('object')
@@ -1826,9 +1791,9 @@ class Assembly():
 
         # if transformation blur is set output the transform with motion from the position_from_object variable
         if self.params['export_transformation_blur']:
-            writeTransform(doc, self.params['scene_scale'], self.position_from_object, True, self.params['motion_samples'])
+            write_transform(doc, self.params['scene_scale'], self.position_from_object, True, self.params['motion_samples'])
         else:
-            writeTransform(doc, self.params['scene_scale'])
+            write_transform(doc, self.params['scene_scale'])
         doc.end_element('assembly_instance')
 
 
@@ -1838,7 +1803,7 @@ class Assembly():
 
 class Scene():
     def __init__(self,params):
-        checkExportCancelled()
+        check_export_cancelled()
         self.params = params
         self.assembly_list = []
         self.color_objects = dict()
@@ -1888,7 +1853,7 @@ class Scene():
                         env_edf_params['horizontal_shift'] = 0.0
                         env_edf_params['vertical_shift'] = 0.0
                 else:
-                    cmds.error('no texture connected to {0}.latitude_longitude_exitance'.format(env_name))
+                    cmds.error("No texture connected to {0}.latitude_longitude_exitance.".format(env_name))
 
             elif env_edf_model_enum == 3:
                 environment_edf_model = 'mirrorball_map_environment_edf'
@@ -1903,10 +1868,10 @@ class Scene():
                         env_edf_params['exitance'] = env_name + '_mirrorball_map_environment_edf_inst'
                         env_edf_params['exitance_multiplier'] = cmds.getAttr(env_name + '.exitance_multiplier')
                 else:
-                    cmds.error('no texture connected to {0}.mirrorball_exitance'.format(env_name))
+                    cmds.error("No texture connected to {0}.mirrorball_exitance.".format(env_name))
 
             else:
-                cmds.error("no environment model selected for {0}".format(env_name))
+                cmds.error("No environment model selected for {0}.".format(env_name))
 
             self.environment_edf = EnvironmentEdf(env_name + '_env_edf', environment_edf_model, env_edf_params)
             self.environment_shader = EnvironmentShader(env_name + '_env_shader', env_name + '_env_edf')
@@ -1923,13 +1888,11 @@ class Scene():
             self.texture_objects[name] = Texture(name, file_name)
 
     def writeXML(self, doc):
-        print('writing scene element')
-
         doc.start_element('scene')
 
         # write current camera
         camera_instance = Camera(self.params, self.params['outputCamera'])
-        camera_instance.writeXML(doc)   
+        camera_instance.writeXML(doc)
 
         # write colors
         for col in self.color_objects:
@@ -1937,7 +1900,6 @@ class Scene():
 
         # write texture objects
         for tex in self.texture_objects:
-            print 'writing texture', self.texture_objects[tex].name
             self.texture_objects[tex].writeXMLObject(doc)
 
         # write texture instances
@@ -1954,12 +1916,12 @@ class Scene():
         shape_list = cmds.ls(g=True, v=True, long=True, noIntermediate=True)
         light_list = cmds.ls(lt=True, v=True, long=True)
 
-        self.params['progress_bar_incriments'] = 100.0 / len(shape_list)
+        self.params['progress_bar_increments'] = 100.0 / len(shape_list)
         self.params['progress_bar_progress'] = 0
 
         if self.params['export_transformation_blur']:
             for geo in shape_list:
-                checkExportCancelled()
+                check_export_cancelled()
                 if ms_commands.shapeIsExportable(geo):
                     # add first connected transform to the list
                     geo_transform = cmds.listRelatives(geo, ad=True, ap=True, fullPath=True)[0]
@@ -2004,8 +1966,6 @@ class Configurations():
         self.params = params
 
     def writeXML(self, doc):
-        print('writing configurations')
-
         doc.start_element("configurations")
 
         # Emit interactive configuration.
@@ -2092,10 +2052,6 @@ def export_container(render_settings_node):
     params['progress_amount'] = 0
     cmds.progressWindow(title='Exporting', progress=params['progress_amount'], status='Exporting ' + render_settings_node, isInterruptable=True)
 
-    if params['error']:
-        cmds.error("error validating UI attributes")
-        raise RuntimeError("check script editor for details")
-
     # compute the base output directory
     scene_filepath = cmds.file(q=True, sceneName=True)
     scene_basename = os.path.splitext(os.path.basename(scene_filepath))[0]
@@ -2145,16 +2101,12 @@ def export_container(render_settings_node):
         safe_make_dirs(params['absolute_geo_dir'])
         safe_make_dirs(params['absolute_tex_dir'])
 
-        params['skipTextures'] = False
-
-        print('beginning export')
-        print('opening output file {0}'.format(filepath))
+        print("Opening output file {0}...".format(filepath))
 
         doc = WriteXml(filepath)
         doc.append_line('<?xml version="1.0" encoding="UTF-8"?>')
         doc.append_line('<!-- File generated by Mayaseed version {0} -->'.format(ms_commands.MAYASEED_VERSION))
 
-        print('writing project element')
         doc.start_element('project')
         scene_element = Scene(params)
         scene_element.writeXML(doc)
@@ -2162,15 +2114,10 @@ def export_container(render_settings_node):
         output_element.writeXML(doc)
         config_element = Configurations(params)
         config_element.writeXML(doc)
-    
         doc.end_element('project')
         doc.close()
 
         current_frame += 1
-
-        # only export textures for the first frame
-        if not params['animatedTextures']:
-            params['skipTextures'] = True
 
     cmds.currentTime(original_time)
     cmds.select(render_settings_node)
