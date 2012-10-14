@@ -925,43 +925,6 @@ class AsObjectInstance():
         doc.end_element('object')
 
 #--------------------------------------------------------------------------------------------------
-# AsMaterial class.
-#--------------------------------------------------------------------------------------------------
-
-class AsMaterial():
-
-    """ Class representing appleseed Material entity """
-
-    def __init__(self):
-        self.name = None
-        self.model = 'generic_material'
-        self.bsdf = None
-        self.edf = None
-        self.surface_shader = None
-        self.alpha_map = None
-        self.normal_map = None
-
-    def emit_xml(self, doc):
-        doc.start_element('material name="%s" model="%s"' % (self.name, self.model))
-
-        if self.bsdf is not None:
-            self.bsdf.emit_xml(doc)
-
-        if self.edf is not None:
-            self.edf.emit_xml(doc)
-
-        if self.surface_shader is not None:
-            self.surface_shader.emit_xml(doc)
-
-        if self.alpha_map is not None:
-            self.alpha_map.emit_xml(doc)
-
-        if self.normal_map is not None:
-            self.normal_map.emit_xml(doc)
-
-        doc.end_element('material')
-
-#--------------------------------------------------------------------------------------------------
 # AsCamera class.
 #--------------------------------------------------------------------------------------------------
 
@@ -1050,6 +1013,100 @@ class AsEnvironmentEdf():
         for parameter in self.parameters:
             parameter.emit_xml(doc)
         doc.end_element('environment')
+
+#--------------------------------------------------------------------------------------------------
+# AsMaterial class.
+#--------------------------------------------------------------------------------------------------
+
+class AsMaterial():
+
+    """ Class representing appleseed Material entity """
+
+    def __init__(self):
+        self.name = None
+        self.model = 'generic_material'
+        self.bsdf = None
+        self.edf = None
+        self.surface_shader = None
+        self.alpha_map = None
+        self.normal_map = None
+
+    def emit_xml(self, doc):
+        doc.start_element('material name="%s" model="%s"' % (self.name, self.model))
+
+        if self.bsdf is not None:
+            self.bsdf.emit_xml(doc)
+
+        if self.edf is not None:
+            self.edf.emit_xml(doc)
+
+        if self.surface_shader is not None:
+            self.surface_shader.emit_xml(doc)
+
+        if self.alpha_map is not None:
+            self.alpha_map.emit_xml(doc)
+
+        if self.normal_map is not None:
+            self.normal_map.emit_xml(doc)
+
+        doc.end_element('material')
+
+#--------------------------------------------------------------------------------------------------
+# AsBsdf class.
+#--------------------------------------------------------------------------------------------------
+
+class AsBsdf():
+
+    """ Class representing appleseed BSDF entity """
+
+    def __init__(self):
+        self.name = None
+        self.model = None
+        self.parameters = []
+
+    def emit_xml(sels, doc):
+        doc.start_element('bsdf name="%s" model="%s"' % (self.name, self.model))
+        for parameter in self.parameters:
+            parameter.emit_xml(doc)
+        doc.end_element('bsdf')
+
+#--------------------------------------------------------------------------------------------------
+# AsEdf class.
+#--------------------------------------------------------------------------------------------------
+
+class AsEdf():
+
+    """ Class representing appleseed EDF entity """
+
+    def __init__(self):
+        self.name = None
+        self.model = None
+        self.parameters = []
+
+    def emit_xml(self, doc):
+        doc.start_element('edf name="%s" model="%s"' % (self.name, self.model))
+        for parameter in self.parameters:
+            parameter.emit_xml(doc)
+        doc.end_element('edf')
+
+#--------------------------------------------------------------------------------------------------
+# AsSurfaceShader class.
+#--------------------------------------------------------------------------------------------------
+
+class AsSurfaceShader():
+
+    """ Class representing appleseed Surface Shader entity """
+
+    def __init__(self):
+        self.name = None
+        self.model = None
+        self.parameters = []
+
+    def emit_xml(self, doc):
+        doc.start_element('surface_shader name="%s" model="%s"' % (self.name, self.model))
+        for parameter in self.parameters:
+            parameter.emit_xml(doc)
+        doc.end_element('surface_shader')
 
 #--------------------------------------------------------------------------------------------------
 # Color class.
