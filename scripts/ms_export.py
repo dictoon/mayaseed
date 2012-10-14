@@ -1109,6 +1109,114 @@ class AsSurfaceShader():
         doc.end_element('surface_shader')
 
 #--------------------------------------------------------------------------------------------------
+# AsLight class.
+#--------------------------------------------------------------------------------------------------
+
+class AsLight():
+
+    """ Class representing appleseed Surface Shader entity """
+
+    def __init__(self):
+        self.name = None
+        self.model = None
+        self.color = None
+        self.multiplier = None
+        self.inner_angle = None
+        self.outer_angle = None
+        self.transform = None
+
+    def emit_xml(self, doc):
+        doc.start_element('light name="%s" model="%s"' % (self.name, self.model))
+        self.color.emit_xml(doc)
+        if self.model == 'spot_light':
+            self.inner_angle.emit_xml(doc)
+            self.outer_angle.emit_xml(doc)
+        self.transform.emit_xml(doc)
+        doc.end_element('light')
+
+#--------------------------------------------------------------------------------------------------
+# AsAssembly class.
+#--------------------------------------------------------------------------------------------------
+
+class AsAssembly():
+
+    """ Class representing appleseed Assembly entity """
+
+    def __init__(self):
+        self.name = None
+        self.colors = []
+        self.textures = []
+        self.texture_instances = []
+        self.materials = []
+        self.bsdfs = []
+        self.edfs = []
+        self.surface_shaders = []
+        self.lights = []
+        self.objects = []
+        self.object_instances = []
+
+        self.instances = []
+
+    def instantiate(self):
+        assembly_instance = AsAssemblyInstance(self)
+        self.object_instances.append(assembly_instance)
+        return assembly_instance
+
+    def emit_xml(self, doc):
+        doc.start_element('assembly name="%s"' % self.name)
+
+        for color in self.colors:
+            color.emit_xml(doc)
+
+        for texture in self.textures:
+            texture.emit_xml(doc)
+
+        for texture_instance in self.texture_instances:
+            texture_instance.emit_xml(doc)
+
+        for material in self.materials:
+            material.emit_xml(doc)
+
+        for bsdf in self.bsdfs:
+            bsdf.emit_xml(doc)
+
+        for edf in self.edfs:
+            edf.emit_xml(doc)
+
+        for surface_shader in self.surface_shaders:
+            surface_shader.emit_xml(doc)
+
+        for light in self.lights:
+            light.emit_xml(doc)
+
+        for object in self.objects:
+            object.emit_xml(doc)
+
+        for object_instance in self.object_instances:
+            object_instance.emit_xml(doc)
+
+        doc.end_element('assembly')
+
+#--------------------------------------------------------------------------------------------------
+# AsAssemblyInstance class.
+#--------------------------------------------------------------------------------------------------
+
+class AsAssemblyInstance():
+
+    """ Class representing appleseed Assembly Instance entity """
+
+    def __init__(self, as_assembly):
+        self.name = '%s_instance_%i' % (as_assembly.name, len(as_assembly.instances))
+        self.assembly = as_assembly
+        self.transforms = []
+
+    def emit_xml(self, doc):
+        doc.start_element('assembly_instance name="%s" assembly="%s"' % (self.name, self.assembly.name))
+        for transform in self.transforms:
+            transform.emit_xml(doc)
+        doc.end_element('assembly_instance')
+
+#--------------------------------------------------------------------------------------------------
 # Color class.
 #--------------------------------------------------------------------------------------------------
 
