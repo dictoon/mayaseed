@@ -151,7 +151,7 @@ def get_maya_params(render_settings_node):
     params['export_animation'] = cmds.getAttr(render_settings_node + '.export_animation')
     params['animation_start_frame'] = cmds.getAttr(render_settings_node + '.animation_start_frame')
     params['animation_end_frame'] = cmds.getAttr(render_settings_node + '.animation_end_frame')
-    params['animatedTextures'] = cmds.getAttr(render_settings_node + '.export_animated_textures')
+    params['animated_textures'] = cmds.getAttr(render_settings_node + '.export_animated_textures')
     params['scene_scale'] = 1.0
 
     if not params['export_animation']:
@@ -168,72 +168,59 @@ def get_maya_params(render_settings_node):
 
     # Cameras.
     # params['sceneCameraExportAllCameras'] = cmds.checkBox('ms_sceneCameraExportAllCameras', query=True, value=True)
-    params['sceneCameraDefaultThinLens'] = cmds.getAttr(render_settings_node + '.export_all_cameras_as_thinlens')
-    
-    # Materials.
-    params['matLambertBSDF'] = 'Lambertian'
-    params['matLambertEDF'] = 'None'
-    params['matLambertSurfaceShader'] = 'Physical'
-    params['matBlinnBSDF'] = 'Ashikhmin-Shirley'
-    params['matBlinnEDF'] = 'None'
-    params['matBlinnSurfaceShader'] = 'Physical'
-    params['matPhongBSDF'] = 'Ashikhmin-Shirley'
-    params['matPhongEDF'] = 'None'
-    params['matPhongSurfaceShader'] = 'Physical'
-    params['matSurfaceShaderBSDF'] = 'Lambertian'
-    params['matSurfaceShaderEDF'] = 'Diffuse'
-    params['matSurfaceShaderSurfaceShader'] = 'Physical'
-    params['matDefaultBSDF'] = 'Lambertian'
-    params['matDefaultEDF'] = 'None'
-    params['matDefaultSurfaceShader'] = 'Physical'
+    params['export_all_cameras_as_thinlens'] = cmds.getAttr(render_settings_node + '.export_all_cameras_as_thinlens')
 
     # Output.
     if cmds.listConnections(render_settings_node + '.camera'):
-        params['outputCamera'] = cmds.listConnections(render_settings_node + '.camera')[0]
+        params['output_camera'] = cmds.listConnections(render_settings_node + '.camera')[0]
     else:
-        cmds.warning("No camera connected to {0}, using \"persp\".".format(render_settings_node))
-        params['outputCamera'] = 'persp'
+        cmds.warning('No camera connected to {0}, using "persp".'.format(render_settings_node))
+        params['output_camera'] = 'persp'
 
     if cmds.getAttr(render_settings_node + '.color_space') == 1:
-        params['outputColorSpace'] = 'linear_rgb'
+        params['output_color_space'] = 'linear_rgb'
     elif cmds.getAttr(render_settings_node + '.color_space') == 2:
-        params['outputColorSpace'] = 'spectral'
+        params['output_color_space'] = 'spectral'
     elif cmds.getAttr(render_settings_node + '.color_space') == 3:
-        params['outputColorSpace'] = 'ciexyz'
+        params['output_color_space'] = 'ciexyz'
     else:
-        params['outputColorSpace'] = 'srgb'
+        params['output_color_space'] = 'srgb'
 
     params['output_res_width'] = cmds.getAttr(render_settings_node + '.width')
     params['output_res_height'] = cmds.getAttr(render_settings_node + '.height')
 
     # Custom final configuration.
 
-    params['customFinalConfigCheck'] = cmds.getAttr(render_settings_node + '.export_custom_final_config')
-    params['customFinalConfigEngine'] = cmds.getAttr(render_settings_node + '.final_lighting_engine')
+    params['custom_final_config_check'] = cmds.getAttr(render_settings_node + '.export_custom_final_config')
+    params['custom_final_config_engine'] = cmds.getAttr(render_settings_node + '.final_lighting_engine')
+    if params['custom_final_config_engine'] == 0:
+        params['custom_final_config_engine'] = 'pt'
+    else:
+        params['custom_final_config_engine'] = 'drt'
 
-    params['drtDLBSDFSamples'] = cmds.getAttr(render_settings_node + '.drt_dl_bsdf_samples')
-    params['drtDLLightSamples'] = cmds.getAttr(render_settings_node + '.drt_dl_light_samples')
-    params['drtEnableIBL'] = cmds.getAttr(render_settings_node + '.drt_enable_ibl')
-    params['drtIBLBSDFSamples'] = cmds.getAttr(render_settings_node + '.drt_ibl_bsdf_samples')
-    params['drtIBLEnvSamples'] = cmds.getAttr(render_settings_node + '.drt_ibl_env_samples')
-    params['drtMaxPathLength'] = cmds.getAttr(render_settings_node + '.drt_max_path_length')
-    params['drtRRMinPathLength'] = cmds.getAttr(render_settings_node + '.drt_rr_min_path_length')
+    params['drt_dl_bsdf_samples'] = cmds.getAttr(render_settings_node + '.drt_dl_bsdf_samples')
+    params['drt_dl_light_samples'] = cmds.getAttr(render_settings_node + '.drt_dl_light_samples')
+    params['drt_enable_ibl'] = cmds.getAttr(render_settings_node + '.drt_enable_ibl')
+    params['drt_ibl_bsdf_samples'] = cmds.getAttr(render_settings_node + '.drt_ibl_bsdf_samples')
+    params['drt_ibl_env_samples'] = cmds.getAttr(render_settings_node + '.drt_ibl_env_samples')
+    params['drt_max_path_length'] = cmds.getAttr(render_settings_node + '.drt_max_path_length')
+    params['drt_rr_min_path_length'] = cmds.getAttr(render_settings_node + '.drt_rr_min_path_length')
 
-    params['ptDLLightSamples'] = cmds.getAttr(render_settings_node + '.pt_dl_light_samples')
-    params['ptEnableCaustics'] = cmds.getAttr(render_settings_node + '.pt_enable_caustics')
-    params['ptEnableDL'] = cmds.getAttr(render_settings_node + '.pt_enable_dl')
-    params['ptEnableIBL'] = cmds.getAttr(render_settings_node + '.pt_enable_ibl')
-    params['ptIBLBSDFSamples'] = cmds.getAttr(render_settings_node + '.pt_ibl_bsdf_samples')
-    params['ptIBLEnvSamples'] = cmds.getAttr(render_settings_node + '.pt_ibl_env_samples')
-    params['ptMaxPathLength'] = cmds.getAttr(render_settings_node + '.pt_max_path_length')
-    params['ptNextEventEstimation'] = cmds.getAttr(render_settings_node + '.pt_next_event_estimation')
-    params['ptRRMinPathLength'] = cmds.getAttr(render_settings_node + '.pt_rr_min_path_length')
+    params['pt_dl_light_samples'] = cmds.getAttr(render_settings_node + '.pt_dl_light_samples')
+    params['pt_enable_caustics'] = cmds.getAttr(render_settings_node + '.pt_enable_caustics')
+    params['pt_enable_dl'] = cmds.getAttr(render_settings_node + '.pt_enable_dl')
+    params['pt_enable_ibl'] = cmds.getAttr(render_settings_node + '.pt_enable_ibl')
+    params['pt_ibl_bsdf_samples'] = cmds.getAttr(render_settings_node + '.pt_ibl_bsdf_samples')
+    params['pt_ibl_env_samples'] = cmds.getAttr(render_settings_node + '.pt_ibl_env_samples')
+    params['pt_max_path_length'] = cmds.getAttr(render_settings_node + '.pt_max_path_length')
+    params['pt_next_event_estimation'] = cmds.getAttr(render_settings_node + '.pt_next_event_estimation')
+    params['pt_rr_min_path_length'] = cmds.getAttr(render_settings_node + '.pt_rr_min_path_length')
 
-    params['gtrFilterSize'] = cmds.getAttr(render_settings_node + '.gtr_filter_size')
-    params['gtrMinSamples'] = cmds.getAttr(render_settings_node + '.gtr_min_samples')
-    params['gtrMaxSamples'] = cmds.getAttr(render_settings_node + '.gtr_max_samples')
-    params['gtrMaxContrast'] = cmds.getAttr(render_settings_node + '.gtr_max_contrast')
-    params['gtrMaxVariation'] = cmds.getAttr(render_settings_node + '.gtr_max_variation')
+    params['gtr_filter_size'] = cmds.getAttr(render_settings_node + '.gtr_filter_size')
+    params['gtr_min_samples'] = cmds.getAttr(render_settings_node + '.gtr_min_samples')
+    params['gtr_max_samples'] = cmds.getAttr(render_settings_node + '.gtr_max_samples')
+    params['gtr_max_contrast'] = cmds.getAttr(render_settings_node + '.gtr_max_contrast')
+    params['gtr_max_variation'] = cmds.getAttr(render_settings_node + '.gtr_max_variation')
 
     if cmds.getAttr(render_settings_node + '.gtr_sampler') == 0:
         params['gtrSampler'] = 'uniform'
@@ -1369,9 +1356,13 @@ class asProject():
 
     def __init__(self):
         scene = None
+        output = None
+        configurations = None
 
     def emit_xml(self, doc):
         scene.emit_xml(doc)
+        output.emit_xml(doc)
+        configurations.emit_xml(doc)
 
 #--------------------------------------------------------------------------------------------------
 # traslate_maya_scene function.
@@ -1410,9 +1401,11 @@ def translate_maya_scene(params, maya_scene):
     for frame_number in frame_list:
         ms_commands.info('exporting frame %i' % frame_number)
 
-        # sample_number is list if indexes that should be itterated over in the cached maya scene
+        # mb_sample_number is list if indexes that should be itterated over in the cached maya scene for objects with motion blur
         # if animation export is turned off it should be initialised to the first sample
-        sample_number_list = range(params['motion_samples'])
+        mb_sample_number_list = range(params['motion_samples'])
+
+        non_mb_sample_number_list = frame_number - params['animation_start_frame']
 
         # is animation export is turned on set the sample list according to the current frame and the sample count
         if params['export_animation']:
@@ -1420,9 +1413,110 @@ def translate_maya_scene(params, maya_scene):
             for i in range(params['motion_samples']):
                 sample_number_list[i] += (frame_number - params['animation_start_frame']) * (params['motion_samples'] - 1)
 
+        # begin construction of as object heirarchy *************************************************
+
         as_project = AsProject()
 
-        # clever code goes here
+        # create output and frame objects
+        as_output = AsOutput()
+        as_project.output = as_output
+        as_frame = AsFrame()
+        as_output.frames.append(as_frame)
+        # note: frame camera is set when the camera is retreived for the scene element
+        as_frame.resolution = AsParameter('resolution', '%i %i' % (params['output_res_width'], params['output_res_height']))
+
+        # create configurations object
+        as_configurations = AsConfigurations()
+        as_project.configurations = as_configurations
+
+        # create interactive config
+        interactive_config = AsConfiguration()
+        as_configurations.configurations.append(interactive_config)
+        interactive_config.name = 'interactive'
+        interactive_config.base = 'base_interactive'
+
+        # create final config
+        final_config = AsConfiguration()
+        as_configurations.configurations.append(final_config)
+        final_config.name = 'final'
+        final_config.base = 'base_final'
+        
+        if ['custom_final_config_check']:
+            final_config.parameters.append(AsParameter('lighting_engine', params['custom_final_config_engine']))
+            
+            pt_paramaters = AsParameters()
+            pt_paramaters.name = 'pt'
+            pt_paramaters.parameters.append(AsParameter('dl_light_samples',      params['pt_dl_light_samples']))
+            pt_paramaters.parameters.append(AsParameter('enable_caustics',       params['pt_enable_caustics']))
+            pt_paramaters.parameters.append(AsParameter('enable_dl',             params['pt_enable_dl']))
+            pt_paramaters.parameters.append(AsParameter('enable_ibl',            params['pt_enable_ibl']))
+            pt_paramaters.parameters.append(AsParameter('ibl_env_samples',       params['pt_ibl_env_samples']))
+            pt_paramaters.parameters.append(AsParameter('ibl_bsdf_samples',      params['pt_ibl_bsdf_samples']))
+            pt_paramaters.parameters.append(AsParameter('max_path_length',       params['pt_max_path_length']))
+            pt_paramaters.parameters.append(AsParameter('next_event_estimation', params['pt_next_event_estimation']))
+            pt_paramaters.parameters.append(AsParameter('rr_min_path_length',    params['pt_rr_min_path_length']))
+            final_config.parameters.append(pt_paramaters)
+
+            drt_parameters = AsParameters()
+            drt_parameters.name = 'drt'
+            drt_paramaters.parameters.append(AsParameter('dl_bsdf_samples',      params['drt_dl_bsdf_samples']))
+            drt_paramaters.parameters.append(AsParameter('dl_light_samples',     params['drt_dl_light_samples']))
+            drt_paramaters.parameters.append(AsParameter('enable_ibl',           params['drt_enable_ibl']))
+            drt_paramaters.parameters.append(AsParameter('ibl_bsdf_samples',     params['drt_ibl_bsdf_samples']))
+            drt_paramaters.parameters.append(AsParameter('ibl_env_samples',      params['drt_ibl_env_samples']))
+            drt_paramaters.parameters.append(AsParameter('max_path_length',      params['drt_max_path_length']))
+            drt_paramaters.parameters.append(AsParameter('rr_min_path_length',   params['drt_rr_min_path_length']))
+            final_config.parameters.append(drt_parameters)
+
+            generic_tile_renderer_parameters = AsParameters()
+            generic_tile_renderer_parameters.name = 'generic_tile_renderer'
+            generic_tile_renderer_parameters.parameters.append(AsParameters('filter_size',   params['gtr_filter_size']))
+            generic_tile_renderer_parameters.parameters.append(AsParameters('sampler',       params['gtr_sampler']))
+            generic_tile_renderer_parameters.parameters.append(AsParameters('min_samples',   params['gtr_min_samples']))
+            generic_tile_renderer_parameters.parameters.append(AsParameters('max_samples',   params['gtr_max_samples']))
+            generic_tile_renderer_parameters.parameters.append(AsParameters('max_contrast',  params['gtr_max_contrast']))
+            generic_tile_renderer_parameters.parameters.append(AsParameters('max_variation', params['gtr_max_variation']))
+            final_config.parameters.append(generic_tile_renderer_parameters)
+
+        # begin scene object
+        as_project.scene = AsScene()
+
+        # retreive camera from maya scene cache and create as camera
+        for transform in maya_scene:
+            for camera in transform.child_cameras + transform.descendant_cameras:
+                if camera.transform.name == params['output_camera']:
+                    # set camera parameter in as frame
+                    as_frame.camera = AsParameter('camera', camera.safe_name)
+
+                    # generic camera settings
+                    as_camera = AsCamera()
+                    as_camera.name = camera.safe_name
+                    as_camera.film_dimensions = AsParameter('film_dimensions', '%i %i' % (camera.film_width, cameras.film_height))
+                    as_camera.focal_length = AsParameter('focal_length', camera.focal_length)
+                    
+                    # dof specific camera settings
+                    if camera.dof or params['export_all_cameras_as_thinlens']:
+                        as_camera.model = 'thinlens_camera'
+                    else:
+                        as_camera.model = 'pinhole_camera'
+                        as_camera.focal_distance = AsParameter('focal_distance', cameras.focal_distance)
+                        as_camera.f_Stop = AsParameter('f_Stop', camera.fStop)
+
+                    # create sample number list
+                    camera_sample_number_list = non_mb_sample_number_list
+                    if params['export_camera_blur']:
+                        camera_sample_number_list = mb_sample_number_list
+
+                    # add transforms
+                    for sample_number in camera_sample_number_list:
+                        as_transform = AsTransform()
+                        as_transform.matrix = camera.world_space_matrices[sample_number]
+                        as_camera.transforms.append(as_transform)
+
+
+
+
+        # end construction of as project heirarchy ************************************************
         
         # add project to dict with the project file path as the key
         file_name = base_file_name.replace("#", str(frame_number).zfill(5))
@@ -1485,6 +1579,61 @@ def export_new(render_settings_node):
         cProfile.run(command)
     else:
         export_container_new(render_settings_node)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #--------------------------------------------------------------------------------------------------
@@ -1869,7 +2018,7 @@ class SurfaceShader():
 class Camera():
     def __init__(self, params, cam):
         self.params = params
-        if self.params['sceneCameraDefaultThinLens'] or cmds.getAttr(cam + '.depthOfField'):
+        if self.params['export_all_cameras_as_thinlens'] or cmds.getAttr(cam + '.depthOfField'):
             self.model = 'thinlens_camera'
             self.f_stop = cmds.getAttr(cam + '.fStop')
             self.focal_distance = cmds.getAttr(cam + '.focusDistance')
@@ -2322,7 +2471,7 @@ class Scene():
         doc.start_element('scene')
 
         # write current camera
-        camera_instance = Camera(self.params, self.params['outputCamera'])
+        camera_instance = Camera(self.params, self.params['output_camera'])
         camera_instance.writeXML(doc)
 
         # write colors
@@ -2381,8 +2530,8 @@ class Output():
     def writeXML(self, doc):
         doc.start_element('output')
         doc.start_element('frame name="beauty"')
-        doc.append_parameter('camera', self.params['outputCamera'])
-        doc.append_parameter('color_space', self.params['outputColorSpace'])
+        doc.append_parameter('camera', self.params['output_camera'])
+        doc.append_parameter('color_space', self.params['output_color_space'])
         doc.append_parameter('resolution', '{0} {1}'.format(self.params['output_res_width'], self.params['output_res_height']))
         doc.end_element('frame')
         doc.end_element('output')
@@ -2403,21 +2552,21 @@ class Configurations():
         doc.append_element('configuration name="interactive" base="base_interactive"')
 
         # Emit final configuration.
-        if self.params['customFinalConfigCheck']:
+        if self.params['custom_final_config_check']:
             doc.start_element('configuration name="final" base="base_final"')
 
-            if self.params['customFinalConfigEngine'] == 0:
+            if self.params['custom_final_config_engine'] == 0:
                 doc.append_parameter('lighting_engine', 'pt')
             else:
                 doc.append_parameter('lighting_engine', 'drt')
             
             doc.start_element('parameters name="drt"')
-            doc.append_parameter('dl_bsdf_samples', self.params['drtDLBSDFSamples'])
-            doc.append_parameter('dl_light_samples', self.params['drtDLLightSamples'])
-            doc.append_parameter('enable_ibl', self.params['drtEnableIBL'])
-            doc.append_parameter('ibl_bsdf_samples', self.params['drtIBLBSDFSamples'])
-            doc.append_parameter('ibl_env_samples', self.params['drtIBLEnvSamples'])
-            doc.append_parameter('max_path_length', self.params['drtMaxPathLength'])
+            doc.append_parameter('dl_bsdf_samples', self.params['drt_dl_bsdf_samples'])
+            doc.append_parameter('dl_light_samples', self.params['drt_dl_light_samples'])
+            doc.append_parameter('enable_ibl', self.params['drt_enable_ibl'])
+            doc.append_parameter('drt_ibl_bsdf_samples', self.params['drt_ibl_bsdf_samples'])
+            doc.append_parameter('ibl_env_samples', self.params['drt_ibl_env_samples'])
+            doc.append_parameter('max_path_length', self.params['drt_max_path_length'])
             doc.append_parameter('rr_min_path_length', self.params['drtRRMinPathLength'])
             doc.end_element("parameters")
 
@@ -2439,7 +2588,7 @@ class Configurations():
             else:
                 doc.append_parameter('enable_ibl', 'false')
 
-            doc.append_parameter('ibl_bsdf_samples', self.params['ptIBLBSDFSamples'])
+            doc.append_parameter('drt_ibl_bsdf_samples', self.params['ptIBLBSDFSamples'])
             doc.append_parameter('ibl_env_samples', self.params['ptIBLEnvSamples'])
             doc.append_parameter('max_path_length', self.params['ptMaxPathLength'])
 
@@ -2524,7 +2673,7 @@ def export_container(render_settings_node):
 
         # directory for textures
         params['tex_dir'] = 'textures'
-        if params['animatedTextures']:
+        if params['animated_textures']:
             params['tex_dir'] = os.path.join(frame_name, params['tex_dir'])
         params['absolute_tex_dir'] = os.path.join(params['output_directory'], params['tex_dir'])
 
