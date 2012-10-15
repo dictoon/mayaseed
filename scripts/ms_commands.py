@@ -710,4 +710,18 @@ def create_dir(path):
 
     return path
 
+#--------------------------------------------------------------------------------------------------
+# log functions.
+#--------------------------------------------------------------------------------------------------
+
+def info(message):
+    print 'info {0}'.foramat(message)
+
+def warning(message):
+    cmds.warning(message)
+
+def error(message):
+    cmds.error(message)
+
+
 
