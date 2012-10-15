@@ -1536,8 +1536,8 @@ class Geometry():
         check_export_cancelled()
         self.params = params
         self.name = name
-        self.short_name = ms_commands.legalizeName(self.name.split('|')[-1])
         self.safe_name = ms_commands.legalizeName(name)
+        self.short_name = ms_commands.legalizeName(name.split('|')[-1])
 
         self.hierarchy_name = name
         self.material_nodes = []
@@ -1581,10 +1581,7 @@ class Geometry():
         return self.shading_nodes
 
     def writeXMLInstance(self, doc):
-        print('writing object instance: '+ self.name)
-        doc.start_element('object_instance name="{0}.0_inst" object="{1}.0"'.format(self.short_name, self.short_name))
-        
-        object_name = self.safe_name + ".0"
+        object_name = self.short_name + ".0"
         instance_name = object_name + "_inst"
 
         print("Writing object instance {0}...".format(instance_name))
@@ -1733,9 +1730,7 @@ class Assembly():
 
         # export and write objects
         for geo in self.geo_objects:
-            file_name = ms_commands.legalizeName(geo.short_name)
-
-            doc.start_element('object name="{0}" model="mesh_object"'.format(file_name))
+            doc.start_element('object name="{0}" model="mesh_object"'.format(geo.short_name))
 
             if self.params['export_deformation_blur']:
                 # store the start time of the export
@@ -1753,7 +1748,7 @@ class Assembly():
                     cmds.currentTime(frame)
                     cmds.refresh()
 
-                    obj_filename = "{0}.{1:03}.obj".format(file_name, i)
+                    obj_filename = "{0}.{1:03}.obj".format(geo.short_name, i)
                     doc.append_parameter("{0:03}".format(i), "{0}/{1}".format(self.params['geo_dir'], obj_filename))
 
                     # write the OBJ file to disk
@@ -1765,7 +1760,7 @@ class Assembly():
 
                 cmds.currentTime(start_time)
             else:
-                obj_filename = file_name + ".obj"
+                obj_filename = geo.short_name + ".obj"
                 doc.append_parameter('filename', os.path.join(self.params['geo_dir'], obj_filename))
 
                 # write the OBJ file to disk
