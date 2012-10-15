@@ -361,6 +361,17 @@ class MTransform():
         self.matrices = []
         self.visibility_states = []
 
+        #check for incomming connections to transform attributes and set the is_animated var
+        self.is_animated = False
+        maya_transform_attribute_list = ['translate', 'translateX', 'translateY', 'translateZ', 
+                                         'rotate', 'rotateX', 'rotateY', 'rotateZ', 
+                                         'scale','scaleX','scaleY','scaleZ', 'visibility']
+
+        for attribute in maya_transform_attribute_list:
+            if cmds.listConnections(self.name + '.' + attribute) is not None:
+                self.is_animated = True
+                break
+
         # get children
         mesh_names = cmds.listRelatives(self.name, type='mesh', fullPath=True)
         if mesh_names != None:
@@ -390,7 +401,7 @@ class MTransform():
                 self.descendant_transforms += new_transform.child_transforms
 
     def add_transform_sample(self):
-        self.matricies.append(cmds.xform(self.name, query=True, matrix=True))
+        self.matrices.append(cmds.xform(self.name, query=True, matrix=True))
 
 
 #--------------------------------------------------------------------------------------------------
@@ -787,20 +798,20 @@ class AsTransform():
     def __init__(self):
         self.time = '000'
         self.scaling_value = 1
-        self.matrix = [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]
+        self.matrices = [[1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]]
 
     def emit_xml(self, doc):
         doc.start_element('transform time="%s"' % self.time)
-
         doc.append_element('scaling value="%s"' % self.scaling_value)
-        doc.start_element('matrix')
 
-        doc.append_line('%.15f %.15f %.15f %.15f' % (self.matrix[0], self.matrix[4], self.matrix[8],  self.matrix[12]))
-        doc.append_line('%.15f %.15f %.15f %.15f' % (self.matrix[1], self.matrix[5], self.matrix[9],  self.matrix[13]))
-        doc.append_line('%.15f %.15f %.15f %.15f' % (self.matrix[2], self.matrix[6], self.matrix[10], self.matrix[14]))
-        doc.append_line('%.15f %.15f %.15f %.15f' % (self.matrix[3], self.matrix[7], self.matrix[11], self.matrix[15]))
+        for matrix in self.matrices:
+            doc.start_element('matrix')
+            doc.append_line('%.15f %.15f %.15f %.15f' % (matrix[0], matrix[4], matrix[8],  matrix[12]))
+            doc.append_line('%.15f %.15f %.15f %.15f' % (matrix[1], matrix[5], matrix[9],  matrix[13]))
+            doc.append_line('%.15f %.15f %.15f %.15f' % (matrix[2], matrix[6], matrix[10], matrix[14]))
+            doc.append_line('%.15f %.15f %.15f %.15f' % (matrix[3], matrix[7], matrix[11], matrix[15]))
+            doc.end_element('matrix')
 
-        doc.end_element('matrix')
         doc.end_element('transform') 
 
 #--------------------------------------------------------------------------------------------------
@@ -862,7 +873,7 @@ class AsObject():
     def __init__(self):
         self.name = None
         self.model = 'mesh_object'
-        self.file_name = None
+        self.file_names = None
         self.instances = []
 
     def instantiate(self):
@@ -872,7 +883,7 @@ class AsObject():
 
     def emit_xml(self, doc):
         doc.start_element('object name="%s" model="%s"' % (self.name, self.model))
-        self.file_name.emit_xml(doc)
+        self.file_names.emit_xml(doc)
         doc.end_element('object')
 
 #--------------------------------------------------------------------------------------------------
@@ -1109,7 +1120,6 @@ class AsLight():
         self.name = None
         self.model = None
         self.color = None
-        self.multiplier = None
         self.inner_angle = None
         self.outer_angle = None
         self.transform = None
@@ -1145,6 +1155,7 @@ class AsAssembly():
         self.object_instances = []
         self.assemblies = []
         self.assembly_instances = []
+        self.transforms = []
 
         self.instances = []
 
@@ -1191,6 +1202,9 @@ class AsAssembly():
 
         for assembly_instance in self.assembly_instances:
             assembly_instance.emit_xml(doc)
+
+        for transform in self.transforms:
+            transform.emit_xml(doc)
 
         doc.end_element('assembly')
 
@@ -1373,7 +1387,7 @@ def translate_maya_scene(params, maya_scene):
     """ Main function for converting a cached maya scene into an appleseed object heirarchy """
 
     # create dict for storing appleseedobject models into
-    # the key will be the file path to save the projket too
+    # the key will be the file path to save the project too
     as_object_models = dict()
 
     # initialize frame list with single default value 
@@ -1401,7 +1415,7 @@ def translate_maya_scene(params, maya_scene):
     for frame_number in frame_list:
         ms_commands.info('exporting frame %i' % frame_number)
 
-        # mb_sample_number is list if indexes that should be itterated over in the cached maya scene for objects with motion blur
+        # mb_sample_number is list if indexes that should be iterated over in the cached maya scene for objects with motion blur
         # if animation export is turned off it should be initialised to the first sample
         mb_sample_number_list = range(params['motion_samples'])
 
@@ -1440,7 +1454,7 @@ def translate_maya_scene(params, maya_scene):
         as_configurations.configurations.append(final_config)
         final_config.name = 'final'
         final_config.base = 'base_final'
-        
+
         if ['custom_final_config_check']:
             final_config.parameters.append(AsParameter('lighting_engine', params['custom_final_config_engine']))
             
@@ -1513,8 +1527,15 @@ def translate_maya_scene(params, maya_scene):
                         as_transform.matrix = camera.world_space_matrices[sample_number]
                         as_camera.transforms.append(as_transform)
 
+        # construct assembly heirarchy
+        # start by creating a root assembly to hold all other assemblies
+        root_assembly = AsAssembly()
+        root_assembly.name = 'root_assembly'
+        as_project.scene.assemblies.append(root_assembly)
+        as_project.scene.assembly_instances.append(root_assembly.instantiate())
 
-
+        for transform in maya_scene:
+            construct_transform_descendents(root_assembly, [], transform, mb_sample_number_list, non_mb_sample_number_list, params['export_camera_blur'], params['export_transformation_blur'], params['export_deformation_blur'])
 
         # end construction of as project heirarchy ************************************************
         
@@ -1526,7 +1547,117 @@ def translate_maya_scene(params, maya_scene):
         
     return as_object_models
 
+#--------------------------------------------------------------------------------------------------
+# construct_transform_descendents function.
+#--------------------------------------------------------------------------------------------------
 
+def construct_transform_descendents(parent_assembly, matrix_stack, maya_transform, mb_sample_number_list, non_mb_sample_number_list, camera_blur, transformation_blur, object_blur):
+
+    """ this function recursivley builds an as object heirarchy from a maya scene """
+
+    if maya_transform.is_animated and (transformation_blur == True):
+
+        new_assembly = AsAssembly()
+        new_assembly.name = maya_transform.safe_name
+        parent_assembly.assemblies.append(new_assembly)
+
+        for i in mb_sample_number_list:
+            new_transform = MTransform()
+            new_transform.matrices = [maya_transform.matrix[i]] + matrix_stack
+            new_assembly.transforms.append(new_transform)
+
+        for transform in maya_transform.child_transforms:
+            construct_transform_descendents(new_assembly, [], transform, mb_sample_number_list, non_mb_sample_number_list, camera_blur, transformation_blur, object_blur)
+
+        for light in maya_transform.child_lights:
+            
+            light_color = AsColor()
+            light_color.name = light.name + '_color'
+            light_color.RGB_color = light.color
+            light_color.multiplier = light.multiplier
+            new_assembly.colors.append(light_color)
+            
+            new_light = AsLight()
+            new_light.name = light.safe_name
+            new_light.color = AsParameter('color', light_color.name)
+            new_light.transform = AsTransform()
+
+            if light.model == 'spotLight':
+                new_light.model = 'spot_light'
+                new_light.inner_angle = parameter('inner_angle', light.inner_angle)
+                new_light.outer_angle = parameter('outer_angle', light.outer_angle)
+            else:
+                new_light.model = 'point_light'
+
+            new_assembly.lights.append(new_light)
+
+        for mesh in maya_transform.child_meshes:
+            # for now we wont be supporting instantiating objects
+            # when the time comes i will add a function call here to find 
+            # if the mesh has been defined somewhere in the assembly heriarchy already and instantiate it if so
+            new_mesh = AsObject()
+            new_mesh.name = mesh.safe_name
+            if not object_blur:
+                new_mesh.file_names = AsParameter('filename', mesh.mesh_file_names[non_mb_sample_number_list])
+            else:
+                file_names = AsParameters('filename')
+                for i in mb_sample_number_list:
+                    file_names.parameters.append(AsParameter(i - mb_sample_number_list[0], mesh.mesh_file_names[i]))
+                new_mesh.file_names = file_names
+            new_mesh.transforms
+            new_assembly.objects.append(new_mesh)
+            mesh_instance = new_mesh.instantiate()
+            mesh_instance.transforms.append(AsTransform())
+            new_assembly.object_instances.append(mesh_instance)
+
+    else:
+
+        new_matrix_stack = matrix_stack.append(maya_transform.matrices[non_mb_sample_number_list])
+
+        for transform in maya_transform.child_transforms:
+            construct_transform_descendents(parent_assembly, new_matrix_stack, transform, mb_sample_number_list, non_mb_sample_number_list, camera_blur, transformation_blur, object_blur)
+
+        for light in maya_transform.child_lights:
+            
+            light_color = AsColor()
+            light_color.name = light.name + '_color'
+            light_color.RGB_color = light.color
+            light_color.multiplier = light.multiplier
+            new_assembly.colors.append(light_color)
+            
+            new_light = AsLight()
+            new_light.name = light.safe_name
+            new_light.color = AsParameter('color', light_color.name)
+            new_light.transform = AsTransform()
+            new_light.transform.matrices = new_matrix_stack
+
+            if light.model == 'spotLight':
+                new_light.model = 'spot_light'
+                new_light.inner_angle = parameter('inner_angle', light.inner_angle)
+                new_light.outer_angle = parameter('outer_angle', light.outer_angle)
+            else:
+                new_light.model = 'point_light'
+
+        for mesh in maya_transform.child_meshes:
+            # again, for now we wont be supporting instantiating objects
+            # when the time comes i will add a function call here to find 
+            # if the mesh has been defined somewhere in the assembly heriarchy already and instantiate it if so
+            new_mesh = AsObject()
+            new_mesh.name = mesh.safe_name
+            if not object_blur:
+                new_mesh.file_names = AsParameter('filename', mesh.mesh_file_names[non_mb_sample_number_list])
+            else:
+                file_names = AsParameters('filename')
+                for i in mb_sample_number_list:
+                    file_names.parameters.append(AsParameter(i - mb_sample_number_list[0], mesh.mesh_file_names[i]))
+                new_mesh.file_names = file_names
+
+            new_assembly.objects.append(new_mesh)
+            mesh_instance = new_mesh.instantiate()
+            mesh_transform = AsTransform()
+            mesh_transform.matrices = new_matrix_stack
+            mesh_instance.transforms.append(mesh_transform)
+            new_assembly.object_instances.append(mesh_instance)
 
 #--------------------------------------------------------------------------------------------------
 # export_container_new function.
@@ -1534,20 +1665,20 @@ def translate_maya_scene(params, maya_scene):
 
 def export_container_new(render_settings_node):
 
-    """ This function is triggers the 3 main processes in translation, scene caching, translation and saving"""
+    """ This function triggers the 3 main processes in translation, scene caching, translation and saving"""
     
     export_start_time = time.time()
     
     params = get_maya_params(render_settings_node)
     maya_scene = get_maya_scene(params)
 
-    scene_cache_time = time.time() - start_time
-    ms_commands.info('Scene cached for translation in %.2f seconds' % scene_cache_time)
+    scene_cache_finish = time.time()
+    ms_commands.info('Scene cached for translation in %.2f seconds' % (scene_cache_finish - start_time))
 
     as_object_models = translate_maya_scene(params, maya_scene)
 
-    scene_translation_time = time.time() - scene_cache_time
-    ms_commands.info('Scene translated in %.2f seconds' % scene_translation_time)
+    scene_translation_finish = time.time() 
+    ms_commands.info('Scene translated in %.2f seconds' % (scene_translation_finish - scene_cache_finish))
 
     for as_object_model_key in as_object_models:
 
@@ -1558,11 +1689,11 @@ def export_container_new(render_settings_node):
         as_object_models[as_object_model_key].emit_xml(doc)
         doc.close()
 
-    save_time = time.time() - scene_translation_time
+    save_finish_time = time.time() 
 
-    export_time = time.time() - start_time
+    export_finish_time = time.time() 
 
-    cmds.info('Export finished in %.2f seconds, See the script editor for details' % export_time)
+    cmds.info('Export finished in %.2f seconds, See the script editor for details' % (export_finish_time - start_time))
 
 
 #--------------------------------------------------------------------------------------------------
@@ -1579,62 +1710,6 @@ def export_new(render_settings_node):
         cProfile.run(command)
     else:
         export_container_new(render_settings_node)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #--------------------------------------------------------------------------------------------------
 # Color class.

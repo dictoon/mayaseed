@@ -715,7 +715,7 @@ def create_dir(path):
 #--------------------------------------------------------------------------------------------------
 
 def info(message):
-    print 'info {0}'.foramat(message)
+    print('info {0}'.format(message))
 
 def warning(message):
     cmds.warning(message)
