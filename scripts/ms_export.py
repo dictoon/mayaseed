@@ -361,7 +361,7 @@ class MTransform():
         self.matrices = []
         self.visibility_states = []
 
-        #check for incomming connections to transform attributes and set the is_animated var
+        #check for incoming connections to transform attributes and set the is_animated var
         self.is_animated = False
         maya_transform_attribute_list = ['translate', 'translateX', 'translateY', 'translateZ', 
                                          'rotate', 'rotateX', 'rotateY', 'rotateZ', 
@@ -1384,7 +1384,7 @@ class asProject():
 
 def translate_maya_scene(params, maya_scene):
 
-    """ Main function for converting a cached maya scene into an appleseed object heirarchy """
+    """ Main function for converting a cached maya scene into an appleseed object hierarchy """
 
     # create dict for storing appleseedobject models into
     # the key will be the file path to save the project too
@@ -1415,7 +1415,7 @@ def translate_maya_scene(params, maya_scene):
     for frame_number in frame_list:
         ms_commands.info('exporting frame %i' % frame_number)
 
-        # mb_sample_number is list if indexes that should be iterated over in the cached maya scene for objects with motion blur
+        # mb_sample_number is list of indices that should be iterated over in the cached maya scene for objects with motion blur
         # if animation export is turned off it should be initialised to the first sample
         mb_sample_number_list = range(params['motion_samples'])
 
@@ -1427,7 +1427,7 @@ def translate_maya_scene(params, maya_scene):
             for i in range(params['motion_samples']):
                 sample_number_list[i] += (frame_number - params['animation_start_frame']) * (params['motion_samples'] - 1)
 
-        # begin construction of as object heirarchy *************************************************
+        # begin construction of as object hierarchy *************************************************
 
         as_project = AsProject()
 
@@ -1436,7 +1436,7 @@ def translate_maya_scene(params, maya_scene):
         as_project.output = as_output
         as_frame = AsFrame()
         as_output.frames.append(as_frame)
-        # note: frame camera is set when the camera is retreived for the scene element
+        # note: frame camera is set when the camera is retrieved for the scene element
         as_frame.resolution = AsParameter('resolution', '%i %i' % (params['output_res_width'], params['output_res_height']))
 
         # create configurations object
@@ -1495,7 +1495,7 @@ def translate_maya_scene(params, maya_scene):
         # begin scene object
         as_project.scene = AsScene()
 
-        # retreive camera from maya scene cache and create as camera
+        # retrieve camera from maya scene cache and create as camera
         for transform in maya_scene:
             for camera in transform.child_cameras + transform.descendant_cameras:
                 if camera.transform.name == params['output_camera']:
@@ -1511,15 +1511,16 @@ def translate_maya_scene(params, maya_scene):
                     # dof specific camera settings
                     if camera.dof or params['export_all_cameras_as_thinlens']:
                         as_camera.model = 'thinlens_camera'
+                        as_camera.focal_distance = AsParameter('focal_distance', cameras.focal_distance)
+                        as_camera.f_Stop = AsParameter('f_Stop', camera.f_stop)
                     else:
                         as_camera.model = 'pinhole_camera'
-                        as_camera.focal_distance = AsParameter('focal_distance', cameras.focal_distance)
-                        as_camera.f_Stop = AsParameter('f_Stop', camera.fStop)
 
                     # create sample number list
-                    camera_sample_number_list = non_mb_sample_number_list
                     if params['export_camera_blur']:
                         camera_sample_number_list = mb_sample_number_list
+                    else:
+                        camera_sample_number_list = non_mb_sample_number_list
 
                     # add transforms
                     for sample_number in camera_sample_number_list:
@@ -1527,7 +1528,7 @@ def translate_maya_scene(params, maya_scene):
                         as_transform.matrix = camera.world_space_matrices[sample_number]
                         as_camera.transforms.append(as_transform)
 
-        # construct assembly heirarchy
+        # construct assembly hierarchy
         # start by creating a root assembly to hold all other assemblies
         root_assembly = AsAssembly()
         root_assembly.name = 'root_assembly'
@@ -1537,7 +1538,7 @@ def translate_maya_scene(params, maya_scene):
         for transform in maya_scene:
             construct_transform_descendents(root_assembly, [], transform, mb_sample_number_list, non_mb_sample_number_list, params['export_camera_blur'], params['export_transformation_blur'], params['export_deformation_blur'])
 
-        # end construction of as project heirarchy ************************************************
+        # end construction of as project hierarchy ************************************************
         
         # add project to dict with the project file path as the key
         file_name = base_file_name.replace("#", str(frame_number).zfill(5))
@@ -1553,7 +1554,7 @@ def translate_maya_scene(params, maya_scene):
 
 def construct_transform_descendents(parent_assembly, matrix_stack, maya_transform, mb_sample_number_list, non_mb_sample_number_list, camera_blur, transformation_blur, object_blur):
 
-    """ this function recursivley builds an as object heirarchy from a maya scene """
+    """ this function recursivley builds an as object hierarchy from a maya scene """
 
     if maya_transform.is_animated and (transformation_blur == True):
 
@@ -1604,7 +1605,6 @@ def construct_transform_descendents(parent_assembly, matrix_stack, maya_transfor
                 for i in mb_sample_number_list:
                     file_names.parameters.append(AsParameter(i - mb_sample_number_list[0], mesh.mesh_file_names[i]))
                 new_mesh.file_names = file_names
-            new_mesh.transforms
             new_assembly.objects.append(new_mesh)
             mesh_instance = new_mesh.instantiate()
             mesh_instance.transforms.append(AsTransform())
@@ -1665,7 +1665,7 @@ def construct_transform_descendents(parent_assembly, matrix_stack, maya_transfor
 
 def export_container_new(render_settings_node):
 
-    """ This function triggers the 3 main processes in translation, scene caching, translation and saving"""
+    """ This function triggers the 3 main processes in exporting, scene caching, translation and saving"""
     
     export_start_time = time.time()
     
