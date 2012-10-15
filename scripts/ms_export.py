@@ -1581,9 +1581,6 @@ class Geometry():
         return self.shading_nodes
 
     def writeXMLInstance(self, doc):
-        print('writing object instance: '+ self.name)
-        doc.start_element('object_instance name="{0}.0_inst" object="{1}.0"'.format(self.short_name, self.short_name))
-        
         object_name = self.safe_name + ".0"
         instance_name = object_name + "_inst"
 
