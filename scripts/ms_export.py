@@ -154,7 +154,7 @@ def get_maya_params(render_settings_node):
     params['animated_textures'] = cmds.getAttr(render_settings_node + '.export_animated_textures')
     params['scene_scale'] = 1.0
 
-    if not params['export_animation']:
+    if not (params['export_transformation_blur'] or params['export_deformation_blur'] or params['export_camera_blur']):
         params['motion_samples'] = 1
     elif params['motion_samples'] < 2:
         ms_commands.warning('Motion samples must be >= 2, using 2.')
@@ -174,8 +174,8 @@ def get_maya_params(render_settings_node):
     if cmds.listConnections(render_settings_node + '.camera'):
         params['output_camera'] = cmds.listConnections(render_settings_node + '.camera')[0]
     else:
-        cmds.warning('No camera connected to {0}, using "persp".'.format(render_settings_node))
-        params['output_camera'] = 'persp'
+        ms_commands.warning('No camera connected to {0}, using "|persp|perspShape".'.format(render_settings_node))
+        params['output_camera'] = '|persp|perspShape'
 
     if cmds.getAttr(render_settings_node + '.color_space') == 1:
         params['output_color_space'] = 'linear_rgb'
@@ -231,7 +231,7 @@ def get_maya_params(render_settings_node):
     if cmds.pluginInfo('ms_export_obj_' + str(int(mel.eval('getApplicationVersionAsFloat()'))), query=True, r=True):
         params['obj_exporter'] = ms_commands.export_obj
     else:
-        cmds.warning("No native obj exporter found, exporting using Python obj exporter.")
+        ms_commands.warning("No native obj exporter found, exporting using Python obj exporter.")
         params['obj_exporter'] = ms_export_obj.export
 
     params['verbose_output'] = cmds.getAttr(render_settings_node + '.verbose_output')
@@ -246,7 +246,7 @@ def get_maya_scene(params):
     
     """ Parses the maya scene and returns a list of root transforms with the relevant children """
 
-    print("Caching Maya scene data...")
+    ms_commands.info("Caching Maya scene data...")
 
     start_time = cmds.currentTime(query=True)
 
@@ -346,20 +346,18 @@ class MTransform():
     def __init__(self, params, maya_transform_name, parent):
         self.params = params
         if self.params['verbose_output']:
-            print("Creating MTransform {0}...".format(maya_transform_name))
+            ms_commands.info("Creating MTransform {0}...".format(maya_transform_name))
         self.name = maya_transform_name
-        self.safe_name = ms_commands.legalizeName(self.name)
+        self.safe_name = ms_commands.legalize_name(self.name)
         self.parent = parent
 
         # child attributes
         self.child_cameras = []
-        self.descendant_cameras = []
         self.child_meshes = []
-        self.descendant_meshes = []
         self.child_lights = []
-        self.descendant_lights = []
         self.child_transforms = []
-        self.descendant_transforms = []
+
+        self.has_children = False
 
         # sample attributes
         self.matrices = []
@@ -517,14 +515,14 @@ class MFile():
     def __init__(self, params, maya_file_node):
         self.params = params
         self.name = maya_file_node
-        self.safe_name = ms_commands.legalizeName(self.name)
+        self.safe_name = ms_commands.legalize_name(self.name)
         self.image_name = cmds.getAttr(self.name + '.fileTextureName')
-        self.resolved_image_name = ms_commands.getFileTextureName(self.name)
+        self.resolved_image_name = ms_commands.get_file_texture_name(self.name)
         self.image_file_names = []
         self.is_animated = cmds.getAttr(self.name + '.useFrameExtension')
         self.alpha_is_luminance = cmds.getAttr(self.name + '.alphaIsLuminance')
 
-        texture_placement_node = ms_commands.getConnectedNode(self.name + '.uvCoord')
+        texture_placement_node = ms_commands.get_connected_node(self.name + '.uvCoord')
         if texture_placement_node is not None:
             self.has_uv_placement = True
             self.repeat_u = cmds.getAttr(texture_placement_node + '.repeatU')
@@ -551,7 +549,7 @@ class MMsEnvironment():
 
     def __init__(self, params, maya_ms_environment_node):
         self.name = maya_ms_environment_node
-        self.safe_name = ms_commands.legalizeName(self.name)
+        self.safe_name = ms_commands.legalize_name(self.name)
 
         self.model = cmds.getAttr(self.name + '.model')
 
@@ -578,11 +576,11 @@ class MColorConnection():
 
         def __init__(self, params, color_connection):
             self.name = color_connection
-            self.safe_name = ms_commands.legalizeName(self.name)
+            self.safe_name = ms_commands.legalize_name(self.name)
             self.color_value = cmds.getAttr(self.name)
             self.normalized_color = ms_commands.normalizeRGB(cmds.getAttr(self.name)[0])[:3]
             self.multiplier = ms_commands.normalizeRGB(cmds.getAttr(self.name)[0])[3]
-            self.connected_node = ms_commands.getConnectedNode(self.name)
+            self.connected_node = ms_commands.get_connected_node(self.name)
             if self.connected_node is not None:
                 self.connected_node_type = cmds.nodeType(self.connected_node)
 
@@ -597,7 +595,7 @@ class MMsMaterial():
     def __init__(self, params, maya_ms_material_name):
         self.params = params
         self.name = maya_ms_material_name
-        self.safe_name = ms_commands.legalizeName(self.name)
+        self.safe_name = ms_commands.legalize_name(self.name)
 
         self.shading_nodes = []
         self.colors = []
@@ -675,7 +673,7 @@ class MMsShadingNode():
     def __init__(self, params, maya_ms_shading_node_name):
         self.params = params
         self.name = maya_ms_shading_node_name
-        self.safe_name = ms_commands.legalizeName(self.name)
+        self.safe_name = ms_commands.legalize_name(self.name)
 
         self.type = cmds.getAttr(self.name + '.node_type')    #bsdf, edf etc
         self.model = cmds.getAttr(self.name + '.node_model')  #lambertian etc
@@ -686,7 +684,7 @@ class MMsShadingNode():
         self.textures = []
 
         #add the correct attributes based on the entity defs xml
-        for attribute_key in params['entityDefs'][self.model].attributes.keys():
+        for attribute_key in params['entity_defs'][self.model].attributes.keys():
             self.attributes[attribute_key] = ''
 
         for attribute_key in self.attributes.keys():
@@ -696,7 +694,7 @@ class MMsShadingNode():
             attribute_value = ''
 
             # if the attribute is a color/entity
-            if params['entityDefs'][self.model].attributes[attribute_key].type == 'entity_picker':
+            if params['entity_defs'][self.model].attributes[attribute_key].type == 'entity_picker':
 
                 color_connection = MColorConnection(self.params, maya_attribute)
 
@@ -720,7 +718,7 @@ class MMsShadingNode():
                 else:
                     attribute_value = color_connection
 
-            elif params['entityDefs'][self.model].attributes[attribute_key].type == 'dropdown_list': 
+            elif params['entity_defs'][self.model].attributes[attribute_key].type == 'dropdown_list': 
                 pass
             # the node must be a text entity
             else:
@@ -779,7 +777,7 @@ class AsColor():
         self.wavelength_range = '400.0, 700.0'
 
     def emit_xml(self, doc):
-        print '// Writing color %s' % self.name
+        ms_commands.info('Writing color %s' % self.name)
         doc.start_element('color name="%s"' % self.name)  
         self.color_space.emit_xml(doc)
         self.multiplier.emit_xml(doc)
@@ -1269,6 +1267,7 @@ class AsOutput():
         for frame in self.frames:
             frame.emit_xml(doc)
         doc.end_element('output')
+
 
 #--------------------------------------------------------------------------------------------------
 # AsConfiguration class.
@@ -1843,7 +1842,7 @@ def export_container(render_settings_node):
 
     for as_object_model_key in as_object_models:
 
-        cmds.info('Saving %s' % as_object_model_key)
+        ms_commands.info('Saving %s' % as_object_model_key)
         doc = WriteXml(as_object_model_key)
         doc.append_line('<?xml version="1.0" encoding="UTF-8"?>')
         doc.append_line('<!-- File generated by Mayaseed version {0} -->'.format(ms_commands.MAYASEED_VERSION))
