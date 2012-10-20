@@ -102,34 +102,32 @@ def normalizeRGB(color):
 # Convert shader connection to image.
 #--------------------------------------------------------------------------------------------------
 
-def convertConnectionToImage(shader, attribute, dest_file, resolution=1024, pass_through=False):
+def convert_connection_to_image(shader, attribute, dest_file, resolution=1024, pass_through=False):
     
     dest_dir = os.path.split(dest_file)[0]
     if not os.path.exists(dest_dir):
         os.makedirs(dest_dir)
 
     if not cmds.objExists(shader+'.'+attribute):
-        print 'error converting texture, no object named {0} exists'.format(shader+'.'+attribute)
+        warning('error converting texture, no object named {0} exists'.format(shader+'.'+attribute))
     else:
         connection = cmds.listConnections(shader+'.'+attribute)
         if not connection:
-            print 'nothing connected to {0}, skipping conversion'.format(plug_name)
+            warning( 'nothing connected to {0}, skipping conversion'.format(plug_name))
         elif pass_through == True:
-            print '{0}: skipping conversion'.format(plug_name)
+            warning( '{0}: skipping conversion'.format(plug_name))
         else:
             cmds.hyperShade(objects=shader)
             connected_object = cmds.ls(sl=True)[0]
-            print connected_object
             cmds.convertSolidTx(connection[0] ,connected_object ,fileImageName=dest_file, antiAlias=True, bm=3, fts=True, sp=True, alpha=True, doubleSided=True, resolutionX=resolution, resolutionY=resolution)
         
         return dest_file
-
 
 #--------------------------------------------------------------------------------------------------
 # Convert textures to OpenEXR format.
 #--------------------------------------------------------------------------------------------------
 
-def findPathToImfCopy():
+def find_path_to_imf_copy():
 
     #
     # Values of maya_base_path:
@@ -162,29 +160,32 @@ def findPathToImfCopy():
 
     return None if imf_copy_path is None else os.path.join(imf_copy_path, 'imf_copy')
 
-def convertTexToExr(file_path, dest_dir, overwrite=True, pass_through=False):
-    dest_file = os.path.join(dest_dir, os.path.splitext(os.path.split(file_path)[1])[0] + '.exr')
 
+def convert_texture_to_exr(file_path, export_root, texture_dir, overwrite=True, pass_through=False, relative=True):
+    relative_path = os.path.join(texture_dir, os.path.splitext(os.path.split(file_path)[1])[0] + '.exr')
+    dest_file = os.path.join(export_root, relative_path)
+    dest_dir = os.path.join(export_root, texture_dir)
+    
     if not os.path.exists(file_path):
-        print "# error: {0} does not exist".format(file_path)
+        info("# error: {0} does not exist".format(file_path))
         return dest_file
 
     if pass_through:
-        print "# skipping conversion of {0}".format(file_path)
+        info("# skipping conversion of {0}".format(file_path))
         return dest_file
 
     if os.path.exists(dest_file) and not overwrite:
-        print "# {0} already exists, skipping conversion".format(dest_file)
+        info("# {0} already exists, skipping conversion".format(dest_file))
         return dest_file
 
-    imf_copy_path = findPathToImfCopy()
+    imf_copy_path = find_path_to_imf_copy()
 
     if imf_copy_path is None:
-        print "# error: cannot convert {0}, imf_copy utility not found".format(file_path)
+        info("# error: cannot convert {0}, imf_copy utility not found".format(file_path))
         return dest_file
 
     if not os.path.exists(dest_dir):
-        os.mkdir(dest_dir)
+        os.mkdir(os.path.join(dest_dir))
 
     # -r: make a tiled OpenEXR file
     # -t: set the tile dimensions
@@ -199,14 +200,17 @@ def convertTexToExr(file_path, dest_dir, overwrite=True, pass_through=False):
         p = subprocess.Popen(args)
         p.wait()
 
-    return dest_file
+    if relative:
+        return relative_path
+    else:
+        return dest_file
 
 
 #--------------------------------------------------------------------------------------------------
 # Check if an object is exportable.
 #--------------------------------------------------------------------------------------------------
 
-def shapeIsExportable(node_name):
+def shape_is_exportable(node_name):
     # check if the node exists
     if not cmds.objExists(node_name):
         return False
@@ -215,9 +219,6 @@ def shapeIsExportable(node_name):
     if not cmds.attributeQuery('visibility', node=node_name, exists=True):
         return False
 
-    # check visibility flag
-    if not cmds.getAttr(node_name + '.visibility'):
-        return False
 
     # check to see if it's an intermediate mesh
     if cmds.attributeQuery('intermediateObject', node=node_name, exists=True):
@@ -229,11 +230,6 @@ def shapeIsExportable(node_name):
         if not cmds.getAttr(node_name + '.overrideVisibility'):
             return False
 
-    # has it got a parent and is it visible?
-    if cmds.listRelatives(node_name, parent=True):
-        if not shapeIsExportable(cmds.listRelatives(node_name, parent=True)[0]):
-            return False
-
     return True
 
 
@@ -241,7 +237,7 @@ def shapeIsExportable(node_name):
 # Check if an object has a shader connected.
 #--------------------------------------------------------------------------------------------------
 
-def hasShaderConnected(node_name):
+def has_shader_connected(node_name):
     # check that the shape has a shader connected
     if not cmds.listConnections(node_name, t='shadingEngine'):
         return False
@@ -258,7 +254,7 @@ def hasShaderConnected(node_name):
 #--------------------------------------------------------------------------------------------------
 
 
-def getEntityDefs(xml_file_path, list=False):
+def get_entity_defs(xml_file_path, list=False):
     nodes = dict()
 
     class Node():
@@ -292,7 +288,7 @@ def getEntityDefs(xml_file_path, list=False):
                 #add an attribute and give it a name
                 nodes[entity.getAttribute('model')].attributes[child.getAttribute('name')] = Attribute(child.getAttribute('name'))
                 
-                #itterate over child nodes and check that they are nodes not text
+                #iterate over child nodes and check that they are nodes not text
                 for param in child.childNodes:
                     if not param.nodeName == '#text': 
                         
@@ -347,7 +343,7 @@ def getEntityDefs(xml_file_path, list=False):
 # Add color attribute to node.
 #--------------------------------------------------------------------------------------------------
 
-def addColorAttr(node_name, attribute_name, default_value=(0,0,0)):
+def add_color_attr(node_name, attribute_name, default_value=(0,0,0)):
     cmds.addAttr(node_name, longName=attribute_name, usedAsColor=True, attributeType='float3')
     cmds.addAttr(node_name, longName=(attribute_name + '_R'), attributeType='float', parent=attribute_name)
     cmds.addAttr(node_name, longName=(attribute_name + '_G'), attributeType='float', parent=attribute_name)
@@ -359,11 +355,11 @@ def addColorAttr(node_name, attribute_name, default_value=(0,0,0)):
 # Create shading node.
 #--------------------------------------------------------------------------------------------------
 
-def createShadingNode(model, entity_defs_obj=False):
+def create_shading_node(model, entity_defs_obj=False):
     if entity_defs_obj:
         entity_defs = entity_defs_obj
     else:
-        entity_defs = getEntityDefs(os.path.join(ROOT_DIRECTORY, 'scripts', 'appleseedEntityDefs.xml'))
+        entity_defs = get_entity_defs(os.path.join(ROOT_DIRECTORY, 'scripts', 'appleseedEntityDefs.xml'))
 
     shading_node_name = cmds.shadingNode('ms_appleseed_shading_node', asUtility=True, name=model)
 
@@ -381,10 +377,9 @@ def createShadingNode(model, entity_defs_obj=False):
                     # if there is a default value, use it
                     if entity_defs[entity_key].attributes[attr_key].default_value:
                         default_value = float(entity_defs[entity_key].attributes[attr_key].default_value)
-                        print default_value
-                        addColorAttr(shading_node_name, attr_key, (default_value,default_value,default_value))
+                        add_color_attr(shading_node_name, attr_key, (default_value,default_value,default_value))
                     else:
-                        addColorAttr(shading_node_name, attr_key)
+                        add_color_attr(shading_node_name, attr_key)
 
                 elif entity_defs[entity_key].attributes[attr_key].type == 'text_box':
                      cmds.addAttr(shading_node_name, longName=attr_key, dt="string")
@@ -394,44 +389,10 @@ def createShadingNode(model, entity_defs_obj=False):
 
 
 #--------------------------------------------------------------------------------------------------
-# Get file texture node file name with correct frame number. DEPRECIATED in favor of get_file_textureName
-#--------------------------------------------------------------------------------------------------
-
-def getFileTextureName(file_node):
-    maya_file_texture_name = cmds.getAttr(file_node + '.fileTextureName')
-
-    if sys.platform == 'darwin':
-        maya_file_texture_name = maya_file_texture_name.replace('\\', '/')
-    elif sys.platform == 'win32':
-        maya_file_texture_name = maya_file_texture_name.replace('/', '\\')
-
-    if os.path.exists(maya_file_texture_name):
-        file_texture_name = maya_file_texture_name
-    else:
-        project_directory = cmds.workspace(q=True, rd=True)
-        file_name = os.path.split(maya_file_texture_name)[1]
-        project_relative_path = os.path.join(project_directory, 'sourceimages', file_name)
-        if os.path.exists(project_relative_path):
-            file_texture_name = project_relative_path
-            cmds.warning("File not found: {0}, using equivalent texture from sourceimages".format(maya_file_texture_name))
-        else:
-            cmds.error("File not found: {0}".format(maya_file_texture_name))
-
-    if cmds.getAttr(file_node + '.useFrameExtension'):
-        split_file_texture_name = maya_file_texture_name.split('.')
-        frame_ofset = cmds.getAttr(file_node + '.frameOffset')
-        current_frame = cmds.currentTime(q=True)
-        frame_padding = len(split_file_texture_name[1])
-        frame_number = str(int(current_frame + frame_ofset)).zfill(frame_padding)
-        file_texture_name = split_file_texture_name[0] + '.' + frame_number + '.' + split_file_texture_name[2]
-
-    return file_texture_name 
-
-#--------------------------------------------------------------------------------------------------
 # Get file texture node file name with correct frame number.
 #--------------------------------------------------------------------------------------------------
 
-def get_file_textureName(file_node, frame):
+def get_file_texture_name(file_node, frame=None):
     maya_file_texture_name = cmds.getAttr(file_node + '.fileTextureName')
 
     if sys.platform == 'darwin':
@@ -447,17 +408,18 @@ def get_file_textureName(file_node, frame):
         project_relative_path = os.path.join(project_directory, 'sourceimages', file_name)
         if os.path.exists(project_relative_path):
             file_texture_name = project_relative_path
-            cmds.warning("file not found: {0}, using equivalent texture from sourceimages".format(maya_file_texture_name))
+            warning("file not found: {0}, using equivalent texture from sourceimages".format(maya_file_texture_name))
         else:
             error_msg = "file not found: {0}".format(maya_file_texture_name)
-            cmds.error(error_msg)
+            error(error_msg)
             raise RuntimeError(error_msg)
 
     if cmds.getAttr(file_node + '.useFrameExtension'):
         split_file_texture_name = maya_file_texture_name.split('.')
         frame_ofset = cmds.getAttr(file_node + '.frameOffset')
         frame_padding = len(split_file_texture_name[1])
-        frame_number = str(int(frame + frame_ofset)).zfill(frame_padding)
+        if frame is not None:
+            frame_number = str(int(frame + frame_ofset)).zfill(frame_padding)
         file_texture_name = split_file_texture_name[0] + '.' + frame_number + '.' + split_file_texture_name[2]
 
     return file_texture_name 
@@ -487,7 +449,7 @@ def export_obj(object_name, file_path, overwrite=True):
 # Legalize a name.
 #--------------------------------------------------------------------------------------------------
 
-def legalizeName(filename):
+def legalize_name(filename):
     filename = filename.replace('\\', '_')
     filename = filename.replace('/', '_')
     filename = filename.replace(':', '_')
@@ -504,7 +466,7 @@ def legalizeName(filename):
 # List objects by shader.
 #--------------------------------------------------------------------------------------------------
 
-def listObjectsByShader(shader):
+def list_objects_by_shader(shader):
     shading_engine = cmds.listConnections(shader, type='shadingEngine')[0]
     return cmds.listConnections(shading_engine, type='mesh')
 
@@ -513,7 +475,7 @@ def listObjectsByShader(shader):
 # Get connected node.
 #--------------------------------------------------------------------------------------------------
 
-def getConnectedNode(connection):
+def get_connected_node(connection):
     connections = cmds.listConnections(connection, destination=False, source=True)
     return None if connections is None else connections[0]
 
@@ -522,31 +484,31 @@ def getConnectedNode(connection):
 # Material conversion.
 #--------------------------------------------------------------------------------------------------
 
-def convertAllMaterials():
+def convert_all_materials():
     materials = cmds.ls(mat=True)
 
     if not materials:
-        cmds.warning('no materials in the scene') 
+        warning('no materials in the scene') 
         return
 
     for material in materials:
-        convertMaterial(material)
+        convert_material(material)
 
-def convertSelectedMaterials():
+def convert_selected_materials():
     materials = cmds.ls(sl=True, mat=True)
 
     if not materials:
-        cmds.warning('no materials selected') 
+        warning('no materials selected') 
         return
 
     for material in materials:
-        convertMaterial(material)
+        convert_material(material)
 
-def convertMaterial(material):
+def convert_material(material):
     material_type = cmds.nodeType(material)
 
     if material_type == 'phong' or material_type == 'blinn':
-        convertPhongBlinnMaterial(material)
+        convert_phong_blinn_material(material)
     elif material_type == 'ms_appleseed_material':
         pass
     elif material_type == 'surfaceShader':
@@ -554,49 +516,49 @@ def convertMaterial(material):
     elif material_type == 'lambert':
         convert_lambert_material(material)
     else:
-        cmds.warning("don't know how to convert material of type '{0}'".format(material_type))
+        warning("don't know how to convert material of type '{0}'".format(material_type))
 
-def convertPhongBlinnMaterial(material):
-    print '// converting shader', material
+def convert_phong_blinn_material(material):
+    info('converting shader ' + material)
 
     new_material_node = cmds.shadingNode('ms_appleseed_material', asShader=True, name=(material + '_translation')) 
 
     # set random hardware color
     cmds.setAttr(new_material_node + '.hardware_color_in', random.random(), random.random(), random.random(), type='float3')
 
-    color_connection = getConnectedNode(material + '.color')
-    specular_color_connection = getConnectedNode(material + '.specularColor')
-    transparency_connection = getConnectedNode(material + '.transparency')
-    # bump_connection = getConnectedNode(material + '.bumpMapping')
+    color_connection = get_connected_node(material + '.color')
+    specular_color_connection = get_connected_node(material + '.specularColor')
+    transparency_connection = get_connected_node(material + '.transparency')
+    # bump_connection = get_connected_node(material + '.bumpMapping')
 
-    bsdf = createShadingNode('ashikhmin_brdf')
+    bsdf = create_shading_node('ashikhmin_brdf')
     cmds.connectAttr(bsdf + '.outColor', new_material_node + '.BSDF_front_color')
 
-    # edf = createShadingNode('diffuse_edf')
+    # edf = create_shading_node('diffuse_edf')
     # cmds.connectAttr(edf + '.outColor', new_material_node + '.EDF_color')
 
-    surface_shader = createShadingNode('physical_surface_shader')
+    surface_shader = create_shading_node('physical_surface_shader')
     cmds.connectAttr(surface_shader + '.outColor', new_material_node + '.surface_shader_front_color')
 
     # diffuse
     color_value = cmds.getAttr(material + '.color')[0]
     cmds.setAttr(bsdf + '.diffuse_reflectance', color_value[0], color_value[1], color_value[2], type='float3')
     if color_connection: 
-        print("connecting {0}.outColor to {1}.diffuse_reflectance".format(color_connection, bsdf))
+        info("connecting {0}.outColor to {1}.diffuse_reflectance".format(color_connection, bsdf))
         cmds.connectAttr(color_connection + '.outColor', bsdf + '.diffuse_reflectance')
 
     # glossy
     color_value = cmds.getAttr(material + '.specularColor')[0]
     cmds.setAttr(bsdf + '.glossy_reflectance', color_value[0], color_value[1], color_value[2], type='float3')
     if specular_color_connection:
-        print("connecting {0}.outColor to {1}.glossy_reflectance".format(specular_color_connection, bsdf))
+        info("connecting {0}.outColor to {1}.glossy_reflectance".format(specular_color_connection, bsdf))
         cmds.connectAttr(specular_color_connection + '.outColor', bsdf + '.glossy_reflectance')
 
     # transparency
     color_value = cmds.getAttr(material + '.transparency')[0]
     cmds.setAttr(new_material_node + '.alpha_map_color', color_value[0], color_value[1], color_value[2], type='float3')
     if transparency_connection:
-        print("connecting {0}.outColor to {1}.alpha_map_color".format(transparency_connection, new_material_node))
+        info("connecting {0}.outColor to {1}.alpha_map_color".format(transparency_connection, new_material_node))
         cmds.connectAttr(transparency_connection + '.outColor', new_material_node + '.alpha_map_color')
 
     # shininess
@@ -618,31 +580,31 @@ def convertPhongBlinnMaterial(material):
 
 
 def convert_surface_shader_material(material):
-    print '// converting shader', material
+    info('converting shader ' + material)
 
     new_material_node = cmds.shadingNode('ms_appleseed_material', asShader=True, name=(material + '_translation')) 
 
     # set random hardware color
     cmds.setAttr(new_material_node + '.hardware_color_in', random.random(), random.random(), random.random(), type='float3')
 
-    out_color_connection = getConnectedNode(material + '.outColor')
-    out_transparency_connection = getConnectedNode(material + '.outTransparency')
+    out_color_connection = get_connected_node(material + '.outColor')
+    out_transparency_connection = get_connected_node(material + '.outTransparency')
 
-    surface_shader = createShadingNode('constant_surface_shader')
+    surface_shader = create_shading_node('constant_surface_shader')
     cmds.connectAttr(surface_shader + '.outColor', new_material_node + '.surface_shader_front_color')
 
     # color
     color_value = cmds.getAttr(material + '.outColor')[0]
     cmds.setAttr(surface_shader + '.color', color_value[0], color_value[1], color_value[2], type='float3')
     if out_color_connection: 
-        print("connecting {0}.outColor to {1}.color".format(out_color_connection, surface_shader))
+        info("connecting {0}.outColor to {1}.color".format(out_color_connection, surface_shader))
         cmds.connectAttr(out_color_connection + '.outColor', surface_shader + '.color')
 
     # transparency
     color_value = cmds.getAttr(material + '.outTransparency')[0]
     cmds.setAttr(new_material_node + '.alpha_map_color', color_value[0], color_value[1], color_value[2], type='float3')
     if out_transparency_connection:
-        print("connecting {0}.outColor to {1}.alpha_map_color".format(out_transparency_connection, new_material_node))
+        info("connecting {0}.outColor to {1}.alpha_map_color".format(out_transparency_connection, new_material_node))
         cmds.connectAttr(out_transparency_connection + '.outColor', new_material_node + '.alpha_map_color')
 
     material_shading_group = cmds.listConnections(material, type='shadingEngine')
@@ -651,18 +613,18 @@ def convert_surface_shader_material(material):
 
 
 def convert_lambert_material(material):
-    print '// converting shader', material
+    info('converting shader ' + material)
 
     new_material_node = cmds.shadingNode('ms_appleseed_material', asShader=True, name=(material + '_translation')) 
 
     # set random hardware color
     cmds.setAttr(new_material_node + '.hardware_color_in', random.random(), random.random(), random.random(), type='float3')
 
-    color_connection = getConnectedNode(material + '.color')
-    transparency_connection = getConnectedNode(material + '.transparency')
+    color_connection = get_connected_node(material + '.color')
+    transparency_connection = get_connected_node(material + '.transparency')
 
-    brdf = createShadingNode('lambertian_brdf')
-    surface_shader = createShadingNode('physical_surface_shader')
+    brdf = create_shading_node('lambertian_brdf')
+    surface_shader = create_shading_node('physical_surface_shader')
 
     cmds.connectAttr(brdf + '.outColor', new_material_node + '.BSDF_front_color')
     cmds.connectAttr(surface_shader + '.outColor', new_material_node + '.surface_shader_front_color')
@@ -672,14 +634,14 @@ def convert_lambert_material(material):
     color_value = cmds.getAttr(material + '.color')[0]
     cmds.setAttr(brdf + '.reflectance', color_value[0], color_value[1], color_value[2], type='float3')
     if color_connection: 
-        print("connecting {0}.outColor to {1}.reflectance".format(color_connection, surface_shader))
+        info("connecting {0}.outColor to {1}.reflectance".format(color_connection, surface_shader))
         cmds.connectAttr(color_connection + '.outColor', brdf + '.reflectance')
 
     # transparency
     color_value = cmds.getAttr(material + '.transparency')[0]
     cmds.setAttr(new_material_node + '.alpha_map_color', color_value[0], color_value[1], color_value[2], type='float3')
     if transparency_connection:
-        print("connecting {0}.outColor to {1}.alpha_map_color".format(transparency_connection, new_material_node))
+        info("connecting {0}.outColor to {1}.alpha_map_color".format(transparency_connection, new_material_node))
         cmds.connectAttr(transparency_connection + '.outColor', new_material_node + '.alpha_map_color')
 
     material_shading_group = cmds.listConnections(material, type='shadingEngine')
@@ -715,10 +677,10 @@ def create_dir(path):
 #--------------------------------------------------------------------------------------------------
 
 def info(message):
-    print('info {0}'.format(message))
+    print('// {0}'.format(message))
 
 def warning(message):
-    cmds.warning(message)
+    print('#  {0}'.format(message))
 
 def error(message):
     cmds.error(message)
