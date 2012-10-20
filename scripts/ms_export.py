@@ -131,17 +131,17 @@ def write_single_transform(doc, object, time, scale):
 #--------------------------------------------------------------------------------------------------
 
 def get_maya_params(render_settings_node):
-    print("Retrieving settings from UI...")
+    ms_commands.info("Retrieving settings from UI...")
 
     params = {}
 
-    params['entityDefs'] = ms_commands.getEntityDefs(os.path.join(ms_commands.ROOT_DIRECTORY, 'scripts', 'appleseedEntityDefs.xml'))
+    params['entity_defs'] = ms_commands.get_entity_defs(os.path.join(ms_commands.ROOT_DIRECTORY, 'scripts', 'appleseedEntityDefs.xml'))
 
     # Main settings.
     params['output_directory'] = cmds.getAttr(render_settings_node + '.output_directory')
     params['file_name'] = cmds.getAttr(render_settings_node + '.output_file')
-    params['convertShadingNodes'] = cmds.getAttr(render_settings_node + '.convert_shading_nodes_to_textures')
-    params['convertTexturesToExr'] = cmds.getAttr(render_settings_node + '.convert_textures_to_exr')
+    params['convert_shading_nodes'] = cmds.getAttr(render_settings_node + '.convert_shading_nodes_to_textures')
+    params['convert_textures_to_exr'] = cmds.getAttr(render_settings_node + '.convert_textures_to_exr')
     params['overwrite_existing_textures'] = cmds.getAttr(render_settings_node + '.overwrite_existing_textures')
     params['export_camera_blur'] = cmds.getAttr(render_settings_node + '.export_camera_blur')
     params['exportMayaLights'] = cmds.getAttr(render_settings_node + '.export_maya_lights')
