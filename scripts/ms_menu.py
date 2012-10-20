@@ -59,13 +59,13 @@ def buildMenu():
     cmds.menuItem(label='Create Material', parent='ms_menu', command=('import maya.cmds as cmds\ncmds.shadingNode("ms_appleseed_material", asShader=True)'))
 
     # Load entity definitions
-    entity_defs = ms_commands.getEntityDefs(os.path.join(ms_commands.ROOT_DIRECTORY, 'scripts', 'appleseedEntityDefs.xml'))
+    entity_defs = ms_commands.get_entity_defs(os.path.join(ms_commands.ROOT_DIRECTORY, 'scripts', 'appleseedEntityDefs.xml'))
 
     # Create BSDF
     cmds.menuItem('menu_create_BSDF', subMenu=True, label='Create BSDF', to=True, parent='ms_menu')
     for entity_key in entity_defs.keys():
         if entity_defs[entity_key].type == 'bsdf':
-            command = 'import ms_commands\nms_commands.createShadingNode("' + entity_key + '")'
+            command = 'import ms_commands\nms_commands.create_shading_node("' + entity_key + '")'
             cmds.menuItem(label=entity_key, parent='menu_create_BSDF', command=command)
 
     # Create EDF
@@ -86,8 +86,8 @@ def buildMenu():
     cmds.menuItem(divider=True, parent='ms_menu')
     cmds.menuItem('menu_convert_maya_materials', subMenu=True, label='Convert Maya materials', to=True, parent='ms_menu')
 
-    cmds.menuItem(label='Selected Materials', parent='menu_convert_maya_materials', command='import ms_commands\nms_commands.convertSelectedMaterials()')
-    cmds.menuItem(label='All Materials', parent='menu_convert_maya_materials', command='import ms_commands\nms_commands.convertAllMaterials()')
+    cmds.menuItem(label='Selected Materials', parent='menu_convert_maya_materials', command='import ms_commands\nms_commands.convert_selected_materials()')
+    cmds.menuItem(label='All Materials', parent='menu_convert_maya_materials', command='import ms_commands\nms_commands.convert_all_materials()')
 
     # Export
     cmds.menuItem(divider=True, parent='ms_menu')
@@ -97,7 +97,7 @@ def buildMenu():
 
     # About
     cmds.menuItem(divider=True, parent='ms_menu')
-    cmds.menuItem(label='About', parent='ms_menu', command='import ms_commands\nms_commands.msInfoDial()')
+    cmds.menuItem(label='About', parent='ms_menu', command='import ms_commands\nms_commands.ms_info_dial()')
 
 def deleteMenu():
     cmds.deleteUI('ms_menu')
