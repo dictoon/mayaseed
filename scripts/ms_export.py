@@ -281,49 +281,37 @@ def get_maya_scene(params):
     params['output_directory'] = params['output_directory'].replace("<ProjectDir>", project_directory)
     params['output_directory'] = params['output_directory'].replace("<SceneName>", scene_basename)
 
-    texture_dir = ms_commands.create_dir(os.path.join(params['output_directory'], 'textures'))
+    texture_dir = '_textures'
+    ms_commands.create_dir(os.path.join(params['output_directory'], texture_dir))
+    geo_dir = '_geometry'
+    ms_commands.create_dir(os.path.join(params['output_directory'], geo_dir))
 
     # add motion samples
     current_frame = start_frame
+    frame_sample_number = 1
 
     while current_frame <= end_frame:
         cmds.currentTime(current_frame)
         rounded_time = '%.6f' % current_frame
 
         # create frame output directories
-        frame_dir = ms_commands.create_dir(os.path.join(params['output_directory'], rounded_time))
-        geo_dir = ms_commands.create_dir(os.path.join(frame_dir, 'geometry'))
+        # frame_dir = ms_commands.create_dir(os.path.join(params['output_directory'], rounded_time))
 
-        if params['export_transformation_blur'] or (current_frame == start_frame):
-            print("Adding transform samples, frame {0}...".format(current_frame))
-            for transform in maya_root_transforms:
-                print '?? adding transform sample to', transform.name
-                transform.add_transform_sample()
-                for descendant_transform in (transform.descendant_transforms + transform.child_transforms):
-                    print '?? adding transform sample to', descendant_transform.name
-                    descendant_transform.add_transform_sample()
+        ms_commands.info("Adding motion samples, frame {0}...".format(current_frame))
 
-        if params['export_deformation_blur'] or (current_frame == start_frame):
-            print("Adding deformation samples, frame {0}...".format(current_frame))
-            for transform in maya_root_transforms:
-                for mesh in (transform.descendant_meshes + transform.child_meshes):
-                    mesh.add_deform_sample(geo_dir, current_frame)
+        # if this is the first sample force a sample
+        if (current_frame == start_frame):
+            force_sample = True
+        else:
+            force_sample = False
 
-        if params['export_camera_blur'] or (current_frame == start_frame):
-            print("Adding camera transformation samples, frame {0}...".format(current_frame))
-            for transform in maya_root_transforms:
-                for camera in (transform.descendant_cameras + transform.child_cameras):
-                    camera.add_matrix_sample()
-
-        # output textures
         for transform in maya_root_transforms:
-            for mesh in (transform.child_meshes + transform.descendant_meshes):
-                for material in mesh.materials:
-                    for texture in material.textures:
-                        # if its the first frame of the animation force a sample
-                        # otherwise only add samples for animated textures
-                        if texture.is_animated or (current_frame == start_frame):
-                            texture.add_image_sample(texture_dir, current_frame)
+            add_scene_sample(transform, params['export_transformation_blur'], params['export_deformation_blur'], params['export_camera_blur'], current_frame, start_frame, frame_sample_number, force_sample, params['output_directory'], geo_dir, texture_dir)
+
+
+        frame_sample_number += 1
+        if frame_sample_number == params['motion_samples']:
+            frame_sample_number = 1
 
         current_frame += sample_increment
 
@@ -333,6 +321,36 @@ def get_maya_scene(params):
     cmds.currentTime(start_time)
 
     return maya_root_transforms
+
+
+#--------------------------------------------------------------------------------------------------
+# add_scene_sample function.
+#--------------------------------------------------------------------------------------------------
+
+def add_scene_sample(m_transform, transform_blur, deform_blur, camera_blur, current_frame, start_frame, frame_sample_number, force_sample, export_root, geo_dir, tex_dir):
+
+    if transform_blur or force_sample:
+        m_transform.add_transform_sample()
+
+    if deform_blur or force_sample:
+        for mesh in m_transform.child_meshes:
+            if mesh.has_deformation or force_sample:
+                mesh.add_deform_sample(export_root, geo_dir, current_frame)
+
+    for mesh in m_transform.child_meshes:
+        if (frame_sample_number == 1) or force_sample:
+            for material in mesh.materials:
+                for texture in material.textures:
+                    if texture.is_animated or force_sample:
+                        texture.add_image_sample(export_root, tex_dir, current_frame)
+
+    if camera_blur or force_sample:
+        for camera in m_transform.child_cameras:
+            camera.add_matrix_sample()
+
+
+    for transform in m_transform.child_transforms:
+        add_scene_sample(transform, transform_blur, deform_blur, camera_blur, current_frame, start_frame, frame_sample_number, force_sample, export_root, geo_dir, tex_dir)
 
 
 #--------------------------------------------------------------------------------------------------
