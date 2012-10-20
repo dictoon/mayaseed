@@ -1739,79 +1739,92 @@ def build_as_shading_nodes(root_assembly, current_maya_shading_node):
 
     current_shading_node = None
     if current_maya_shading_node.type == 'bsdf':
-        current_shading_node = AsBsdf()
-        root_assembly.bsdfs.append(current_shading_node)
+        current_shading_node = get_from_list(root_assembly.bsdfs, current_maya_shading_node.safe_name)
+        if current_shading_node is None:
+            current_shading_node = AsBsdf()
+            root_assembly.bsdfs.append(current_shading_node)
+        else:
+            return current_shading_node
+
     elif current_maya_shading_node.type == 'edf':
-        current_shading_node = AsEdf()
-        root_assembly.edfs.append(current_shading_node)
+        current_shading_node = get_from_list(root_assembly.edfs, current_maya_shading_node.safe_name)
+        if current_shading_node is None:
+            current_shading_node = AsEdf()
+            root_assembly.edfs.append(current_shading_node)
+        else:
+            return current_shading_node
+
     elif current_maya_shading_node.type == 'surface_shader':
-        current_shading_node = AsSurfaceShader()
-        root_assembly.surface_shaders.append(current_shading_node)
-    
+        current_shading_node = get_from_list(root_assembly.surface_shaders, current_maya_shading_node.safe_name)
+        if current_shading_node is None:
+            current_shading_node = AsSurfaceShader()
+            root_assembly.surface_shaders.append(current_shading_node)
+        else:
+            return current_shading_node
+
+
     current_shading_node.name = current_maya_shading_node.safe_name
     current_shading_node.model = current_maya_shading_node.model
 
-    root_assembly.shading_nodes.append(current_shading_node)
-
-    for attrib_key in current_maya_shading_node.attribs:
-        if current_maya_shading_node.attribs[attrib_key].__class__.__name__ == 'MMsShadingNode':
+    for attrib_key in current_maya_shading_node.attributes:
+        if current_maya_shading_node.attributes[attrib_key].__class__.__name__ == 'MMsShadingNode':
             new_shading_node = None
             for shading_node in shading_nodes:
-                if shading_node.name == current_maya_shading_node.attribs[attrib_key].safe_name:
+                if shading_node.name == current_maya_shading_node.attributes[attrib_key].safe_name:
                     new_shading_node = shading_node
 
             if new_shading_node is None:
-                new_shading_node = build_as_shading_nodes(root_assembly, current_maya_shading_node.attribs[attrib_key])
+                new_shading_node = build_as_shading_nodes(root_assembly, current_maya_shading_node.attributes[attrib_key])
 
-            new_shading_node_parameter = AsParameter(attrib_key, new_shadin_node.name)
-            current_shading_node.parameters.append(new_shadin_node_parameter)
+            new_shading_node_parameter = AsParameter(attrib_key, new_shading_node.name)
+            current_shading_node.parameters.append(new_shading_node_parameter)
 
-        elif current_maya_shading_node.attribs[attrib_key].__class__.__name__ == 'MFile':
+        elif current_maya_shading_node.attributes[attrib_key].__class__.__name__ == 'MFile':
             new_texture_entity = None
-            for texture in textures:
-                if texture.name == current_maya_shading_node[attrib_key].safe_name:
+            for texture in root_assembly.textures:
+                if texture.name == current_maya_shading_node.attributes[attrib_key].safe_name:
                     new_texture_entity = texture
 
             if new_texture_entity is None:
                 new_texture_entity = AsTexture()
-                new_texture_entity.name = current_maya_shading_node[attrib_key].safe_name
-                new_texture_entity.file_name = AsParameter('filename', current_maya_shading_node.attribs[attrib_key].image_name)
+                new_texture_entity.name = current_maya_shading_node.attributes[attrib_key].safe_name
+                new_texture_entity.file_name = AsParameter('filename', current_maya_shading_node.attributes[attrib_key].image_name)
                 root_assembly.textures.append(new_texture_entity)
 
-            new_texture_instance = new_texture_entity.instance()
+            new_texture_instance = new_texture_entity.instantiate()
             root_assembly.texture_instances.append(new_texture_instance)
 
             new_shading_node_parameter = AsParameter(attrib_key, new_texture_instance.name)
-            current_shading_node.parameters.append(new_shadin_node_parameter)
+            current_shading_node.parameters.append(new_shading_node_parameter)
 
-        elif current_maya_shading_node.attribs[attrib_key].__class__.__name__ == 'MColorConnection':
+        elif current_maya_shading_node.attributes[attrib_key].__class__.__name__ == 'MColorConnection':
             new_color_entity = None
-            for color in colors:
-                if color.name == current_maya_shading_node.attribs[attrib_key].safe_name:
+            for color in root_assembly.colors:
+                if color.name == current_maya_shading_node.attributes[attrib_key].safe_name:
                     new_color_entity = color
 
-            if color is None:
+            if new_color_entity is None:
                 new_color_entity = AsColor()
-                new_color_entity.name = current_maya_shading_node.attribs[attrib_key].safe_name
-                new_color_entity.RGB_color = current_maya_shading_node.attribs[attrib_key].normalized_color
-                new_color_entity.multiplier.value = current_maya_shading_node.attribs[attrib_key].multiplier
+                new_color_entity.name = current_maya_shading_node.attributes[attrib_key].safe_name
+                new_color_entity.RGB_color = current_maya_shading_node.attributes[attrib_key].normalized_color
+                new_color_entity.multiplier.value = current_maya_shading_node.attributes[attrib_key].multiplier
                 root_assembly.colors.append(new_color_entity)
 
             new_shading_node_parameter = AsParameter(attrib_key, new_color_entity.name)
-            current_shading_node.parameters.append(new_shadin_node_parameter)
+            current_shading_node.parameters.append(new_shading_node_parameter)
             
-        elif current_maya_shading_node.attribs[attrib_key].__class__.__name__ == 'str':
-            new_shading_node_parameter = AsParameter(attrib_key, current_maya_shading_node.attribs[attrib_key])
-            current_shading_node.parameters.append(new_shadin_node_parameter)
+        elif current_maya_shading_node.attributes[attrib_key].__class__.__name__ == 'str':
+            new_shading_node_parameter = AsParameter(attrib_key, current_maya_shading_node.attributes[attrib_key])
+            current_shading_node.parameters.append(new_shading_node_parameter)
 
     return current_shading_node
 
 
 #--------------------------------------------------------------------------------------------------
-# export_container_new function.
+# export_container function.
 #--------------------------------------------------------------------------------------------------
 
-def export_container_new(render_settings_node):
+def export_container(render_settings_node):
 
     """ This function triggers the 3 main processes in exporting, scene caching, translation and saving"""
     
@@ -1841,20 +1854,20 @@ def export_container_new(render_settings_node):
 
     export_finish_time = time.time() 
 
-    cmds.info('Export finished in %.2f seconds, See the script editor for details' % (export_finish_time - export_start_time))
+    ms_commands.info('Export finished in %.2f seconds, See the script editor for details' % (export_finish_time - export_start_time))
 
 
 #--------------------------------------------------------------------------------------------------
-# export_new function.
+# export function.
 #--------------------------------------------------------------------------------------------------
 
-def export_new(render_settings_node):
+def export(render_settings_node):
 
     """ This function is a wrapper for export_container so that we can profile the export easily """ 
 
     if cmds.getAttr(render_settings_node + '.profile_export'):
         import cProfile
-        command = 'import ms_export\nms_export.export_container_new("' + render_settings_node + '")'
+        command = 'import ms_export\nms_export.export_container("' + render_settings_node + '")'
         cProfile.run(command)
     else:
-        export_container_new(render_settings_node)
+        export_container(render_settings_node)
