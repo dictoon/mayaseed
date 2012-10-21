@@ -350,10 +350,11 @@ def add_scene_sample(m_transform, transform_blur, deform_blur, camera_blur, curr
                     if texture.is_animated or force_sample:
                         texture.add_image_sample(export_root, tex_dir, current_frame)
 
-    if camera_blur or force_sample:
-        for camera in m_transform.child_cameras:
+    for camera in m_transform.child_cameras:
+        if camera_blur or force_sample or (frame_sample_number == 1):
             camera.add_matrix_sample()
-
+        if (frame_sample_number == 1):
+            camera.add_focal_distance_sample()
 
     for transform in m_transform.child_transforms:
         add_scene_sample(transform, transform_blur, deform_blur, camera_blur, current_frame, start_frame, frame_sample_number, force_sample, export_root, geo_dir, tex_dir)
@@ -529,9 +530,10 @@ class MCamera(MTransformChild):
         self.world_space_matrices = []
 
         self.dof = (self.name + '.depthOfField' )
-        self.focal_distance = cmds.getAttr(self.name + '.focusDistance') 
+        self.focal_distance_values = []
+        self.focus_region_scale = cmds.getAttr(self.name + '.focusRegionScale')
         self.focal_length = float(cmds.getAttr(self.name + '.focalLength')) / 1000
-        self.f_stop = cmds.getAttr(self.name + '.fStop')
+        self.f_stop = self.focus_region_scale * cmds.getAttr(self.name + '.fStop')
 
         maya_resolution_aspect = float(self.params['output_res_width']) / float(self.params['output_res_height'])
         maya_film_aspect = cmds.getAttr(self.name + '.horizontalFilmAperture') / cmds.getAttr(self.name + '.verticalFilmAperture')
@@ -546,6 +548,8 @@ class MCamera(MTransformChild):
     def add_matrix_sample(self):
         self.world_space_matrices.append(cmds.xform(self.transform.name, query=True, matrix=True, ws=True))
 
+    def add_focal_distance_sample(self):
+        self.focal_distance_values.append(cmds.getAttr(self.name + '.focusDistance') )
 
 #--------------------------------------------------------------------------------------------------
 # MFile class.
@@ -578,7 +582,7 @@ class MFile():
 
         if self.params['convert_textures_to_exr']:
             converted_image = ms_commands.convert_texture_to_exr(image_name, export_root, texture_dir, overwrite=self.params['overwrite_existing_textures'], pass_through=False)
-            
+
             self.image_file_names.append(converted_image)
         else:
             self.image_file_names.append(image_name)
@@ -1602,7 +1606,7 @@ def translate_maya_scene(params, maya_scene):
         # dof specific camera settings
         if camera.dof or params['export_all_cameras_as_thinlens']:
             as_camera.model = 'thinlens_camera'
-            as_camera.focal_distance = AsParameter('focal_distance', camera.focal_distance)
+            as_camera.focal_distance = AsParameter('focal_distance', camera.focal_distance_values[non_mb_sample_number])
             as_camera.f_stop = AsParameter('f_stop', camera.f_stop)
         else:
             as_camera.model = 'pinhole_camera'
