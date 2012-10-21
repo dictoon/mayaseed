@@ -453,6 +453,10 @@ class MMesh(MTransformChild):
         MTransformChild.__init__(self, params, maya_mesh_name, MTransform_object)                
         self.mesh_file_names = []
         self.materials = []
+        self.has_deformation = False
+        if cmds.listConnections(self.name + '.inMesh') is not None:
+            ms_commands.info(self.name + ' has deformation')
+            self.has_deformation = True
 
         attached_material_names = ms_commands.get_attached_materials(self.name)
 
