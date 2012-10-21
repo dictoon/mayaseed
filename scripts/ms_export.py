@@ -435,9 +435,10 @@ class MTransformChild():
     def __init__(self, params, maya_entity_name, MTransform_object):
         self.params = params
         if self.params['verbose_output']:
-            print("Creating {0}: {1}...".format(self.__class__.__name__, maya_entity_name))
+            ms_commands.info("Creating {0}: {1}...".format(self.__class__.__name__, maya_entity_name))
         self.name = maya_entity_name
-        self.safe_name = ms_commands.legalizeName(self.name)
+        self.short_name = self.name.split('|')[-1]
+        self.safe_name = ms_commands.legalize_name(self.name)
         self.transform = MTransform_object
 
 
@@ -465,10 +466,15 @@ class MMesh(MTransformChild):
                 if cmds.nodeType(material_name) == 'ms_appleseed_material':
                     self.materials.append(MMsMaterial(self.params, material_name))
 
-    def add_deform_sample(self, mesh_dir, time):
+    def add_deform_sample(self, export_root, geo_dir, time):
         file_name = '{0}_{1}.obj'.format(self.safe_name, time)
-        output_file_path = os.path.join(mesh_dir, file_name)
-        self.mesh_file_names.append(ms_commands.export_obj(self.safe_name, output_file_path, overwrite=True))
+        output_file_path = os.path.join(geo_dir, file_name)
+        
+        # set file path as relative value
+        self.mesh_file_names.append(output_file_path)
+
+        # export mesh using absolute file path
+        self.params['obj_exporter'](self.name, os.path.join(export_root, output_file_path), overwrite=True)
 
 
 #--------------------------------------------------------------------------------------------------
@@ -551,11 +557,12 @@ class MFile():
         else:
             self.has_uv_placement = False
 
-    def add_image_sample(self, output_directory, time):
-        image_name = ms_commands.get_file_textureName(self.name, time)
+    def add_image_sample(self, export_root, texture_dir, time):
+        image_name = ms_commands.get_file_texture_name(self.name, time)
 
-        if self.params['convertTexturesToExr']:
-            converted_image = ms_commands.convertTexToExr(image_name, output_directory, overwrite=self.params['overwrite_existing_textures'], pass_through=False)
+        if self.params['convert_textures_to_exr']:
+            converted_image = ms_commands.convert_texture_to_exr(image_name, export_root, texture_dir, overwrite=self.params['overwrite_existing_textures'], pass_through=False)
+            
             self.image_file_names.append(converted_image)
         else:
             self.image_file_names.append(image_name)
@@ -855,10 +862,11 @@ class AsTexture():
         self.name = None
         self.model = 'disk_texture_2d'
         self.color_space = AsParameter('color_space', 'srgb')
+        self.alpha_source = AsParameter('alpha_source', 'color')
         self.file_name = None
         self.instances = []
 
-    def instantiate():
+    def instantiate(self):
         texture_instance = AsTextureInstance(self)
         self.instances.append(texture_instance)
         return texture_instance
@@ -867,7 +875,8 @@ class AsTexture():
         doc.start_element('texture name="%s" model="%s"' % (self.name, self.model))
         self.color_space.emit_xml(doc)
         self.file_name.emit_xml(doc)
-        doc.end_element('model')
+        self.alpha_source.emit_xml(doc)
+        doc.end_element('texture')
 
 #--------------------------------------------------------------------------------------------------
 # AsTextureInstance class.
@@ -901,9 +910,11 @@ class AsObject():
 
     def __init__(self):
         self.name = None
+        self.name_in_obj = None
         self.model = 'mesh_object'
         self.file_names = None
         self.instances = []
+        self.has_deformation = False
 
     def instantiate(self):
         object_instance = AsObjectInstance(self)
@@ -946,12 +957,12 @@ class AsObjectInstance():
         self.material_assignments = []
 
     def emit_xml(self, doc):
-        doc.start_element('object_inatsnce name="%s" object="%s"' % (self.name, self.object.name))
+        doc.start_element('object_instance name="%s" object="%s.0"' % (self.name, self.object.name))
         for transform in self.transforms:
             transform.emit_xml(doc)
         for material_assignment in self.material_assignments:
             material_assignment.emit_xml(doc)
-        doc.end_element('object')
+        doc.end_element('object_instance')
 
 #--------------------------------------------------------------------------------------------------
 # AsCamera class.
@@ -966,6 +977,7 @@ class AsCamera():
         self.model = None
         self.film_dimensions = None
         self.focal_length = None
+        self.focal_distance = None
         self.f_stop = None
         self.diaphragm_blades = AsParameter('diaphragm_blades', '0')
         self.diaphragm_tilt_angle = AsParameter('diaphragm_tilt_angle', '0.0')
@@ -978,6 +990,7 @@ class AsCamera():
         self.focal_length.emit_xml(doc)
 
         if self.model == 'thinlens_camera':
+            self.focal_distance.emit_xml(doc)
             self.diaphragm_blades.emit_xml(doc)
             self.diaphragm_tilt_angle.emit_xml(doc)
             self.f_stop.emit_xml(doc)
@@ -1093,7 +1106,7 @@ class AsBsdf():
         self.model = None
         self.parameters = []
 
-    def emit_xml(sels, doc):
+    def emit_xml(self, doc):
         doc.start_element('bsdf name="%s" model="%s"' % (self.name, self.model))
         for parameter in self.parameters:
             parameter.emit_xml(doc)
@@ -1148,14 +1161,14 @@ class AsLight():
     def __init__(self):
         self.name = None
         self.model = None
-        self.color = None
+        self.exitance = None
         self.inner_angle = None
         self.outer_angle = None
         self.transform = None
 
     def emit_xml(self, doc):
         doc.start_element('light name="%s" model="%s"' % (self.name, self.model))
-        self.color.emit_xml(doc)
+        self.exitance.emit_xml(doc)
         if self.model == 'spot_light':
             self.inner_angle.emit_xml(doc)
             self.outer_angle.emit_xml(doc)
@@ -1184,13 +1197,12 @@ class AsAssembly():
         self.object_instances = []
         self.assemblies = []
         self.assembly_instances = []
-        self.transforms = []
 
         self.instances = []
 
     def instantiate(self):
         assembly_instance = AsAssemblyInstance(self)
-        self.object_instances.append(assembly_instance)
+        self.instances.append(assembly_instance)
         return assembly_instance
 
     def emit_xml(self, doc):
@@ -1205,9 +1217,6 @@ class AsAssembly():
         for texture_instance in self.texture_instances:
             texture_instance.emit_xml(doc)
 
-        for material in self.materials:
-            material.emit_xml(doc)
-
         for bsdf in self.bsdfs:
             bsdf.emit_xml(doc)
 
@@ -1220,20 +1229,20 @@ class AsAssembly():
         for light in self.lights:
             light.emit_xml(doc)
 
+        for material in self.materials:
+            material.emit_xml(doc)
+
         for object in self.objects:
             object.emit_xml(doc)
-
-        for object_instance in self.object_instances:
-            object_instance.emit_xml(doc)
 
         for assembly in self.assemblies:
             assembly.emit_xml(doc)
 
+        for object_instance in self.object_instances:
+            object_instance.emit_xml(doc)
+
         for assembly_instance in self.assembly_instances:
             assembly_instance.emit_xml(doc)
-
-        for transform in self.transforms:
-            transform.emit_xml(doc)
 
         doc.end_element('assembly')
 
@@ -1309,9 +1318,10 @@ class AsConfiguration():
         self.parameters = []
 
     def emit_xml(self, doc):
-        doc.start_element('configuration')
+        doc.start_element('configuration name="%s" base="%s"' % (self.name, self.base))
+        for parameter in self.parameters:
+            parameter.emit_xml(doc)
         doc.end_element('configuration')
-
 
 
 #--------------------------------------------------------------------------------------------------
@@ -1340,7 +1350,7 @@ class AsScene():
     """ Class representing appleseed Scene entity """
 
     def __init__(self):
-        self.cameras = []
+        self.cameras = None
         self.colors = []
         self.textures = []
         self.texture_instances = []
@@ -1352,11 +1362,10 @@ class AsScene():
         self.assemblies = []
         self.assembly_instances = []
 
-    def emit_xml(doc):
+    def emit_xml(self, doc):
         doc.start_element('scene')
 
-        for camera in self.cameras:
-            camera.emit_xml(doc)
+        self.camera.emit_xml(doc)
 
         for color in self.colors:
             color.emit_xml(doc)
@@ -1404,9 +1413,31 @@ class AsProject():
         configurations = None
 
     def emit_xml(self, doc):
-        scene.emit_xml(doc)
-        output.emit_xml(doc)
-        configurations.emit_xml(doc)
+        doc.start_element('project')
+        self.scene.emit_xml(doc)
+        self.output.emit_xml(doc)
+        self.configurations.emit_xml(doc)
+        doc.end_element('project')
+
+#--------------------------------------------------------------------------------------------------
+# fetch_m_camera function.
+#--------------------------------------------------------------------------------------------------
+
+def fetch_m_camera(m_transform, maya_camera_name):
+
+    # check if any direct children are the camera were looking for
+    for camera in m_transform.child_cameras:
+        if camera.name == maya_camera_name:
+            return camera
+
+    # of not found recursivley check any child transform to see if they own the camera
+    for transform in m_transform.child_transforms:
+        camera = fetch_m_camera(transform, maya_camera_name)
+        if camera is not None:
+            return camera
+
+    return None
+
 
 #--------------------------------------------------------------------------------------------------
 # traslate_maya_scene function.
@@ -1525,48 +1556,60 @@ def translate_maya_scene(params, maya_scene):
             generic_tile_renderer_parameters.parameters.append(AsParameter('max_variation', params['gtr_max_variation']))
             final_config.parameters.append(generic_tile_renderer_parameters)
 
+
         # begin scene object
         as_project.scene = AsScene()
 
         # retrieve camera from maya scene cache and create as camera
+        camera = None
         for transform in maya_scene:
-            for camera in transform.child_cameras + transform.descendant_cameras:
-                if camera.transform.name == params['output_camera']:
-                    # set camera parameter in as frame
-                    as_frame.camera = AsParameter('camera', camera.safe_name)
+            camera = fetch_m_camera(transform, params['output_camera'])
+            if camera is not None:
+                break
+        if camera == None:
+            ms_commands.error('Camera not found: ' +  params['output_camera'])
 
-                    # generic camera settings
-                    as_camera = AsCamera()
-                    as_camera.name = camera.safe_name
-                    as_camera.film_dimensions = AsParameter('film_dimensions', '%i %i' % (camera.film_width, cameras.film_height))
-                    as_camera.focal_length = AsParameter('focal_length', camera.focal_length)
-                    
-                    # dof specific camera settings
-                    if camera.dof or params['export_all_cameras_as_thinlens']:
-                        as_camera.model = 'thinlens_camera'
-                        as_camera.focal_distance = AsParameter('focal_distance', cameras.focal_distance)
-                        as_camera.f_Stop = AsParameter('f_Stop', camera.f_stop)
-                    else:
-                        as_camera.model = 'pinhole_camera'
+        # set camera parameter in as frame
+        as_frame.camera = AsParameter('camera', camera.safe_name)
 
-                    # create sample number list
-                    if params['export_camera_blur']:
-                        camera_sample_number_list = mb_sample_number_list
-                    else:
-                        camera_sample_number_list = non_mb_sample_number
+        # generic camera settings
+        as_camera = AsCamera()
+        as_camera.name = camera.safe_name
 
-                    # add transforms
-                    for sample_number in camera_sample_number_list:
-                        as_transform = AsTransform()
-                        as_transform.matrix = camera.world_space_matrices[sample_number]
-                        as_camera.transforms.append(as_transform)
+        as_camera.film_dimensions = AsParameter('film_dimensions', '%f %f' % (camera.film_width, camera.film_height))
+        as_camera.focal_length = AsParameter('focal_length', camera.focal_length)
+        
+        # dof specific camera settings
+        if camera.dof or params['export_all_cameras_as_thinlens']:
+            as_camera.model = 'thinlens_camera'
+            as_camera.focal_distance = AsParameter('focal_distance', camera.focal_distance)
+            as_camera.f_stop = AsParameter('f_stop', camera.f_stop)
+        else:
+            as_camera.model = 'pinhole_camera'
+
+        # create sample number list
+        if params['export_camera_blur']:
+            camera_sample_number_list = mb_sample_number_list
+        else:
+            camera_sample_number_list = [non_mb_sample_number]
+
+        # add transforms
+        for sample_number in camera_sample_number_list:
+            as_transform = AsTransform()
+            as_transform.matrices.append(camera.world_space_matrices[sample_number])
+
+            as_camera.transforms.append(as_transform)
+
+        as_project.scene.camera = as_camera
 
         # construct assembly hierarchy
         # start by creating a root assembly to hold all other assemblies
         root_assembly = AsAssembly()
         root_assembly.name = 'root_assembly'
         as_project.scene.assemblies.append(root_assembly)
-        as_project.scene.assembly_instances.append(root_assembly.instantiate())
+        root_assembly_instance = root_assembly.instantiate()
+        root_assembly_instance.transforms.append(AsTransform())
+        as_project.scene.assembly_instances.append(root_assembly_instance)
 
         for transform in maya_scene:
             construct_transform_descendents(root_assembly, root_assembly, [], transform, mb_sample_number_list, non_mb_sample_number, params['export_camera_blur'], params['export_transformation_blur'], params['export_deformation_blur'])
@@ -1589,84 +1632,92 @@ def construct_transform_descendents(root_assembly, parent_assembly, matrix_stack
 
     """ this function recursivley builds an as object hierarchy from a maya scene """
 
-    print '??', len(maya_transform.matrices)
-    print '??', maya_transform.matrices
-    print '??', maya_transform.name
-    print '?? sample', non_mb_sample_number
-
     current_assembly = parent_assembly
     current_matrix_stack = matrix_stack + [maya_transform.matrices[non_mb_sample_number]]
 
-    if maya_transform.is_animated and (transformation_blur == True):
+    if maya_transform.has_children:
 
-        current_assembly = AsAssembly()
-        current_assembly.name = maya_transform.safe_name
-        parent_assembly.assemblies.append(current_assembly)
-        current_matrix_stack = []
+        if maya_transform.is_animated and (transformation_blur == True):
 
-        for i in mb_sample_number_list:
-            new_transform = MTransform()
-            new_transform.matrices = [maya_transform.matrix[i]] + matrix_stack
-            current_assembly.transforms.append(new_transform)
+            current_assembly = AsAssembly()
+            current_assembly.name = maya_transform.safe_name
+            parent_assembly.assemblies.append(current_assembly)
+            current_assembly_instance = current_assembly.instantiate()
+            parent_assembly.assembly_instances.append(current_assembly_instance)
+            current_matrix_stack = []
 
-    for transform in maya_transform.child_transforms:
-        construct_transform_descendents(root_assembly, current_assembly, current_matrix_stack, transform, mb_sample_number_list, non_mb_sample_number, camera_blur, transformation_blur, object_blur)
-
-    for light in maya_transform.child_lights:
-        
-        light_color = AsColor()
-        light_color.name = light.name + '_color'
-        light_color.RGB_color = light.color
-        light_color.multiplier = light.multiplier
-        current_assembly.colors.append(light_color)
-        
-        new_light = AsLight()
-        new_light.name = light.safe_name
-        new_light.color = AsParameter('color', light_color.name)
-        new_light.transform = AsTransform()
-        if current_matrix_stack == []:
-            new_light.transform.martices = current_matrix_stack
-
-
-        if light.model == 'spotLight':
-            new_light.model = 'spot_light'
-            new_light.inner_angle = parameter('inner_angle', light.inner_angle)
-            new_light.outer_angle = parameter('outer_angle', light.outer_angle)
-        else:
-            new_light.model = 'point_light'
-
-        current_assembly.lights.append(new_light)
-
-    for mesh in maya_transform.child_meshes:
-        # for now we wont be supporting instantiating objects
-        # when the time comes i will add a function call here to find 
-        # if the mesh has been defined somewhere in the assembly heriarchy already and instantiate it if so
-        new_mesh = AsObject()
-        new_mesh.name = mesh.safe_name
-        if not object_blur:
-            new_mesh.file_names = AsParameter('filename', mesh.mesh_file_names[non_mb_sample_number])
-        else:
-            file_names = AsParameters('filename')
+            sample_count = 0
+            time_incriment = 1.0 / (len(mb_sample_number_list) - 1)
             for i in mb_sample_number_list:
-                file_names.parameters.append(AsParameter(i - mb_sample_number_list[0], mesh.mesh_file_names[i]))
-            new_mesh.file_names = file_names
+                new_transform = AsTransform()
+                new_transform.time = str(sample_count * time_incriment)
+                new_transform.matrices = [maya_transform.matrices[i]] + matrix_stack
+                current_assembly_instance.transforms.append(new_transform)
+                sample_count += 1
 
-        current_assembly.objects.append(new_mesh)
-        mesh_instance = new_mesh.instantiate()
-        mesh_transform = AsTransform()
-        if current_matrix_stack == []:
-            mesh_transform.matrices = current_matrix_stack
-        mesh_instance.transforms.append(mesh_transform)
+        for transform in maya_transform.child_transforms:
+            construct_transform_descendents(root_assembly, current_assembly, current_matrix_stack, transform, mb_sample_number_list, non_mb_sample_number, camera_blur, transformation_blur, object_blur)
 
-        # translate materials and assign
-        for maya_material in mesh.materials:
-            as_materials = construct_appleseed_material_network(root_assembly, maya_material)
-            if as_materials[0] is not None:
-                mesh_instance.material_assignments.append(AsObjectInstanceMaterialAssignment(maya_material.safe_name, 'front', as_materials[0].name))
-            if as_materials[1] is not None:
-                mesh_instance.material_assignments.append(AsObjectInstanceMaterialAssignment(maya_material.safe_name, 'back', as_materials[1].name))
+        for light in maya_transform.child_lights:
+            
+            light_color = AsColor()
+            light_color.name = light.name + '_color'
+            light_color.RGB_color = light.color[0]
+            light_color.multiplier.value = light.multiplier
+            current_assembly.colors.append(light_color)
+            
+            new_light = AsLight()
+            new_light.name = light.safe_name
+            new_light.exitance = AsParameter('exitance', light_color.name)
+            new_light.transform = AsTransform()
+            if current_matrix_stack is not []:
+                new_light.transform.martices = current_matrix_stack
 
-        current_assembly.object_instances.append(mesh_instance)
+
+            if light.model == 'spotLight':
+                new_light.model = 'spot_light'
+                new_light.inner_angle = parameter('inner_angle', light.inner_angle)
+                new_light.outer_angle = parameter('outer_angle', light.outer_angle)
+            else:
+                new_light.model = 'point_light'
+
+            current_assembly.lights.append(new_light)
+
+        for mesh in maya_transform.child_meshes:
+            # for now we wont be supporting instantiating objects
+            # when the time comes i will add a function call here to find 
+            # if the mesh has been defined somewhere in the assembly heriarchy already and instantiate it if so
+            new_mesh = AsObject()
+            new_mesh.name = mesh.safe_name
+            new_mesh.name_in_obj = mesh.short_name
+            new_mesh.has_deformation = mesh.has_deformation
+
+            print '??', mesh.mesh_file_names
+
+            if not object_blur or not new_mesh.has_deformation:
+                new_mesh.file_names = AsParameter('filename', mesh.mesh_file_names[0])
+            else:
+                file_names = AsParameters('filename')
+                for i in mb_sample_number_list:
+                    file_names.parameters.append(AsParameter(i - mb_sample_number_list[0], mesh.mesh_file_names[i]))
+                new_mesh.file_names = file_names
+
+            current_assembly.objects.append(new_mesh)
+            mesh_instance = new_mesh.instantiate()
+            mesh_transform = AsTransform()
+            if current_matrix_stack is not []:
+                mesh_transform.matrices = current_matrix_stack
+            mesh_instance.transforms.append(mesh_transform)
+
+            # translate materials and assign
+            for maya_material in mesh.materials:
+                as_materials = construct_appleseed_material_network(root_assembly, maya_material)
+                if as_materials[0] is not None:
+                    mesh_instance.material_assignments.append(AsObjectInstanceMaterialAssignment(maya_material.safe_name, 'front', as_materials[0].name))
+                if as_materials[1] is not None:
+                    mesh_instance.material_assignments.append(AsObjectInstanceMaterialAssignment(maya_material.safe_name, 'back', as_materials[1].name))
+
+            current_assembly.object_instances.append(mesh_instance)
 
 #--------------------------------------------------------------------------------------------------
 # construct_appleseed_material_network function.
@@ -1694,12 +1745,12 @@ def construct_appleseed_material_network(root_assembly, ms_material):
         if ms_material.bsdf_front is not None:
             new_bsdf = build_as_shading_nodes(root_assembly, ms_material.bsdf_front)
             front_material.bsdf = AsParameter('bsdf', new_bsdf.name)
-        if ms_material.bsdf_front is not None:
-            new_bsdf = build_as_shading_nodes(root_assembly, ms_material.bsdf_front)
-            front_material.bsdf = AsParameter('edf', new_bsdf.name)
-        if ms_material.bsdf_front is not None:
-            new_bsdf = build_as_shading_nodes(root_assembly, ms_material.bsdf_front)
-            front_material.bsdf = AsParameter('surface_shader', new_bsdf.name)
+        if ms_material.edf_front is not None:
+            new_edf = build_as_shading_nodes(root_assembly, ms_material.edf_front)
+            front_material.edf = AsParameter('edf', new_edf.name)
+        if ms_material.surface_shader_front is not None:
+            new_surface_shader = build_as_shading_nodes(root_assembly, ms_material.surface_shader_front)
+            front_material.surface_shader = AsParameter('surface_shader', new_surface_shader.name)
         if ms_material.normal_map_front is not None:
             new_texture = AsTexture()
             new_texture.name = ms_material.normal_map_front.safe_name
@@ -1708,14 +1759,14 @@ def construct_appleseed_material_network(root_assembly, ms_material):
             new_texture_instance = new_texture.instantiate()
             root_assembly.texture_instances.append(new_texture_instance)
             front_material.normal_map = AsParameter('normal_map', new_texture_instance.name)
-        if ms_material.alpha_map_front is not None:
+        if ms_material.alpha_map is not None:
             new_texture = AsTexture()
-            new_texture.name = ms_material.alpha_map_front.safe_name
-            new_texture.file_name = AsParameter('filename', ms_material.alpha_map_front.resolved_image_name)
+            new_texture.name = ms_material.alpha_map.safe_name
+            new_texture.file_name = AsParameter('filename', ms_material.alpha_map.resolved_image_name)
             root_assembly.textures.append(new_texture)
             new_texture_instance = new_texture.instantiate()
             root_assembly.texture_instances.append(new_texture_instance)
-            front_material.alpha_map_front = AsParameter('alpha_map_front', new_texture_instance.name)
+            front_material.alpha_map = AsParameter('alpha_map', new_texture_instance.name)
         
         root_assembly.materials.append(front_material)
         materials[0] = front_material
@@ -1726,12 +1777,12 @@ def construct_appleseed_material_network(root_assembly, ms_material):
         if ms_material.bsdf_back is not None:
             new_bsdf = build_as_shading_nodes(root_assembly, ms_material.bsdf_back)
             back_material.bsdf = AsParameter('bsdf', new_bsdf.name)
-        if ms_material.bsdf_back is not None:
-            new_bsdf = build_as_shading_nodes(root_assembly, ms_material.bsdf_back)
-            back_material.bsdf = AsParameter('edf', new_bsdf.name)
-        if ms_material.bsdf_back is not None:
-            new_bsdf = build_as_shading_nodes(root_assembly, ms_material.bsdf_back)
-            back_material.bsdf = AsParameter('surface_shader', new_bsdf.name)
+        if ms_material.edf_back is not None:
+            new_edf = build_as_shading_nodes(root_assembly, ms_material.edf_back)
+            back_material.edf = AsParameter('edf', new_edf.name)
+        if ms_material.surface_shader_back is not None:
+            new_surface_shader = build_as_shading_nodes(root_assembly, ms_material.surface_shader_back)
+            back_material.surface_shader = AsParameter('surface_shader', new_surface_shader.name)
         if ms_material.normal_map_back is not None:
             new_texture = AsTexture()
             new_texture.name = ms_material.normal_map_back.safe_name
@@ -1740,20 +1791,33 @@ def construct_appleseed_material_network(root_assembly, ms_material):
             new_texture_instance = new_texture.instantiate()
             root_assembly.texture_instances.append(new_texture_instance)
             back_material.normal_map = AsParameter('normal_map', new_texture_instance.name)
-        if ms_material.alpha_map_back is not None:
+        if ms_material.alpha_map is not None:
             new_texture = AsTexture()
-            new_texture.name = ms_material.alpha_map_back.safe_name
-            new_texture.file_name = AsParameter('filename', ms_material.alpha_map_back.resolved_image_name)
+            new_texture.name = ms_material.alpha_map.safe_name
+            new_texture.file_name = AsParameter('filename', ms_material.alpha_map.resolved_image_name)
             root_assembly.textures.append(new_texture)
             new_texture_instance = new_texture.instantiate()
             root_assembly.texture_instances.append(new_texture_instance)
-            back_material.alpha_map_back = AsParameter('alpha_map_back', new_texture_instance.name)
+            back_material.alpha_map = AsParameter('alpha_map', new_texture_instance.name)
 
         root_assembly.materials.append(back_material)
         materials[1] = back_material
 
         return materials
 
+#--------------------------------------------------------------------------------------------------
+# is_in_list function.
+#--------------------------------------------------------------------------------------------------
+
+def get_from_list(list, name):
+
+    """ searches through list of bsdfs, edfs or surface_shaders and returns the object if it exists or None if not"""
+
+    for item in list:
+        if item.name == name:
+            return item
+
+    return None
 
 #--------------------------------------------------------------------------------------------------
 # build_as_shading_nodes function.
