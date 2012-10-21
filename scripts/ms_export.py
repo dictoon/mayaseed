@@ -1615,12 +1615,17 @@ def translate_maya_scene(params, maya_scene):
         else:
             camera_sample_number_list = [non_mb_sample_number]
 
+        sample_count = 0
+        time_incriment = 1.0 / (len(camera_sample_number_list) - 1)
+
         # add transforms
         for sample_number in camera_sample_number_list:
-            as_transform = AsTransform()
-            as_transform.matrices.append(camera.world_space_matrices[sample_number])
 
+            as_transform = AsTransform()
+            as_transform.time = str(sample_count * time_incriment)
+            as_transform.matrices.append(camera.world_space_matrices[sample_number])
             as_camera.transforms.append(as_transform)
+            sample_count += 1
 
         as_project.scene.camera = as_camera
 
