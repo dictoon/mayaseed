@@ -172,7 +172,9 @@ def get_maya_params(render_settings_node):
 
     # Output.
     if cmds.listConnections(render_settings_node + '.camera'):
-        params['output_camera'] = cmds.listConnections(render_settings_node + '.camera')[0]
+        connected_cameras = cmds.listConnections(render_settings_node + '.camera')
+        if connected_cameras is not None:
+            params['output_camera'] = cmds.listRelatives(connected_cameras[0], typ='camera', fullPath=True)[0]
     else:
         ms_commands.warning('No camera connected to {0}, using "|persp|perspShape".'.format(render_settings_node))
         params['output_camera'] = '|persp|perspShape'
