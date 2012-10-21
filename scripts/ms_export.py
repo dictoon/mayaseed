@@ -822,13 +822,18 @@ class AsTransform():
     def __init__(self):
         self.time = '000'
         self.scaling_value = 1
-        self.matrices = [[1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]]
+        self.matrices = []
 
     def emit_xml(self, doc):
+
+        # add default matrix if no matrix is present
+        if self.matrices == []:
+            self.matrices.append([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1])
+
         doc.start_element('transform time="%s"' % self.time)
         doc.append_element('scaling value="%s"' % self.scaling_value)
 
-        for matrix in self.matrices:
+        for matrix in reversed(self.matrices):
             doc.start_element('matrix')
             doc.append_line('%.15f %.15f %.15f %.15f' % (matrix[0], matrix[4], matrix[8],  matrix[12]))
             doc.append_line('%.15f %.15f %.15f %.15f' % (matrix[1], matrix[5], matrix[9],  matrix[13]))
