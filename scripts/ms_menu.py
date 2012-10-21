@@ -72,14 +72,14 @@ def buildMenu():
     cmds.menuItem('menu_create_EDF', subMenu=True, label='Create EDF', to=True, parent='ms_menu')
     for entity_key in entity_defs.keys():
         if entity_defs[entity_key].type == 'edf':
-            command = 'import ms_commands\nms_commands.createShadingNode("' + entity_key + '")'
+            command = 'import ms_commands\nms_commands.create_shading_node("' + entity_key + '")'
             cmds.menuItem(label=entity_key, parent='menu_create_EDF', command=command)
 
     # Create Surface Shader
     cmds.menuItem('menu_create_surface_shader', subMenu=True, label='Create Surface Shader', to=True, parent='ms_menu')
     for entity_key in entity_defs.keys():
         if entity_defs[entity_key].type == 'surface_shader':
-            command = 'import ms_commands\nms_commands.createShadingNode("' + entity_key + '")'
+            command = 'import ms_commands\nms_commands.create_shading_node("' + entity_key + '")'
             cmds.menuItem(label=entity_key, parent='menu_create_surface_shader', command=command)
 
     # convert materials
