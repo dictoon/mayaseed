@@ -54,11 +54,11 @@ class printc():
 
 
 def getDepends(xml_file_path):
-
     depend_list = []
 
-    file = open(xml_file_path,'r')
     directory = os.path.split(xml_file_path)[0]
+
+    file = open(xml_file_path, 'r')
     data = file.read()
     file.close()
 
@@ -74,7 +74,7 @@ def getDepends(xml_file_path):
             else:
                 file_name_attr = file_name_attr.replace('\\', '/')
 
-            depend_list.append( os.path.join( directory,  file_name_attr) )
+            depend_list.append(os.path.join( directory,  file_name_attr))
 
     return depend_list
 
@@ -94,17 +94,21 @@ def listAppleseedFiles(directory_path):
 
 
 def isRenderable(file):
-    print '\n'
-    depend_name_text = ('Dependencies for ' + os.path.split(file)[1])
-    print depend_name_text
-    print len(depend_name_text) * '-'
+    depend_name_text = 'dependencies for "{0}"'.format(os.path.split(file)[1])
+    print(depend_name_text)
+    print(len(depend_name_text) * '-')
+
     is_renderable = True
+
     for depend in getDepends(file):
         if os.path.exists(os.path.join(depend)):
             printc.success('EXISTS   ' + depend)
         else:
             printc.error('MISSING  ' + depend)
             is_renderable = False
+
+    print
+
     return is_renderable
 
 
@@ -113,8 +117,6 @@ def main():
     appleseed_dir = None
     watch_dir = None
     for arg in args:
-        print arg
-        print ''
         if arg == 'h' or arg == 'help':
             print 'h or help  = print help'
             print 'ad=...     = set appleseed bin directory'
@@ -128,12 +130,12 @@ def main():
             watch_dir = split_arg[1]
 
     if appleseed_dir == None:
-        printc.warning('no path to appleseed provided use ad=... to set path to appleseed bin directory')
+        printc.warning('no path to appleseed provided, use ad=... to set path to appleseed bin directory.')
         return 0
-    if watch_dir == None:
-        print('no watch directory provided, using working directory')
-        watch_dir = os.getcwd()
 
+    if watch_dir == None:
+        print('no watch directory provided, using working directory.')
+        watch_dir = os.getcwd()
 
     # make folder to put rendered appleseed files into
     if not os.path.exists(os.path.join(watch_dir, '_completed')):
@@ -143,38 +145,41 @@ def main():
     if not os.path.exists(os.path.join(watch_dir, '_output')):
         os.mkdir(os.path.join(watch_dir, '_output'))
 
-    while (True):
+    while True:
         appleseed_files = listAppleseedFiles(watch_dir)
 
-        #if any appleseed files have been found
-        if len(appleseed_files):
+        # if any appleseed files have been found
+        if len(appleseed_files) > 0:
             for appleseed_file in appleseed_files:
+                print
+
                 if isRenderable(appleseed_file):
+                    printc.warning(':::: RENDERING "{0}" ::::\n'.format(appleseed_file))
 
-                    printc.warning('\n\n:::: RENDERING ' + appleseed_file + ' ::::\n\n')
-
-                    #create shell command
+                    # create shell command
                     appleseed_file_name = os.path.split(appleseed_file)[1]
-                    _output_file_name = os.path.splitext(appleseed_file_name)[0] + '.png'
-                    _output_file_path = os.path.join(watch_dir, '_output', _output_file_name)
+                    output_file_name = os.path.splitext(appleseed_file_name)[0] + '.png'
+                    output_file_path = os.path.join(watch_dir, '_output', output_file_name)
+                    command = '{0} -o "{1}" "{2}"'.format(cli_path, output_file_path, appleseed_file)
 
-                    command = cli_path + ' -o ' + _output_file_path + ' ' + appleseed_file
-                    
-                    #execute command
+                    # execute command
                     return_value = os.system(command)
 
-                    #if the return value isnt 0 then somehtign may have gone wrong
-                    if not return_value == 0:
-                        printc.warning('File may not have rendered correctly: ' + appleseed_file)
+                    print("")
+
+                    # if the return value is not 0 then something may have gone wrong
+                    if return_value != 0:
+                        printc.warning('file may not have rendered correctly: ' + appleseed_file)
 
                     move_dest = os.path.join(watch_dir, '_completed', os.path.split(appleseed_file)[1])
-                    shutil.move(appleseed_file,move_dest)
+                    shutil.move(appleseed_file, move_dest)
 
                     break
                 else:
-                    print '\n', datetime.now(), os.path.split(appleseed_file)[1], ': Missing dependencies'
+                    print('{0} - missing dependencies to render "{1}"'.format(datetime.now(), os.path.split(appleseed_file)[1]))
         else:
-            print '\n', datetime.now(), ': Nothing to render' 
+            print("{0} - nothing to render".format(datetime.now()))
+
         time.sleep(3)
 
 
