@@ -724,7 +724,8 @@ class MMsShadingNode():
 
         #add the correct attributes based on the entity defs xml
         for attribute_key in params['entity_defs'][self.model].attributes.keys():
-            self.attributes[attribute_key] = ''
+            if params['entity_defs'][self.model].attributes[attribute_key].type is not 'dropdown_list':
+                self.attributes[attribute_key] = ''
 
         for attribute_key in self.attributes.keys():
             maya_attribute = self.name + '.' + attribute_key
