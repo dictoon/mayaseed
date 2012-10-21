@@ -1483,20 +1483,21 @@ def translate_maya_scene(params, maya_scene):
         final_config.base = 'base_final'
 
         if ['custom_final_config_check']:
+
             final_config.parameters.append(AsParameter('lighting_engine', params['custom_final_config_engine']))
             
-            pt_paramaters = AsParameters()
-            pt_paramaters.name = 'pt'
-            pt_paramaters.parameters.append(AsParameter('dl_light_samples',      params['pt_dl_light_samples']))
-            pt_paramaters.parameters.append(AsParameter('enable_caustics',       params['pt_enable_caustics']))
-            pt_paramaters.parameters.append(AsParameter('enable_dl',             params['pt_enable_dl']))
-            pt_paramaters.parameters.append(AsParameter('enable_ibl',            params['pt_enable_ibl']))
-            pt_paramaters.parameters.append(AsParameter('ibl_env_samples',       params['pt_ibl_env_samples']))
-            pt_paramaters.parameters.append(AsParameter('ibl_bsdf_samples',      params['pt_ibl_bsdf_samples']))
-            pt_paramaters.parameters.append(AsParameter('max_path_length',       params['pt_max_path_length']))
-            pt_paramaters.parameters.append(AsParameter('next_event_estimation', params['pt_next_event_estimation']))
-            pt_paramaters.parameters.append(AsParameter('rr_min_path_length',    params['pt_rr_min_path_length']))
-            final_config.parameters.append(pt_paramaters)
+            pt_parameters = AsParameters()
+            pt_parameters.name = 'pt'
+            pt_parameters.parameters.append(AsParameter('dl_light_samples',      params['pt_dl_light_samples']))
+            pt_parameters.parameters.append(AsParameter('enable_caustics',       params['pt_enable_caustics']))
+            pt_parameters.parameters.append(AsParameter('enable_dl',             params['pt_enable_dl']))
+            pt_parameters.parameters.append(AsParameter('enable_ibl',            params['pt_enable_ibl']))
+            pt_parameters.parameters.append(AsParameter('ibl_env_samples',       params['pt_ibl_env_samples']))
+            pt_parameters.parameters.append(AsParameter('ibl_bsdf_samples',      params['pt_ibl_bsdf_samples']))
+            pt_parameters.parameters.append(AsParameter('max_path_length',       params['pt_max_path_length']))
+            pt_parameters.parameters.append(AsParameter('next_event_estimation', params['pt_next_event_estimation']))
+            pt_parameters.parameters.append(AsParameter('rr_min_path_length',    params['pt_rr_min_path_length']))
+            final_config.parameters.append(pt_parameters)
 
             drt_parameters = AsParameters()
             drt_parameters.name = 'drt'
