@@ -148,6 +148,8 @@ def get_maya_params(render_settings_node):
     params['export_transformation_blur'] = cmds.getAttr(render_settings_node + '.export_transformation_blur')
     params['export_deformation_blur'] = cmds.getAttr(render_settings_node + '.export_deformation_blur')
     params['motion_samples'] = cmds.getAttr(render_settings_node + '.motion_samples')
+    params['shutter_open_time'] = cmds.getAttr(render_settings_node + '.shutter_open_time')
+    params['shutter_close_time'] = cmds.getAttr(render_settings_node + '.shutter_close_time')
     params['export_animation'] = cmds.getAttr(render_settings_node + '.export_animation')
     params['animation_start_frame'] = cmds.getAttr(render_settings_node + '.animation_start_frame')
     params['animation_end_frame'] = cmds.getAttr(render_settings_node + '.animation_end_frame')
@@ -990,6 +992,8 @@ class AsCamera():
         self.f_stop = None
         self.diaphragm_blades = AsParameter('diaphragm_blades', '0')
         self.diaphragm_tilt_angle = AsParameter('diaphragm_tilt_angle', '0.0')
+        self.shutter_open_time = AsParameter('shutter_open_time', '0.0')
+        self.shutter_close_time = AsParameter('shutter_close_time', '1.0')
         self.transforms = []
     
     def emit_xml(self, doc):
@@ -997,6 +1001,8 @@ class AsCamera():
 
         self.film_dimensions.emit_xml(doc)
         self.focal_length.emit_xml(doc)
+        self.shutter_open_time.emit_xml(doc)
+        self.shutter_close_time.emit_xml(doc)
 
         if self.model == 'thinlens_camera':
             self.focal_distance.emit_xml(doc)
@@ -1584,9 +1590,10 @@ def translate_maya_scene(params, maya_scene):
         # generic camera settings
         as_camera = AsCamera()
         as_camera.name = camera.safe_name
-
         as_camera.film_dimensions = AsParameter('film_dimensions', '%f %f' % (camera.film_width, camera.film_height))
         as_camera.focal_length = AsParameter('focal_length', camera.focal_length)
+        as_camera.shutter_open_time.value = params['shutter_open_time']
+        as_camera.shutter_close_time.value = params['shutter_close_time']
         
         # dof specific camera settings
         if camera.dof or params['export_all_cameras_as_thinlens']:
