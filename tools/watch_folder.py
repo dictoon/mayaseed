@@ -29,6 +29,11 @@ import time
 from datetime import datetime
 import shutil
 
+# directory names
+
+OUTPUT_DIR = '_output'
+COMPLETED_DIR = '_completed'
+
 # Define helper class for printing colored text.
 class printc():
     @staticmethod
@@ -138,12 +143,12 @@ def main():
         watch_dir = os.getcwd()
 
     # make folder to put rendered appleseed files into
-    if not os.path.exists(os.path.join(watch_dir, '_completed')):
-        os.mkdir(os.path.join(watch_dir, '_completed'))
+    if not os.path.exists(os.path.join(watch_dir, COMPLETED_DIR)):
+        os.mkdir(os.path.join(watch_dir, COMPLETED_DIR))
 
     # make folder to put rendered images into
-    if not os.path.exists(os.path.join(watch_dir, '_output')):
-        os.mkdir(os.path.join(watch_dir, '_output'))
+    if not os.path.exists(os.path.join(watch_dir, OUTPUT_DIR)):
+        os.mkdir(os.path.join(watch_dir, OUTPUT_DIR))
 
     while True:
         appleseed_files = listAppleseedFiles(watch_dir)
@@ -156,11 +161,16 @@ def main():
                 if isRenderable(appleseed_file):
                     printc.warning(':::: RENDERING "{0}" ::::\n'.format(appleseed_file))
 
+                    temporary_file_name = appleseed_file + '.inprogress'
+
+                    # temporarily rename file so others dont try to render it
+                    os.rename(appleseed_file, temporary_file_name)
+
                     # create shell command
                     appleseed_file_name = os.path.split(appleseed_file)[1]
                     output_file_name = os.path.splitext(appleseed_file_name)[0] + '.png'
-                    output_file_path = os.path.join(watch_dir, '_output', output_file_name)
-                    command = '{0} -o "{1}" "{2}"'.format(cli_path, output_file_path, appleseed_file)
+                    output_file_path = os.path.join(watch_dir, OUTPUT_DIR, output_file_name)
+                    command = '{0} -o "{1}" "{2}"'.format(cli_path, output_file_path, temporary_file_name)
 
                     # execute command
                     return_value = os.system(command)
@@ -171,8 +181,13 @@ def main():
                     if return_value != 0:
                         printc.warning('file may not have rendered correctly: ' + appleseed_file)
 
-                    move_dest = os.path.join(watch_dir, '_completed', os.path.split(appleseed_file)[1])
-                    shutil.move(appleseed_file, move_dest)
+                    # move the file into _completed directory
+                    move_dest = os.path.join(watch_dir, COMPLETED_DIR, os.path.split(temporary_file_name)[1])
+                    shutil.move(temporary_file_name, move_dest)
+
+                    # rename the file to its original name
+                    reverted_file_name = os.path.join(watch_dir, COMPLETED_DIR, os.path.split(appleseed_file)[1])
+                    os.rename(move_dest, reverted_file_name)
 
                     break
                 else:
