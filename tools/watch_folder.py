@@ -121,11 +121,13 @@ def main():
     args = sys.argv
     appleseed_dir = None
     watch_dir = None
+    short_name = None
     for arg in args:
         if arg == 'h' or arg == 'help':
             print 'h or help  = print help'
             print 'ad=...     = set appleseed bin directory'
             print 'wd=...     = set watch directory'
+            print 'sn=...     = set short name, used to identify the file being rendered'
             return 0
         split_arg = arg.split("=")
         if split_arg[0] == 'ad':
@@ -133,6 +135,8 @@ def main():
             cli_path = os.path.join(appleseed_dir, 'appleseed.cli')
         elif split_arg[0] == 'wd':
             watch_dir = split_arg[1]
+        elif split_arg[0] == 'sn':
+            short_name = split_arg[1]
 
     if appleseed_dir == None:
         printc.warning('no path to appleseed provided, use ad=... to set path to appleseed bin directory.')
@@ -161,7 +165,12 @@ def main():
                 if isRenderable(appleseed_file):
                     printc.warning(':::: RENDERING "{0}" ::::\n'.format(appleseed_file))
 
-                    temporary_file_name = appleseed_file + '.inprogress'
+                    if short_name is None:
+                        in_progress_appendage = '.inprogress'
+                    else:
+                        in_progress_appendage = '.' + short_name
+
+                    temporary_file_name = appleseed_file + in_progress_appendage
 
                     # temporarily rename file so others dont try to render it
                     os.rename(appleseed_file, temporary_file_name)
