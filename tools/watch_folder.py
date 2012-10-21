@@ -29,11 +29,6 @@ import time
 from datetime import datetime
 import shutil
 
-CLI_PATH = '/projects/appleseed/sandbox/bin/Release/appleseed.cli'
-FLAGS = ''
-
-print '\n\n\n'
-
 # Define helper class for printing colored text.
 class printc():
     @staticmethod
@@ -114,18 +109,42 @@ def isRenderable(file):
 
 
 def main():
-    working_dir = os.getcwd()
+    args = sys.argv
+    appleseed_dir = None
+    watch_dir = None
+    for arg in args:
+        print arg
+        print ''
+        if arg == 'h' or arg == 'help':
+            print 'h or help  = print help'
+            print 'ad=...     = set appleseed bin directory'
+            print 'wd=...     = set watch directory'
+            return 0
+        split_arg = arg.split("=")
+        if split_arg[0] == 'ad':
+            appleseed_dir = split_arg[1]
+            cli_path = os.path.join(appleseed_dir, 'appleseed.cli')
+        elif split_arg[0] == 'wd':
+            watch_dir = split_arg[1]
+
+    if appleseed_dir == None:
+        printc.warning('no path to appleseed provided use ad=... to set path to appleseed bin directory')
+        return 0
+    if watch_dir == None:
+        print('no watch directory provided, using working directory')
+        watch_dir = os.getcwd()
+
 
     # make folder to put rendered appleseed files into
-    if not os.path.exists(os.path.join(working_dir, 'done')):
-        os.mkdir(os.path.join(working_dir, 'done'))
+    if not os.path.exists(os.path.join(watch_dir, '_completed')):
+        os.mkdir(os.path.join(watch_dir, '_completed'))
 
     # make folder to put rendered images into
-    if not os.path.exists(os.path.join(working_dir, 'output')):
-        os.mkdir(os.path.join(working_dir, 'output'))
+    if not os.path.exists(os.path.join(watch_dir, '_output')):
+        os.mkdir(os.path.join(watch_dir, '_output'))
 
     while (True):
-        appleseed_files = listAppleseedFiles(working_dir)
+        appleseed_files = listAppleseedFiles(watch_dir)
 
         #if any appleseed files have been found
         if len(appleseed_files):
@@ -136,10 +155,10 @@ def main():
 
                     #create shell command
                     appleseed_file_name = os.path.split(appleseed_file)[1]
-                    output_file_name = os.path.splitext(appleseed_file_name)[0] + '.png'
-                    output_file_path = os.path.join(working_dir, 'output', output_file_name)
+                    _output_file_name = os.path.splitext(appleseed_file_name)[0] + '.png'
+                    _output_file_path = os.path.join(watch_dir, '_output', _output_file_name)
 
-                    command = CLI_PATH + ' -o ' + output_file_path + ' ' + appleseed_file
+                    command = cli_path + ' -o ' + _output_file_path + ' ' + appleseed_file
                     
                     #execute command
                     return_value = os.system(command)
@@ -148,7 +167,7 @@ def main():
                     if not return_value == 0:
                         printc.warning('File may not have rendered correctly: ' + appleseed_file)
 
-                    move_dest = os.path.join(working_dir, 'done', os.path.split(appleseed_file)[1])
+                    move_dest = os.path.join(watch_dir, '_completed', os.path.split(appleseed_file)[1])
                     shutil.move(appleseed_file,move_dest)
 
                     break
