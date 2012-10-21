@@ -879,7 +879,6 @@ class AsTexture():
         self.name = None
         self.model = 'disk_texture_2d'
         self.color_space = AsParameter('color_space', 'srgb')
-        self.alpha_source = AsParameter('alpha_source', 'color')
         self.file_name = None
         self.instances = []
 
@@ -892,7 +891,6 @@ class AsTexture():
         doc.start_element('texture name="%s" model="%s"' % (self.name, self.model))
         self.color_space.emit_xml(doc)
         self.file_name.emit_xml(doc)
-        self.alpha_source.emit_xml(doc)
         doc.end_element('texture')
 
 #--------------------------------------------------------------------------------------------------
@@ -1770,7 +1768,6 @@ def construct_appleseed_material_network(root_assembly, ms_material):
             alpha_texture = AsTexture()
             alpha_texture.name = ms_material.alpha_map.safe_name
             alpha_texture.file_name = AsParameter('filename', ms_material.alpha_map.image_file_names[0])
-            print '?? camsa adding', alpha_texture.name
             root_assembly.textures.append(alpha_texture)
             alpha_texture_instance = alpha_texture.instantiate()
 
@@ -1796,7 +1793,6 @@ def construct_appleseed_material_network(root_assembly, ms_material):
                 new_texture = AsTexture()
                 new_texture.name = ms_material.normal_map_front.safe_name
                 new_texture.file_name = AsParameter('filename', ms_material.normal_map_front.image_file_names[0])
-                print '?? camsn adding', new_texture.name
                 root_assembly.textures.append(new_texture)
                 new_texture_instance = new_texture.instantiate()
                 root_assembly.texture_instances.append(new_texture_instance)
@@ -1823,7 +1819,6 @@ def construct_appleseed_material_network(root_assembly, ms_material):
                 new_texture = AsTexture()
                 new_texture.name = ms_material.normal_map_back.safe_name
                 new_texture.file_name = AsParameter('filename', ms_material.normal_map_back.image_file_names[0])
-                print '?? camsn adding', new_texture.name
                 root_assembly.textures.append(new_texture)
                 new_texture_instance = new_texture.instantiate()
                 root_assembly.texture_instances.append(new_texture_instance)
@@ -1913,7 +1908,6 @@ def build_as_shading_nodes(root_assembly, current_maya_shading_node):
                 new_texture_entity.name = current_maya_shading_node.attributes[attrib_key].safe_name
                 new_texture_entity.file_name = AsParameter('filename', current_maya_shading_node.attributes[attrib_key].image_file_names[0])
                 
-                print '?? basn  adding', new_texture_entity.name
                 root_assembly.textures.append(new_texture_entity)
 
             new_texture_instance = new_texture_entity.instantiate()
