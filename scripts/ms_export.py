@@ -1692,8 +1692,6 @@ def construct_transform_descendents(root_assembly, parent_assembly, matrix_stack
             new_mesh.name_in_obj = mesh.short_name
             new_mesh.has_deformation = mesh.has_deformation
 
-            print '??', mesh.mesh_file_names
-
             if not object_blur or not new_mesh.has_deformation:
                 new_mesh.file_names = AsParameter('filename', mesh.mesh_file_names[0])
             else:
