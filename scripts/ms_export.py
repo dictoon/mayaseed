@@ -441,6 +441,7 @@ class MTransformChild():
         self.name = maya_entity_name
         self.short_name = self.name.split('|')[-1]
         self.safe_name = ms_commands.legalize_name(self.name)
+        self.safe_short_name = ms_commands.legalize_name(self.short_name)
         self.transform = MTransform_object
 
 
@@ -452,8 +453,14 @@ class MMesh(MTransformChild):
 
     """ Lightweight class representing Maya mesh data """
 
+    object_counter = 1
+
     def __init__(self, params, maya_mesh_name, MTransform_object):
-        MTransformChild.__init__(self, params, maya_mesh_name, MTransform_object)                
+        MTransformChild.__init__(self, params, maya_mesh_name, MTransform_object)  
+        # incriment class conuter so each instance of the class gets a unique id
+        self.id = MMesh.object_counter
+        MMesh.object_counter +=1
+
         self.mesh_file_names = []
         self.materials = []
         self.has_deformation = False
@@ -469,7 +476,7 @@ class MMesh(MTransformChild):
                     self.materials.append(MMsMaterial(self.params, material_name))
 
     def add_deform_sample(self, export_root, geo_dir, time):
-        file_name = '{0}_{1}.obj'.format(self.safe_name, time)
+        file_name = '%s_%i_%i.obj' % (self.safe_short_name, self.id, time)
         output_file_path = os.path.join(geo_dir, file_name)
         
         # set file path as relative value
