@@ -335,6 +335,8 @@ def add_scene_sample(m_transform, transform_blur, deform_blur, camera_blur, curr
 
     if transform_blur or force_sample:
         m_transform.add_transform_sample()
+        if (frame_sample_number == 1) or force_sample:
+            m_transform.add_visibility_sample()
 
     if deform_blur or force_sample:
         for mesh in m_transform.child_meshes:
@@ -426,6 +428,9 @@ class MTransform():
 
     def add_transform_sample(self):
         self.matrices.append(cmds.xform(self.name, query=True, matrix=True))
+
+    def add_visibility_sample(self):
+        self.visibility_states.append(cmds.getAttr(self.name + '.visibility'))
 
 
 #--------------------------------------------------------------------------------------------------
@@ -1652,7 +1657,7 @@ def construct_transform_descendents(root_assembly, parent_assembly, matrix_stack
     current_assembly = parent_assembly
     current_matrix_stack = matrix_stack + [maya_transform.matrices[non_mb_sample_number]]
 
-    if maya_transform.has_children:
+    if maya_transform.has_children and (maya_transform.visibility_states[non_mb_sample_number] is True):
 
         if maya_transform.is_animated and (transformation_blur == True):
 
