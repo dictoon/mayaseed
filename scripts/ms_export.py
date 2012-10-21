@@ -1727,10 +1727,13 @@ def construct_transform_descendents(root_assembly, parent_assembly, matrix_stack
             # translate materials and assign
             for maya_material in mesh.materials:
                 as_materials = construct_appleseed_material_network(root_assembly, maya_material)
-                if as_materials[0] is not None:
-                    mesh_instance.material_assignments.append(AsObjectInstanceMaterialAssignment(maya_material.safe_name, 'front', as_materials[0].name))
-                if as_materials[1] is not None:
-                    mesh_instance.material_assignments.append(AsObjectInstanceMaterialAssignment(maya_material.safe_name, 'back', as_materials[1].name))
+
+                if as_materials is not None:
+
+                    if as_materials[0] is not None:
+                        mesh_instance.material_assignments.append(AsObjectInstanceMaterialAssignment(maya_material.safe_name, 'front', as_materials[0].name))
+                    if as_materials[1] is not None:
+                        mesh_instance.material_assignments.append(AsObjectInstanceMaterialAssignment(maya_material.safe_name, 'back', as_materials[1].name))
 
             current_assembly.object_instances.append(mesh_instance)
 
@@ -1746,79 +1749,84 @@ def construct_appleseed_material_network(root_assembly, ms_material):
     
     # check if material already exists in root_assembly
     for material in root_assembly.materials:
-        if material.name == (ms_material.name + '_front') and (ms_material.enable_front):
+        if material.name == (ms_material.safe_name + '_front') and ms_material.enable_front:
             materials[0] = material
-        elif material.name == (ms_material.name + '_back') and (ms_material.enable_back):
-            material[1] = material
-        if not materials == [None, None]:
-            return materials
+        if material.name == (ms_material.safe_name + '_back') and ms_material.enable_back and ms_material.duplicate_shaders:
+            materials[1] = material
 
-    # if the materials are not yet defined construct them
-    if ms_material.enable_front:
-        front_material = AsMaterial()
-        front_material.name = ms_material.safe_name + '_front'
-        if ms_material.bsdf_front is not None:
-            new_bsdf = build_as_shading_nodes(root_assembly, ms_material.bsdf_front)
-            front_material.bsdf = AsParameter('bsdf', new_bsdf.name)
-        if ms_material.edf_front is not None:
-            new_edf = build_as_shading_nodes(root_assembly, ms_material.edf_front)
-            front_material.edf = AsParameter('edf', new_edf.name)
-        if ms_material.surface_shader_front is not None:
-            new_surface_shader = build_as_shading_nodes(root_assembly, ms_material.surface_shader_front)
-            front_material.surface_shader = AsParameter('surface_shader', new_surface_shader.name)
-        if ms_material.normal_map_front is not None:
-            new_texture = AsTexture()
-            new_texture.name = ms_material.normal_map_front.safe_name
-            new_texture.file_name = AsParameter('filename', ms_material.normal_map_front.resolved_image_name)
-            root_assembly.textures.append(new_texture)
-            new_texture_instance = new_texture.instantiate()
-            root_assembly.texture_instances.append(new_texture_instance)
-            front_material.normal_map = AsParameter('normal_map', new_texture_instance.name)
+    if (materials[0] is None) and (materials[1] is None):
+
         if ms_material.alpha_map is not None:
-            new_texture = AsTexture()
-            new_texture.name = ms_material.alpha_map.safe_name
-            new_texture.file_name = AsParameter('filename', ms_material.alpha_map.resolved_image_name)
-            root_assembly.textures.append(new_texture)
-            new_texture_instance = new_texture.instantiate()
-            root_assembly.texture_instances.append(new_texture_instance)
-            front_material.alpha_map = AsParameter('alpha_map', new_texture_instance.name)
-        
-        root_assembly.materials.append(front_material)
-        materials[0] = front_material
+            alpha_texture = AsTexture()
+            alpha_texture.name = ms_material.alpha_map.safe_name
+            alpha_texture.file_name = AsParameter('filename', ms_material.alpha_map.image_file_names[0])
+            print '?? camsa adding', alpha_texture.name
+            root_assembly.textures.append(alpha_texture)
+            alpha_texture_instance = alpha_texture.instantiate()
 
-    if ms_material.enable_back:
-        back_material = AsMaterial()
-        back_material.name = ms_material.safe_name + '_back'
-        if ms_material.bsdf_back is not None:
-            new_bsdf = build_as_shading_nodes(root_assembly, ms_material.bsdf_back)
-            back_material.bsdf = AsParameter('bsdf', new_bsdf.name)
-        if ms_material.edf_back is not None:
-            new_edf = build_as_shading_nodes(root_assembly, ms_material.edf_back)
-            back_material.edf = AsParameter('edf', new_edf.name)
-        if ms_material.surface_shader_back is not None:
-            new_surface_shader = build_as_shading_nodes(root_assembly, ms_material.surface_shader_back)
-            back_material.surface_shader = AsParameter('surface_shader', new_surface_shader.name)
-        if ms_material.normal_map_back is not None:
-            new_texture = AsTexture()
-            new_texture.name = ms_material.normal_map_back.safe_name
-            new_texture.file_name = AsParameter('filename', ms_material.normal_map_back.resolved_image_name)
-            root_assembly.textures.append(new_texture)
-            new_texture_instance = new_texture.instantiate()
-            root_assembly.texture_instances.append(new_texture_instance)
-            back_material.normal_map = AsParameter('normal_map', new_texture_instance.name)
-        if ms_material.alpha_map is not None:
-            new_texture = AsTexture()
-            new_texture.name = ms_material.alpha_map.safe_name
-            new_texture.file_name = AsParameter('filename', ms_material.alpha_map.resolved_image_name)
-            root_assembly.textures.append(new_texture)
-            new_texture_instance = new_texture.instantiate()
-            root_assembly.texture_instances.append(new_texture_instance)
-            back_material.alpha_map = AsParameter('alpha_map', new_texture_instance.name)
+            if ms_material.alpha_map.alpha_is_luminance:
 
-        root_assembly.materials.append(back_material)
-        materials[1] = back_material
+                alpha_texture_instance.alpha_mode.value = 'luminance'
+            root_assembly.texture_instances.append(alpha_texture_instance)
 
-        return materials
+        # if the materials are not yet defined construct them
+        if ms_material.enable_front:
+            front_material = AsMaterial()
+            front_material.name = ms_material.safe_name + '_front'
+            if ms_material.bsdf_front is not None:
+                new_bsdf = build_as_shading_nodes(root_assembly, ms_material.bsdf_front)
+                front_material.bsdf = AsParameter('bsdf', new_bsdf.name)
+            if ms_material.edf_front is not None:
+                new_edf = build_as_shading_nodes(root_assembly, ms_material.edf_front)
+                front_material.edf = AsParameter('edf', new_edf.name)
+            if ms_material.surface_shader_front is not None:
+                new_surface_shader = build_as_shading_nodes(root_assembly, ms_material.surface_shader_front)
+                front_material.surface_shader = AsParameter('surface_shader', new_surface_shader.name)
+            if ms_material.normal_map_front is not None:
+                new_texture = AsTexture()
+                new_texture.name = ms_material.normal_map_front.safe_name
+                new_texture.file_name = AsParameter('filename', ms_material.normal_map_front.image_file_names[0])
+                print '?? camsn adding', new_texture.name
+                root_assembly.textures.append(new_texture)
+                new_texture_instance = new_texture.instantiate()
+                root_assembly.texture_instances.append(new_texture_instance)
+                front_material.normal_map = AsParameter('normal_map', new_texture_instance.name)
+            if ms_material.alpha_map is not None:
+                front_material.alpha_map = AsParameter('alpha_map', alpha_texture_instance.name)
+            
+            root_assembly.materials.append(front_material)
+            materials[0] = front_material
+
+        if ms_material.enable_back:
+            back_material = AsMaterial()
+            back_material.name = ms_material.safe_name + '_back'
+            if ms_material.bsdf_back is not None:
+                new_bsdf = build_as_shading_nodes(root_assembly, ms_material.bsdf_back)
+                back_material.bsdf = AsParameter('bsdf', new_bsdf.name)
+            if ms_material.edf_back is not None:
+                new_edf = build_as_shading_nodes(root_assembly, ms_material.edf_back)
+                back_material.edf = AsParameter('edf', new_edf.name)
+            if ms_material.surface_shader_back is not None:
+                new_surface_shader = build_as_shading_nodes(root_assembly, ms_material.surface_shader_back)
+                back_material.surface_shader = AsParameter('surface_shader', new_surface_shader.name)
+            if ms_material.normal_map_back is not None:
+                new_texture = AsTexture()
+                new_texture.name = ms_material.normal_map_back.safe_name
+                new_texture.file_name = AsParameter('filename', ms_material.normal_map_back.image_file_names[0])
+                print '?? camsn adding', new_texture.name
+                root_assembly.textures.append(new_texture)
+                new_texture_instance = new_texture.instantiate()
+                root_assembly.texture_instances.append(new_texture_instance)
+                back_material.normal_map = AsParameter('normal_map', new_texture_instance.name)
+            if ms_material.alpha_map is not None:
+                back_material.alpha_map = AsParameter('alpha_map', alpha_texture_instance.name)
+
+            root_assembly.materials.append(back_material)
+            materials[1] = back_material
+
+
+
+    return materials
 
 #--------------------------------------------------------------------------------------------------
 # is_in_list function.
@@ -1826,7 +1834,7 @@ def construct_appleseed_material_network(root_assembly, ms_material):
 
 def get_from_list(list, name):
 
-    """ searches through list of bsdfs, edfs or surface_shaders and returns the object if it exists or None if not"""
+    """ searches through list of objects with a .name attribute or surface_shaders and returns the object if it exists or None if not"""
 
     for item in list:
         if item.name == name:
@@ -1893,7 +1901,9 @@ def build_as_shading_nodes(root_assembly, current_maya_shading_node):
             if new_texture_entity is None:
                 new_texture_entity = AsTexture()
                 new_texture_entity.name = current_maya_shading_node.attributes[attrib_key].safe_name
-                new_texture_entity.file_name = AsParameter('filename', current_maya_shading_node.attributes[attrib_key].image_name)
+                new_texture_entity.file_name = AsParameter('filename', current_maya_shading_node.attributes[attrib_key].image_file_names[0])
+                
+                print '?? basn  adding', new_texture_entity.name
                 root_assembly.textures.append(new_texture_entity)
 
             new_texture_instance = new_texture_entity.instantiate()
