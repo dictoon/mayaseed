@@ -165,24 +165,29 @@ def convert_texture_to_exr(file_path, export_root, texture_dir, overwrite=True, 
     relative_path = os.path.join(texture_dir, os.path.splitext(os.path.split(file_path)[1])[0] + '.exr')
     dest_file = os.path.join(export_root, relative_path)
     dest_dir = os.path.join(export_root, texture_dir)
+
+    if relative:
+        reuturn_file = relative_path
+    else:
+        reuturn_file = dest_file
     
     if not os.path.exists(file_path):
         info("# error: {0} does not exist".format(file_path))
-        return dest_file
+        return reuturn_file
 
     if pass_through:
         info("# skipping conversion of {0}".format(file_path))
-        return dest_file
+        return reuturn_file
 
     if os.path.exists(dest_file) and not overwrite:
         info("# {0} already exists, skipping conversion".format(dest_file))
-        return dest_file
+        return reuturn_file
 
     imf_copy_path = find_path_to_imf_copy()
 
     if imf_copy_path is None:
         info("# error: cannot convert {0}, imf_copy utility not found".format(file_path))
-        return dest_file
+        return reuturn_file
 
     if not os.path.exists(dest_dir):
         os.mkdir(os.path.join(dest_dir))
@@ -200,10 +205,7 @@ def convert_texture_to_exr(file_path, export_root, texture_dir, overwrite=True, 
         p = subprocess.Popen(args)
         p.wait()
 
-    if relative:
-        return relative_path
-    else:
-        return dest_file
+    return reuturn_file
 
 
 #--------------------------------------------------------------------------------------------------
