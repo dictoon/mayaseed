@@ -28,6 +28,7 @@ import sys
 import time
 from datetime import datetime
 import shutil
+import random
 
 # directory names
 
@@ -155,56 +156,73 @@ def main():
         os.mkdir(os.path.join(watch_dir, OUTPUT_DIR))
 
     while True:
-        appleseed_files = listAppleseedFiles(watch_dir)
+        try:
+            appleseed_files = listAppleseedFiles(watch_dir)
 
-        # if any appleseed files have been found
-        if len(appleseed_files) > 0:
-            for appleseed_file in appleseed_files:
-                print
+            renderable_files_found = False
 
-                if isRenderable(appleseed_file):
-                    printc.warning(':::: RENDERING "{0}" ::::\n'.format(appleseed_file))
+            # if any appleseed files have been found
+            if len(appleseed_files) > 0:
 
-                    if short_name is None:
-                        in_progress_appendage = '.inprogress'
+                # define random start point for list
+                random_start_point = int(random.random() * (len(appleseed_files) - 1))
+
+                # iterate over re ordered list of files
+                for appleseed_file in (appleseed_files[random_start_point:] + appleseed_files[:random_start_point]):
+
+                    print
+
+                    if isRenderable(appleseed_file):
+
+                        renderable_files_found = True
+
+                        printc.warning(':::: RENDERING "{0}" ::::\n'.format(appleseed_file))
+
+                        if short_name is None:
+                            in_progress_appendage = '.inprogress'
+                        else:
+                            in_progress_appendage = '.' + short_name
+
+                        temporary_file_name = appleseed_file + in_progress_appendage
+
+                        # temporarily rename file so others dont try to render it
+                        os.rename(appleseed_file, temporary_file_name)
+
+                        # create shell command
+                        appleseed_file_name = os.path.split(appleseed_file)[1]
+                        output_file_name = os.path.splitext(appleseed_file_name)[0] + '.png'
+                        output_file_path = os.path.join(watch_dir, OUTPUT_DIR, output_file_name)
+                        command = '{0} -o "{1}" "{2}"'.format(cli_path, output_file_path, temporary_file_name)
+
+                        # execute command
+                        return_value = os.system(command)
+
+                        print("")
+
+                        # if the return value is not 0 then something may have gone wrong
+                        if return_value != 0:
+                            printc.warning('file may not have rendered correctly: ' + appleseed_file)
+
+                        # move the file into _completed directory
+                        move_dest = os.path.join(watch_dir, COMPLETED_DIR, os.path.split(temporary_file_name)[1])
+                        shutil.move(temporary_file_name, move_dest)
+
+                        # rename the file to its original name
+
+                        # reverted_file_name = os.path.join(watch_dir, COMPLETED_DIR, os.path.split(appleseed_file)[1])
+                        # os.rename(move_dest, reverted_file_name)
+
+                        break
                     else:
-                        in_progress_appendage = '.' + short_name
+                        print('{0} - missing dependencies to render "{1}"'.format(datetime.now(), os.path.split(appleseed_file)[1]))
+            else:
+                print("{0} - nothing to render".format(datetime.now()))
+                renderable_files_found = False
 
-                    temporary_file_name = appleseed_file + in_progress_appendage
-
-                    # temporarily rename file so others dont try to render it
-                    os.rename(appleseed_file, temporary_file_name)
-
-                    # create shell command
-                    appleseed_file_name = os.path.split(appleseed_file)[1]
-                    output_file_name = os.path.splitext(appleseed_file_name)[0] + '.png'
-                    output_file_path = os.path.join(watch_dir, OUTPUT_DIR, output_file_name)
-                    command = '{0} -o "{1}" "{2}"'.format(cli_path, output_file_path, temporary_file_name)
-
-                    # execute command
-                    return_value = os.system(command)
-
-                    print("")
-
-                    # if the return value is not 0 then something may have gone wrong
-                    if return_value != 0:
-                        printc.warning('file may not have rendered correctly: ' + appleseed_file)
-
-                    # move the file into _completed directory
-                    move_dest = os.path.join(watch_dir, COMPLETED_DIR, os.path.split(temporary_file_name)[1])
-                    shutil.move(temporary_file_name, move_dest)
-
-                    # rename the file to its original name
-                    reverted_file_name = os.path.join(watch_dir, COMPLETED_DIR, os.path.split(appleseed_file)[1])
-                    os.rename(move_dest, reverted_file_name)
-
-                    break
-                else:
-                    print('{0} - missing dependencies to render "{1}"'.format(datetime.now(), os.path.split(appleseed_file)[1]))
-        else:
-            print("{0} - nothing to render".format(datetime.now()))
-
-        time.sleep(3)
+            if not renderable_files_found:
+                time.sleep(1)
+        except:
+            princ('an unknown error has occured')
 
 
 if __name__ == '__main__':
