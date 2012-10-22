@@ -1299,7 +1299,7 @@ class AsFrame():
     def __init__(self):
         self.name = 'beauty'
         self.camera = None
-        self.color_space = AsParameter('camera', 'srgb')
+        self.color_space = AsParameter('color_space', 'srgb')
         self.resolution = None
 
     def emit_xml(self, doc):
