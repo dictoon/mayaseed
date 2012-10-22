@@ -31,32 +31,55 @@ import shutil
 import random
 
 # directory names
-
 OUTPUT_DIR = '_output'
 COMPLETED_DIR = '_completed'
 
-# Define helper class for printing colored text.
-class printc():
+
+class Console():
     @staticmethod
-    def warning(text):
-        if os.system == 'darwin':
-            print '\033[93m' + text + '\033[0m'
-        else: 
-            print text
-    
+    def is_coloring_supported():
+        return os.system == 'darwin'
+
     @staticmethod
-    def error(text):
-        if os.system == 'darwin':
-            print '\033[91m' + text + '\033[0m'
-        else: 
-            print text
-            
+    def format_message(msg):
+        return "[{0}] {1}".format(datetime.now(), msg)
+
     @staticmethod
-    def success(text):
-        if os.system == 'darwin':
-            print '\033[92m' + text + '\033[0m'
+    def blank_line():
+        Console.info("")
+
+    @staticmethod
+    def info(msg):
+        print("{0}".format(Console.format_message(msg)))
+
+    @staticmethod
+    def success(msg):
+        s = Console.format_message(msg)
+        if Console.is_coloring_supported():
+            print("\033[92m{0}\033[0m".format(s))
         else: 
-            print text
+            print("{0}".format(s))
+
+    @staticmethod
+    def warning(msg):
+        s = Console.format_message(msg)
+        if Console.is_coloring_supported():
+            print("\033[93m{0}\033[0m".format(s))
+        else: 
+            print("{0}".format(s))
+
+    @staticmethod
+    def error(msg):
+        s = Console.format_message(msg)
+        if Console.is_coloring_supported():
+            print("\033[91m{0}\033[0m".format(s))
+        else: 
+            print("{0}".format(s))
+
+
+def safe_mkdir(dir):
+    if not os.path.exists(dir):
+        os.mkdir(dir)
 
 
 def getDepends(xml_file_path):
@@ -101,129 +124,122 @@ def listAppleseedFiles(directory_path):
 
 def isRenderable(file):
     depend_name_text = 'dependencies for "{0}"'.format(os.path.split(file)[1])
-    print(depend_name_text)
-    print(len(depend_name_text) * '-')
+    Console.info(depend_name_text)
+    Console.info(len(depend_name_text) * '-')
 
     is_renderable = True
 
     for depend in getDepends(file):
-        if os.path.exists(os.path.join(depend)):
-            printc.success('EXISTS   ' + depend)
-        else:
-            printc.error('MISSING  ' + depend)
+        if not os.path.exists(os.path.join(depend)):
+            Console.error("MISSING {0}".format(depend))
             is_renderable = False
 
-    print
+    Console.blank_line()
 
     return is_renderable
 
 
+def print_usage():
+    print("usage:")
+    print("  -h, --help   print this help")
+    print("  ad=...       set appleseed bin directory")
+    print("  wd=...       set watch directory")
+    print("  sn=...       set short name, used to identify the file being rendered")
+
+
 def main():
-    args = sys.argv
+    if len(sys.argv) == 0:
+        print_usage()
+        return 0
+
     appleseed_dir = None
     watch_dir = None
     short_name = None
-    for arg in args:
-        if arg == 'h' or arg == 'help':
-            print 'h or help  = print help'
-            print 'ad=...     = set appleseed bin directory'
-            print 'wd=...     = set watch directory'
-            print 'sn=...     = set short name, used to identify the file being rendered'
+
+    for arg in sys.argv:
+        if arg == '-h' or arg == '--help':
+            print_usage()
             return 0
-        split_arg = arg.split("=")
+        split_arg = arg.split('=')
         if split_arg[0] == 'ad':
             appleseed_dir = split_arg[1]
-            cli_path = os.path.join(appleseed_dir, 'appleseed.cli')
         elif split_arg[0] == 'wd':
             watch_dir = split_arg[1]
         elif split_arg[0] == 'sn':
             short_name = split_arg[1]
 
-    if appleseed_dir == None:
-        printc.warning('no path to appleseed provided, use ad=... to set path to appleseed bin directory.')
-        return 0
+    if appleseed_dir is None:
+        print("no path to appleseed provided.\n")
+        print_usage()
+        return 1
 
-    if watch_dir == None:
-        print('no watch directory provided, using working directory.')
+    if watch_dir is None:
         watch_dir = os.getcwd()
+        print("no watch directory provided, watching working directory ({0}).\n".format(watch_dir))
 
-    # make folder to put rendered appleseed files into
-    if not os.path.exists(os.path.join(watch_dir, COMPLETED_DIR)):
-        os.mkdir(os.path.join(watch_dir, COMPLETED_DIR))
-
-    # make folder to put rendered images into
-    if not os.path.exists(os.path.join(watch_dir, OUTPUT_DIR)):
-        os.mkdir(os.path.join(watch_dir, OUTPUT_DIR))
+    cli_path = os.path.join(appleseed_dir, 'appleseed.cli')
 
     while True:
         try:
+            # wait until appleseed files are found
             appleseed_files = listAppleseedFiles(watch_dir)
+            if len(appleseed_files) == 0:
+                Console.info("nothing to render.")
+                time.sleep(1)
+                continue
+
+            # define random start point for list
+            random_start_point = int(random.random() * (len(appleseed_files) - 1))
 
             renderable_files_found = False
 
-            # if any appleseed files have been found
-            if len(appleseed_files) > 0:
+            # iterate over reordered list of files
+            for appleseed_file in (appleseed_files[random_start_point:] + appleseed_files[:random_start_point]):
+                Console.blank_line()
 
-                # define random start point for list
-                random_start_point = int(random.random() * (len(appleseed_files) - 1))
+                if isRenderable(appleseed_file):
+                    renderable_files_found = True
 
-                # iterate over re ordered list of files
-                for appleseed_file in (appleseed_files[random_start_point:] + appleseed_files[:random_start_point]):
+                    Console.success(':::: RENDERING "{0}" ::::\n'.format(appleseed_file))
 
-                    print
+                    # rename the appleseed file so others don't try to render it
+                    in_progress_appendage = '.inprogress' if short_name is None else '.' + short_name
+                    os.rename(appleseed_file, appleseed_file + in_progress_appendage)
+                    appleseed_file += in_progress_appendage
 
-                    if isRenderable(appleseed_file):
+                    # create shell command
+                    appleseed_file_name = os.path.split(appleseed_file)[1]
+                    output_file_name = os.path.splitext(appleseed_file_name)[0] + '.png'
+                    output_file_path = os.path.join(watch_dir, OUTPUT_DIR, output_file_name)
+                    command = '{0} -o "{1}" "{2}"'.format(cli_path, output_file_path, appleseed_file)
 
-                        renderable_files_found = True
+                    # make sure the output directory exists
+                    safe_mkdir(os.path.join(watch_dir, OUTPUT_DIR))
 
-                        printc.warning(':::: RENDERING "{0}" ::::\n'.format(appleseed_file))
+                    # execute command
+                    return_value = os.system(command)
+                    Console.blank_line()
 
-                        if short_name is None:
-                            in_progress_appendage = '.inprogress'
-                        else:
-                            in_progress_appendage = '.' + short_name
+                    # if the return value is not 0 then something may have gone wrong
+                    if return_value != 0:
+                        Console.warning('file may not have rendered correctly: "{0}".'.format(appleseed_file))
 
-                        temporary_file_name = appleseed_file + in_progress_appendage
+                    # move the file into _completed directory
+                    safe_mkdir(os.path.join(watch_dir, COMPLETED_DIR))
+                    move_dest = os.path.join(watch_dir, COMPLETED_DIR, os.path.split(appleseed_file)[1])
+                    shutil.move(appleseed_file, move_dest)
 
-                        # temporarily rename file so others dont try to render it
-                        os.rename(appleseed_file, temporary_file_name)
-
-                        # create shell command
-                        appleseed_file_name = os.path.split(appleseed_file)[1]
-                        output_file_name = os.path.splitext(appleseed_file_name)[0] + '.png'
-                        output_file_path = os.path.join(watch_dir, OUTPUT_DIR, output_file_name)
-                        command = '{0} -o "{1}" "{2}"'.format(cli_path, output_file_path, temporary_file_name)
-
-                        # execute command
-                        return_value = os.system(command)
-
-                        print("")
-
-                        # if the return value is not 0 then something may have gone wrong
-                        if return_value != 0:
-                            printc.warning('file may not have rendered correctly: ' + appleseed_file)
-
-                        # move the file into _completed directory
-                        move_dest = os.path.join(watch_dir, COMPLETED_DIR, os.path.split(temporary_file_name)[1])
-                        shutil.move(temporary_file_name, move_dest)
-
-                        # rename the file to its original name
-
-                        # reverted_file_name = os.path.join(watch_dir, COMPLETED_DIR, os.path.split(appleseed_file)[1])
-                        # os.rename(move_dest, reverted_file_name)
-
-                        break
-                    else:
-                        print('{0} - missing dependencies to render "{1}"'.format(datetime.now(), os.path.split(appleseed_file)[1]))
-            else:
-                print("{0} - nothing to render".format(datetime.now()))
-                renderable_files_found = False
+                    break
 
             if not renderable_files_found:
                 time.sleep(1)
-        except:
-            princ('an unknown error has occured')
 
+        except KeyboardInterrupt, SystemExit:
+            Console.info("CTRL-C detected, exiting...")
+            break
+        except:
+            Console.error("unexpected error: {0}.".format(sys.exc_info()[0]))
+            pass
 
 if __name__ == '__main__':
     main()
