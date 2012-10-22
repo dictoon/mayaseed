@@ -28,6 +28,7 @@ import sys
 import time
 from datetime import datetime
 import shutil
+import random
 
 # directory names
 
@@ -177,13 +178,24 @@ def main():
         try:
             appleseed_files = listAppleseedFiles(watch_dir)
 
+            renderable_files_found = False
+
             # if any appleseed files have been found
             if len(appleseed_files) > 0:
-                for appleseed_file in appleseed_files:
+
+                # define random start point for list
+                random_start_point = int(random.random() * (len(appleseed_files) - 1))
+
+                # iterate over re ordered list of files
+                for appleseed_file in (appleseed_files[random_start_point:] + appleseed_files[:random_start_point]):
+
                     Console.blank_line()
 
                     if isRenderable(appleseed_file):
-                        Console.warning(':::: RENDERING "{0}" ::::\n'.format(appleseed_file))
+
+                        renderable_files_found = True
+
+                        Console.success(':::: RENDERING "{0}" ::::\n'.format(appleseed_file))
 
                         if short_name is None:
                             in_progress_appendage = '.inprogress'
@@ -214,17 +226,15 @@ def main():
                         move_dest = os.path.join(watch_dir, COMPLETED_DIR, os.path.split(temporary_file_name)[1])
                         shutil.move(temporary_file_name, move_dest)
 
-                        # rename the file to its original name
-                        reverted_file_name = os.path.join(watch_dir, COMPLETED_DIR, os.path.split(appleseed_file)[1])
-                        os.rename(move_dest, reverted_file_name)
-
                         break
                     else:
                         Console.info('missing dependencies to render "{0}".'.format(os.path.split(appleseed_file)[1]))
             else:
                 Console.info("nothing to render".format(datetime.now()))
+                renderable_files_found = False
 
-            time.sleep(3)
+            if not renderable_files_found:
+                time.sleep(1)
 
         except KeyboardInterrupt, SystemExit:
             Console.info("CTRL-C detected, exiting...")
