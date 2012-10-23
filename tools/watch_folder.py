@@ -1,5 +1,3 @@
-
-#
 # Copyright (c) 2012 Jonathan Topf
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -26,14 +24,9 @@ from xml.dom.minidom import parseString
 import os
 import sys
 import time
-from datetime import datetime
+import datetime
 import shutil
 import random
-
-# directory names
-OUTPUT_DIR = '_output'
-COMPLETED_DIR = '_completed'
-
 
 class Console():
     @staticmethod
@@ -42,7 +35,7 @@ class Console():
 
     @staticmethod
     def format_message(msg):
-        return "[{0}] {1}".format(datetime.now(), msg)
+        return "[{0}] {1}".format(datetime.datetime.now(), msg)
 
     @staticmethod
     def blank_line():
@@ -152,6 +145,10 @@ def main():
         print_usage()
         return 0
 
+    output_dir = '_output'
+    completed_dir = '_completed'
+    log_dir = '_log'
+
     appleseed_dir = None
     watch_dir = None
     short_name = None
@@ -168,6 +165,9 @@ def main():
         elif split_arg[0] == 'sn':
             short_name = split_arg[1]
 
+    log_file_name = short_name + '.log'
+    log_file_path = os.path.join(watch_dir, log_dir, log_file_name)
+
     if appleseed_dir is None:
         print("no path to appleseed provided.\n")
         print_usage()
@@ -178,6 +178,11 @@ def main():
         print("no watch directory provided, watching working directory ({0}).\n".format(watch_dir))
 
     cli_path = os.path.join(appleseed_dir, 'appleseed.cli')
+
+    if not os.path.exists(os.path.join(watch_dir, log_dir)):
+        os.makedirs(os.path.join(watch_dir, log_dir))
+
+    open(log_file_path, 'w').write('# file name : start time : end time : error status\n')
 
     while True:
         try:
@@ -192,12 +197,19 @@ def main():
             random_start_point = int(random.random() * (len(appleseed_files) - 1))
 
             renderable_files_found = False
+            start_time = None
+            end_time = None
+            reneder_file_name = None
+            error_status = None
 
             # iterate over reordered list of files
             for appleseed_file in (appleseed_files[random_start_point:] + appleseed_files[:random_start_point]):
                 Console.blank_line()
 
                 if isRenderable(appleseed_file):
+                    reneder_file_name = appleseed_file
+                    start_time = datetime.datetime.now()
+
                     renderable_files_found = True
 
                     Console.success(':::: RENDERING "{0}" ::::\n'.format(appleseed_file))
@@ -210,11 +222,11 @@ def main():
                     # create shell command
                     appleseed_file_name = os.path.split(appleseed_file)[1]
                     output_file_name = os.path.splitext(appleseed_file_name)[0] + '.png'
-                    output_file_path = os.path.join(watch_dir, OUTPUT_DIR, output_file_name)
+                    output_file_path = os.path.join(watch_dir, output_dir, output_file_name)
                     command = '{0} -o "{1}" "{2}"'.format(cli_path, output_file_path, appleseed_file)
 
                     # make sure the output directory exists
-                    safe_mkdir(os.path.join(watch_dir, OUTPUT_DIR))
+                    safe_mkdir(os.path.join(watch_dir, output_dir))
 
                     # execute command
                     return_value = os.system(command)
@@ -225,9 +237,12 @@ def main():
                         Console.warning('file may not have rendered correctly: "{0}".'.format(appleseed_file))
 
                     # move the file into _completed directory
-                    safe_mkdir(os.path.join(watch_dir, COMPLETED_DIR))
-                    move_dest = os.path.join(watch_dir, COMPLETED_DIR, os.path.split(appleseed_file)[1])
+                    safe_mkdir(os.path.join(watch_dir, completed_dir))
+                    move_dest = os.path.join(watch_dir, completed_dir, os.path.split(appleseed_file)[1])
                     shutil.move(appleseed_file, move_dest)
+
+                    end_time = datetime.datetime.now()
+                    error_status = 'success'
 
                     break
 
@@ -236,10 +251,17 @@ def main():
 
         except KeyboardInterrupt, SystemExit:
             Console.info("CTRL-C detected, exiting...")
+            error_status = 'user exeted'
             break
-        except:
-            Console.error("unexpected error: {0}.".format(sys.exc_info()[0]))
-            pass
+        # except:
+        #     Console.error("unexpected error: {0}.".format(sys.exc_info()[0]))
+        #     error_status = 'enexpected error'
+        #     pass
+
+        if reneder_file_name is not None:
+            log_line = '{0} : {1} : {2} : {3}\n'.format(reneder_file_name, start_time, end_time, error_status)
+            open(log_file_path, "a+b").write(log_line)
+
 
 if __name__ == '__main__':
     main()
