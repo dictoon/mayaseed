@@ -178,8 +178,8 @@ def get_maya_params(render_settings_node):
         if connected_cameras is not None:
             params['output_camera'] = cmds.listRelatives(connected_cameras[0], typ='camera', fullPath=True)[0]
     else:
-        ms_commands.warning('No camera connected to {0}, using "|persp|perspShape".'.format(render_settings_node))
         params['output_camera'] = '|persp|perspShape'
+        ms_commands.warning('No camera connected to {0}, using "{1}".'.format(render_settings_node, params['output_camera']))
 
     if cmds.getAttr(render_settings_node + '.color_space') == 1:
         params['output_color_space'] = 'linear_rgb'
