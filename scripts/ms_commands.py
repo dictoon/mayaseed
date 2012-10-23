@@ -38,7 +38,7 @@ import random
 # Constants.
 #--------------------------------------------------------------------------------------------------
 
-MAYASEED_VERSION = '0.1.8'
+MAYASEED_VERSION = '0.2.0'
 MAYASEED_URL = 'https://github.com/jonathantopf/mayaseed'
 APPLESEED_URL = 'http://appleseedhq.net/'
 ROOT_DIRECTORY = os.path.split((os.path.dirname(inspect.getfile(inspect.currentframe()))))[0]
@@ -75,6 +75,17 @@ class msInfoDial():
 
 
 #--------------------------------------------------------------------------------------------------
+# Creates a directory if it doesn't already exist.
+#--------------------------------------------------------------------------------------------------
+
+def create_dir(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    return path
+
+
+#--------------------------------------------------------------------------------------------------
 # Normalize an RGB color.
 #--------------------------------------------------------------------------------------------------
 
@@ -103,32 +114,33 @@ def normalizeRGB(color):
 #--------------------------------------------------------------------------------------------------
 
 def convert_connection_to_image(shader, attribute, dest_file, resolution=1024, pass_through=False):
-    
     dest_dir = os.path.split(dest_file)[0]
-    if not os.path.exists(dest_dir):
-        os.makedirs(dest_dir)
 
-    if not cmds.objExists(shader+'.'+attribute):
-        warning('error converting texture, no object named {0} exists'.format(shader+'.'+attribute))
+    create_dir(dest_dir)
+
+    plug_name = shader + '.' + attribute
+
+    if not cmds.objExists(plug_name):
+        warning('error converting texture, no object named {0} exists'.format(plug_name))
     else:
-        connection = cmds.listConnections(shader+'.'+attribute)
+        connection = cmds.listConnections(plug_name)
         if not connection:
-            warning( 'nothing connected to {0}, skipping conversion'.format(plug_name))
+            warning('nothing connected to {0}, skipping conversion'.format(plug_name))
         elif pass_through == True:
-            warning( '{0}: skipping conversion'.format(plug_name))
+            warning('{0}: skipping conversion'.format(plug_name))
         else:
             cmds.hyperShade(objects=shader)
             connected_object = cmds.ls(sl=True)[0]
             cmds.convertSolidTx(connection[0] ,connected_object ,fileImageName=dest_file, antiAlias=True, bm=3, fts=True, sp=True, alpha=True, doubleSided=True, resolutionX=resolution, resolutionY=resolution)
-        
+
         return dest_file
+
 
 #--------------------------------------------------------------------------------------------------
 # Convert textures to OpenEXR format.
 #--------------------------------------------------------------------------------------------------
 
 def find_path_to_imf_copy():
-
     #
     # Values of maya_base_path:
     #
@@ -160,42 +172,35 @@ def find_path_to_imf_copy():
 
     return None if imf_copy_path is None else os.path.join(imf_copy_path, 'imf_copy')
 
-
 def convert_texture_to_exr(file_path, export_root, texture_dir, overwrite=True, pass_through=False, relative=True):
     relative_path = os.path.join(texture_dir, os.path.splitext(os.path.split(file_path)[1])[0] + '.exr')
     dest_file = os.path.join(export_root, relative_path)
     dest_dir = os.path.join(export_root, texture_dir)
+    result_file = relative_path if relative else dest_file
 
-    if relative:
-        reuturn_file = relative_path
-    else:
-        reuturn_file = dest_file
-    
     if not os.path.exists(file_path):
         info("# error: {0} does not exist".format(file_path))
-        return reuturn_file
+        return result_file
 
     if pass_through:
         info("# skipping conversion of {0}".format(file_path))
-        return reuturn_file
+        return result_file
 
     if os.path.exists(dest_file) and not overwrite:
         info("# {0} already exists, skipping conversion".format(dest_file))
-        return reuturn_file
+        return result_file
 
     imf_copy_path = find_path_to_imf_copy()
 
     if imf_copy_path is None:
         info("# error: cannot convert {0}, imf_copy utility not found".format(file_path))
-        return reuturn_file
+        return result_file
 
-    if not os.path.exists(dest_dir):
-        os.mkdir(os.path.join(dest_dir))
+    create_dir(dest_dir)
 
     # -r: make a tiled OpenEXR file
     # -t: set the tile dimensions
     args = [imf_copy_path, "-r", "-t 32", file_path, dest_file]
-
 
     if sys.platform == 'win32':
         # http://stackoverflow.com/questions/2935704/running-shell-commands-without-a-shell-window
@@ -205,7 +210,7 @@ def convert_texture_to_exr(file_path, export_root, texture_dir, overwrite=True, 
         p = subprocess.Popen(args)
         p.wait()
 
-    return reuturn_file
+    return result_file
 
 
 #--------------------------------------------------------------------------------------------------
@@ -220,7 +225,6 @@ def shape_is_exportable(node_name):
     # check if the node has a visibility attribute meaning it's a DAG node
     if not cmds.attributeQuery('visibility', node=node_name, exists=True):
         return False
-
 
     # check to see if it's an intermediate mesh
     if cmds.attributeQuery('intermediateObject', node=node_name, exists=True):
@@ -252,9 +256,8 @@ def has_shader_connected(node_name):
 
 
 #--------------------------------------------------------------------------------------------------
-# read entity defs xml file and return dict 
+# Read entity definitions from disk.
 #--------------------------------------------------------------------------------------------------
-
 
 def get_entity_defs(xml_file_path, list=False):
     nodes = dict()
@@ -264,7 +267,7 @@ def get_entity_defs(xml_file_path, list=False):
             self.name = name
             self.type = type
             self.attributes = dict()
-            
+
     class Attribute():
         def __init__(self, name):
             self.name = name
@@ -273,49 +276,41 @@ def get_entity_defs(xml_file_path, list=False):
             self.default_value = ''
             self.entity_types = []
 
-    file = open(xml_file_path,'r')
+    file = open(xml_file_path, 'r')
     data = file.read()
     file.close()
 
     dom = parseString(data)
 
     for entity in dom.getElementsByTagName('entity'):
-        
-        #create new dict entry to store the node info
+        # create new dict entry to store the node info
         nodes[entity.getAttribute('model')] = Node(entity.getAttribute('model'), entity.getAttribute('type'))
 
         for child in entity.childNodes:
             if child.nodeName =='parameters':
-                
-                #add an attribute and give it a name
+                # add an attribute and give it a name
                 nodes[entity.getAttribute('model')].attributes[child.getAttribute('name')] = Attribute(child.getAttribute('name'))
-                
-                #iterate over child nodes and check that they are nodes not text
+
+                # iterate over child nodes and check that they are nodes not text
                 for param in child.childNodes:
                     if not param.nodeName == '#text': 
-                        
-                        #node is a parameter with single value
+                        # node is a parameter with single value
                         if param.nodeName == 'parameter':
-                            
-                            #get attribute type
+                            # get attribute type
                             if param.getAttribute('name') == 'widget':
                                 nodes[entity.getAttribute('model')].attributes[child.getAttribute('name')].type = param.getAttribute('value')
-                            
                             elif param.getAttribute('name') == 'default':
                                 nodes[entity.getAttribute('model')].attributes[child.getAttribute('name')].default_value = param.getAttribute('value')
-                            
                             elif param.getAttribute('name') == 'label':
                                 nodes[entity.getAttribute('model')].attributes[child.getAttribute('name')].label = param.getAttribute('value')
-                                
-                        #node is a parameter with multiple values
+
+                        # node is a parameter with multiple values
                         elif param.nodeName == 'parameters':
-                            
-                            #if the node contains entity types we are interested
+                            # if the node contains entity types we are interested
                             if param.getAttribute('name') == 'entity_types':
                                 for node in param.childNodes:
-                                    if not param.nodeName == '#text': 
-                                        if node.nodeName == 'parameter':
-                                            nodes[entity.getAttribute('model')].attributes[child.getAttribute('name')].entity_types.append(node.getAttribute('name'))
+                                    if node.nodeName == 'parameter':
+                                        nodes[entity.getAttribute('model')].attributes[child.getAttribute('name')].entity_types.append(node.getAttribute('name'))
 
     if list:
         print 'Found the following appleseed nodes:\n'
@@ -427,9 +422,6 @@ def get_file_texture_name(file_node, frame=None):
     return file_texture_name 
 
 
-
-
-
 #--------------------------------------------------------------------------------------------------
 # Export .obj file.
 # This function is a wrapper for the C++ obj exporter.
@@ -438,8 +430,7 @@ def get_file_texture_name(file_node, frame=None):
 def export_obj(object_name, file_path, overwrite=True):
     directory = os.path.split(file_path)[0]
 
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+    create_dir(directory)
 
     safe_file_path = file_path.replace('\\', '\\\\')
     mel.eval('ms_export_obj -mesh "{0}" -filePath "{1}"'.format(object_name, safe_file_path))
@@ -580,7 +571,6 @@ def convert_phong_blinn_material(material):
     if material_shading_group != None:
         cmds.connectAttr(new_material_node + '.outColor', material_shading_group[0] + '.surfaceShader', force=True)
 
-
 def convert_surface_shader_material(material):
     info('converting shader ' + material)
 
@@ -613,7 +603,6 @@ def convert_surface_shader_material(material):
     if material_shading_group != None:
         cmds.connectAttr(new_material_node + '.outColor', material_shading_group[0] + '.surfaceShader', force=True)
 
-
 def convert_lambert_material(material):
     info('converting shader ' + material)
 
@@ -630,7 +619,6 @@ def convert_lambert_material(material):
 
     cmds.connectAttr(brdf + '.outColor', new_material_node + '.BSDF_front_color')
     cmds.connectAttr(surface_shader + '.outColor', new_material_node + '.surface_shader_front_color')
-
 
     # color
     color_value = cmds.getAttr(material + '.color')[0]
@@ -651,31 +639,19 @@ def convert_lambert_material(material):
         cmds.connectAttr(new_material_node + '.outColor', material_shading_group[0] + '.surfaceShader', force=True)
 
 
-
 #--------------------------------------------------------------------------------------------------
-# returns list of materials connecetd to mesh.
+# Returns the materials connected to a mesh.
 #--------------------------------------------------------------------------------------------------
 
 def get_attached_materials(mesh_name):
     shading_engine = cmds.listConnections(mesh_name, t='shadingEngine')
     if shading_engine:
         return cmds.listConnections(shading_engine[0] + ".surfaceShader")
-    else:
-        return None
+    return None
+
 
 #--------------------------------------------------------------------------------------------------
-# creates a directory if it doesnt already exist
-#--------------------------------------------------------------------------------------------------
-
-def create_dir(path):
-
-    if not os.path.exists(path):
-        os.makedirs(path)
-
-    return path
-
-#--------------------------------------------------------------------------------------------------
-# log functions.
+# Log functions.
 #--------------------------------------------------------------------------------------------------
 
 def info(message):
@@ -686,6 +662,3 @@ def warning(message):
 
 def error(message):
     cmds.error(message)
-
-
-

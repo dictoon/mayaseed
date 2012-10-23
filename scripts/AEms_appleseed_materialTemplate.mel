@@ -22,8 +22,7 @@
 //
 
 
-global proc AEms_appleseed_materialTemplate( string $nodeName )
-{
+global proc AEms_appleseed_materialTemplate(string $nodeName) {
     editorTemplate -beginScrollLayout;
 
     editorTemplate -beginLayout "Main Attributes" -collapse 0;
@@ -49,9 +48,8 @@ global proc AEms_appleseed_materialTemplate( string $nodeName )
         editorTemplate -addControl "alpha_map_color";
     editorTemplate -endLayout;
 
-    // include/call base class/node attributes
     AEdependNodeTemplate $nodeName;
-    
+
     editorTemplate -addExtraControls;
     editorTemplate -endScrollLayout;
 }
