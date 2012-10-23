@@ -23,7 +23,7 @@
 
 
 import maya.cmds as cmds
-import maya.mel as mel 
+import maya.mel as mel
 import maya.utils as mu
 import os
 import time
@@ -55,11 +55,11 @@ class WriteXml():
     def start_element(self, str):
         self.append_line("<" + str + ">")
         self.indentation_level += 1
-        
+
     def end_element(self, str):
         self.indentation_level -= 1
         self.append_line("</" + str + ">")
-        
+
     def append_element(self, str):
         self.append_line("<" + str + "/>")
 
@@ -247,7 +247,7 @@ def get_maya_params(render_settings_node):
 #--------------------------------------------------------------------------------------------------
 
 def get_maya_scene(params):
-    
+
     """ Parses the maya scene and returns a list of root transforms with the relevant children """
 
     ms_commands.info("Caching Maya scene data...")
@@ -319,7 +319,7 @@ def get_maya_scene(params):
 
         current_frame += sample_increment
 
-        # add code to export textures here    
+        # add code to export textures here
 
     # return to pre-export time
     cmds.currentTime(start_time)
@@ -390,8 +390,8 @@ class MTransform():
 
         #check for incoming connections to transform attributes and set the is_animated var
         self.is_animated = False
-        maya_transform_attribute_list = ['translate', 'translateX', 'translateY', 'translateZ', 
-                                         'rotate', 'rotateX', 'rotateY', 'rotateZ', 
+        maya_transform_attribute_list = ['translate', 'translateX', 'translateY', 'translateZ',
+                                         'rotate', 'rotateX', 'rotateY', 'rotateZ',
                                          'scale','scaleX','scaleY','scaleZ', 'visibility']
 
         for attribute in maya_transform_attribute_list:
@@ -464,7 +464,7 @@ class MMesh(MTransformChild):
     object_counter = 1
 
     def __init__(self, params, maya_mesh_name, MTransform_object):
-        MTransformChild.__init__(self, params, maya_mesh_name, MTransform_object)  
+        MTransformChild.__init__(self, params, maya_mesh_name, MTransform_object)
         # incriment class conuter so each instance of the class gets a unique id
         self.id = MMesh.object_counter
         MMesh.object_counter +=1
@@ -486,7 +486,7 @@ class MMesh(MTransformChild):
     def add_deform_sample(self, export_root, geo_dir, time):
         file_name = '%s_%i_%i.obj' % (self.safe_short_name, self.id, time)
         output_file_path = os.path.join(geo_dir, file_name)
-        
+
         # set file path as relative value
         self.mesh_file_names.append(output_file_path)
 
@@ -540,16 +540,17 @@ class MCamera(MTransformChild):
 
         if maya_resolution_aspect > maya_film_aspect:
             self.film_width = float(cmds.getAttr(self.name + '.horizontalFilmAperture')) * inch_to_meter
-            self.film_height = self.film_width / maya_resolution_aspect  
+            self.film_height = self.film_width / maya_resolution_aspect
         else:
             self.film_height = float(cmds.getAttr(self.name + '.verticalFilmAperture')) * inch_to_meter
-            self.film_width = self.film_height * maya_resolution_aspect 
+            self.film_width = self.film_height * maya_resolution_aspect
 
     def add_matrix_sample(self):
         self.world_space_matrices.append(cmds.xform(self.transform.name, query=True, matrix=True, ws=True))
 
     def add_focal_distance_sample(self):
         self.focal_distance_values.append(cmds.getAttr(self.name + '.focusDistance') )
+
 
 #--------------------------------------------------------------------------------------------------
 # MFile class.
@@ -587,6 +588,7 @@ class MFile():
         else:
             self.image_file_names.append(image_name)
 
+
 #--------------------------------------------------------------------------------------------------
 # MMsEnvironment class.
 #--------------------------------------------------------------------------------------------------
@@ -614,6 +616,7 @@ class MMsEnvironment():
         self.mirrorball_exitance = cmds.getAttr(self.name + '.mirrorball_exitance')
         self.exitance_multiplier = cmds.getAttr(self.name + '.exitance_multiplier')
 
+
 #--------------------------------------------------------------------------------------------------
 # MColor class.
 #--------------------------------------------------------------------------------------------------
@@ -631,6 +634,7 @@ class MColorConnection():
             self.connected_node = ms_commands.get_connected_node(self.name)
             if self.connected_node is not None:
                 self.connected_node_type = cmds.nodeType(self.connected_node)
+
 
 #--------------------------------------------------------------------------------------------------
 # MMsMaterial class.
@@ -678,7 +682,7 @@ class MMsMaterial():
                                              self.normal_map_back,
                                              self.alpha_map]
 
-        else: 
+        else:
             self.bsdf_back, self.edf_back, self.surface_shader_back, self.normal_map_back = self.bsdf_front, self.edf_front, self.surface_shader_front, self.normal_map_front
 
             self.shading_nodes += [self.bsdf_front,
@@ -709,6 +713,7 @@ class MMsMaterial():
 
         else:
             return None
+
 
 #--------------------------------------------------------------------------------------------------
 # MMsShadingNode class.
@@ -767,7 +772,7 @@ class MMsShadingNode():
                 else:
                     attribute_value = color_connection
 
-            elif params['entity_defs'][self.model].attributes[attribute_key].type == 'dropdown_list': 
+            elif params['entity_defs'][self.model].attributes[attribute_key].type == 'dropdown_list':
                 pass
             # the node must be a text entity
             else:
@@ -775,6 +780,7 @@ class MMsShadingNode():
 
             # add attribute to dict
             self.attributes[attribute_key] = attribute_value
+
 
 #--------------------------------------------------------------------------------------------------
 # AsParameter class.
@@ -791,6 +797,7 @@ class AsParameter():
     def emit_xml(self, doc):
         doc.append_parameter(self.name, str(self.value))
 
+
 #--------------------------------------------------------------------------------------------------
 # AsParameters class.
 #--------------------------------------------------------------------------------------------------
@@ -805,9 +812,10 @@ class AsParameters():
 
     def emit_xml(self, doc):
         doc.start_element('parameters name="%s"' % self.name)
-        for parameter in self.parameters:       
-            parameter.emit_xml(doc)                         
+        for parameter in self.parameters:
+            parameter.emit_xml(doc)
         doc.end_element('parameters')
+
 
 #--------------------------------------------------------------------------------------------------
 # AsColor class.
@@ -827,7 +835,7 @@ class AsColor():
 
     def emit_xml(self, doc):
         ms_commands.info('Writing color %s' % self.name)
-        doc.start_element('color name="%s"' % self.name)  
+        doc.start_element('color name="%s"' % self.name)
         self.color_space.emit_xml(doc)
         self.multiplier.emit_xml(doc)
 
@@ -838,6 +846,7 @@ class AsColor():
         doc.append_line('%.6f' % self.alpha)
         doc.end_element('alpha')
         doc.end_element('color')
+
 
 #--------------------------------------------------------------------------------------------------
 # AsTransform class.
@@ -869,7 +878,8 @@ class AsTransform():
             doc.append_line('%.15f %.15f %.15f %.15f' % (matrix[3], matrix[7], matrix[11], matrix[15]))
             doc.end_element('matrix')
 
-        doc.end_element('transform') 
+        doc.end_element('transform')
+
 
 #--------------------------------------------------------------------------------------------------
 # AsTexture class.
@@ -897,6 +907,7 @@ class AsTexture():
         self.file_name.emit_xml(doc)
         doc.end_element('texture')
 
+
 #--------------------------------------------------------------------------------------------------
 # AsTextureInstance class.
 #--------------------------------------------------------------------------------------------------
@@ -918,6 +929,7 @@ class AsTextureInstance():
         self.filtering_mode.emit_xml(doc)
         self.alpha_mode.emit_xml(doc)
         doc.end_element('texture_instance')
+
 
 #--------------------------------------------------------------------------------------------------
 # AsObject class.
@@ -945,6 +957,7 @@ class AsObject():
         self.file_names.emit_xml(doc)
         doc.end_element('object')
 
+
 #--------------------------------------------------------------------------------------------------
 # AsObjectInstanceMaterialAssignment class.
 #--------------------------------------------------------------------------------------------------
@@ -960,6 +973,7 @@ class AsObjectInstanceMaterialAssignment():
 
     def emit_xml(self, doc):
         doc.append_element('assign_material slot="%s" side="%s" material="%s"' % (self.slot, self.side, self.material))
+
 
 #--------------------------------------------------------------------------------------------------
 # AsObjectInstance class.
@@ -983,6 +997,7 @@ class AsObjectInstance():
             material_assignment.emit_xml(doc)
         doc.end_element('object_instance')
 
+
 #--------------------------------------------------------------------------------------------------
 # AsCamera class.
 #--------------------------------------------------------------------------------------------------
@@ -1003,7 +1018,7 @@ class AsCamera():
         self.shutter_open_time = AsParameter('shutter_open_time', '0.0')
         self.shutter_close_time = AsParameter('shutter_close_time', '1.0')
         self.transforms = []
-    
+
     def emit_xml(self, doc):
         doc.start_element('camera name="%s" model="%s"' % (self.name, self.model))
 
@@ -1022,6 +1037,7 @@ class AsCamera():
             transform.emit_xml(doc)
 
         doc.end_element('camera')
+
 
 #--------------------------------------------------------------------------------------------------
 # AsEnvironment class.
@@ -1043,6 +1059,7 @@ class AsEnvironment():
         self.environment_edf.emit_xml(doc)
         doc.end_element('environment')
 
+
 #--------------------------------------------------------------------------------------------------
 # AsEnvironmentShader class.
 #--------------------------------------------------------------------------------------------------
@@ -1059,6 +1076,7 @@ class AsEnvironmentShader():
         doc.start_element('environment_shader name="%s" model="edf_environment_shader"' % self.name)
         self.edf.emit_xml(doc)
         doc.end_element('environment_shader')
+
 
 #--------------------------------------------------------------------------------------------------
 # AsEnvironmentEdf class.
@@ -1078,6 +1096,7 @@ class AsEnvironmentEdf():
         for parameter in self.parameters:
             parameter.emit_xml(doc)
         doc.end_element('environment')
+
 
 #--------------------------------------------------------------------------------------------------
 # AsMaterial class.
@@ -1116,6 +1135,7 @@ class AsMaterial():
 
         doc.end_element('material')
 
+
 #--------------------------------------------------------------------------------------------------
 # AsBsdf class.
 #--------------------------------------------------------------------------------------------------
@@ -1134,6 +1154,7 @@ class AsBsdf():
         for parameter in self.parameters:
             parameter.emit_xml(doc)
         doc.end_element('bsdf')
+
 
 #--------------------------------------------------------------------------------------------------
 # AsEdf class.
@@ -1154,6 +1175,7 @@ class AsEdf():
             parameter.emit_xml(doc)
         doc.end_element('edf')
 
+
 #--------------------------------------------------------------------------------------------------
 # AsSurfaceShader class.
 #--------------------------------------------------------------------------------------------------
@@ -1172,6 +1194,7 @@ class AsSurfaceShader():
         for parameter in self.parameters:
             parameter.emit_xml(doc)
         doc.end_element('surface_shader')
+
 
 #--------------------------------------------------------------------------------------------------
 # AsLight class.
@@ -1197,6 +1220,7 @@ class AsLight():
             self.outer_angle.emit_xml(doc)
         self.transform.emit_xml(doc)
         doc.end_element('light')
+
 
 #--------------------------------------------------------------------------------------------------
 # AsAssembly class.
@@ -1269,6 +1293,7 @@ class AsAssembly():
 
         doc.end_element('assembly')
 
+
 #--------------------------------------------------------------------------------------------------
 # AsAssemblyInstance class.
 #--------------------------------------------------------------------------------------------------
@@ -1287,6 +1312,7 @@ class AsAssemblyInstance():
         for transform in self.transforms:
             transform.emit_xml(doc)
         doc.end_element('assembly_instance')
+
 
 #--------------------------------------------------------------------------------------------------
 # AsFrame class.
@@ -1308,6 +1334,7 @@ class AsFrame():
         self.color_space.emit_xml(doc)
         self.resolution.emit_xml(doc)
         doc.end_element('frame')
+
 
 #--------------------------------------------------------------------------------------------------
 # AsOutput class.
@@ -1363,6 +1390,7 @@ class AsConfigurations():
         for configuration in self.configurations:
             configuration.emit_xml(doc)
         doc.end_element('configurations')
+
 
 #--------------------------------------------------------------------------------------------------
 # AsScene class.
@@ -1422,6 +1450,7 @@ class AsScene():
 
         doc.end_element('scene')
 
+
 #--------------------------------------------------------------------------------------------------
 # AsProject class.
 #--------------------------------------------------------------------------------------------------
@@ -1441,6 +1470,7 @@ class AsProject():
         self.output.emit_xml(doc)
         self.configurations.emit_xml(doc)
         doc.end_element('project')
+
 
 #--------------------------------------------------------------------------------------------------
 # fetch_m_camera function.
@@ -1474,7 +1504,7 @@ def translate_maya_scene(params, maya_scene):
     # the key will be the file path to save the project too
     as_object_models = dict()
 
-    # initialize frame list with single default value 
+    # initialize frame list with single default value
     frame_list = [int(cmds.currentTime(query=True))]
 
     # compute the base output directory
@@ -1544,7 +1574,7 @@ def translate_maya_scene(params, maya_scene):
         if ['custom_final_config_check']:
 
             final_config.parameters.append(AsParameter('lighting_engine', params['custom_final_config_engine']))
-            
+
             pt_parameters = AsParameters()
             pt_parameters.name = 'pt'
             pt_parameters.parameters.append(AsParameter('dl_light_samples',      params['pt_dl_light_samples']))
@@ -1602,7 +1632,7 @@ def translate_maya_scene(params, maya_scene):
         as_camera.focal_length = AsParameter('focal_length', camera.focal_length)
         as_camera.shutter_open_time.value = params['shutter_open_time']
         as_camera.shutter_close_time.value = params['shutter_close_time']
-        
+
         # dof specific camera settings
         if camera.dof or params['export_all_cameras_as_thinlens']:
             as_camera.model = 'thinlens_camera'
@@ -1644,14 +1674,15 @@ def translate_maya_scene(params, maya_scene):
             construct_transform_descendents(root_assembly, root_assembly, [], transform, mb_sample_number_list, non_mb_sample_number, params['export_camera_blur'], params['export_transformation_blur'], params['export_deformation_blur'])
 
         # end construction of as project hierarchy ************************************************
-        
+
         # add project to dict with the project file path as the key
         file_name = base_file_name.replace("#", str(frame_number).zfill(5))
         project_file_path = os.path.join(params['output_directory'], file_name)
 
         as_object_models[project_file_path] = as_project
-        
+
     return as_object_models
+
 
 #--------------------------------------------------------------------------------------------------
 # construct_transform_descendents function.
@@ -1688,13 +1719,13 @@ def construct_transform_descendents(root_assembly, parent_assembly, matrix_stack
             construct_transform_descendents(root_assembly, current_assembly, current_matrix_stack, transform, mb_sample_number_list, non_mb_sample_number, camera_blur, transformation_blur, object_blur)
 
         for light in maya_transform.child_lights:
-            
+
             light_color = AsColor()
             light_color.name = light.name + '_color'
             light_color.RGB_color = light.color[0]
             light_color.multiplier.value = light.multiplier
             current_assembly.colors.append(light_color)
-            
+
             new_light = AsLight()
             new_light.name = light.safe_name
             new_light.exitance = AsParameter('exitance', light_color.name)
@@ -1714,7 +1745,7 @@ def construct_transform_descendents(root_assembly, parent_assembly, matrix_stack
 
         for mesh in maya_transform.child_meshes:
             # for now we wont be supporting instantiating objects
-            # when the time comes i will add a function call here to find 
+            # when the time comes i will add a function call here to find
             # if the mesh has been defined somewhere in the assembly heriarchy already and instantiate it if so
             new_mesh = AsObject()
             new_mesh.name = mesh.safe_name
@@ -1749,16 +1780,17 @@ def construct_transform_descendents(root_assembly, parent_assembly, matrix_stack
 
             current_assembly.object_instances.append(mesh_instance)
 
+
 #--------------------------------------------------------------------------------------------------
 # construct_appleseed_material_network function.
 #--------------------------------------------------------------------------------------------------
 
 def construct_appleseed_material_network(root_assembly, ms_material):
-    
+
     """ constructs a AsMaterial from an MMsMaterial """
 
     materials = [None, None]
-    
+
     # check if material already exists in root_assembly
     for material in root_assembly.materials:
         if material.name == (ms_material.safe_name + '_front') and ms_material.enable_front:
@@ -1803,7 +1835,7 @@ def construct_appleseed_material_network(root_assembly, ms_material):
                 front_material.normal_map = AsParameter('normal_map', new_texture_instance.name)
             if ms_material.alpha_map is not None:
                 front_material.alpha_map = AsParameter('alpha_map', alpha_texture_instance.name)
-            
+
             root_assembly.materials.append(front_material)
             materials[0] = front_material
 
@@ -1833,9 +1865,8 @@ def construct_appleseed_material_network(root_assembly, ms_material):
             root_assembly.materials.append(back_material)
             materials[1] = back_material
 
-
-
     return materials
+
 
 #--------------------------------------------------------------------------------------------------
 # is_in_list function.
@@ -1850,6 +1881,7 @@ def get_from_list(list, name):
             return item
 
     return None
+
 
 #--------------------------------------------------------------------------------------------------
 # build_as_shading_nodes function.
@@ -1911,7 +1943,7 @@ def build_as_shading_nodes(root_assembly, current_maya_shading_node):
                 new_texture_entity = AsTexture()
                 new_texture_entity.name = current_maya_shading_node.attributes[attrib_key].safe_name
                 new_texture_entity.file_name = AsParameter('filename', current_maya_shading_node.attributes[attrib_key].image_file_names[0])
-                
+
                 root_assembly.textures.append(new_texture_entity)
 
             new_texture_instance = new_texture_entity.instantiate()
@@ -1935,7 +1967,7 @@ def build_as_shading_nodes(root_assembly, current_maya_shading_node):
 
             new_shading_node_parameter = AsParameter(attrib_key, new_color_entity.name)
             current_shading_node.parameters.append(new_shading_node_parameter)
-            
+
         elif current_maya_shading_node.attributes[attrib_key].__class__.__name__ == 'str':
             new_shading_node_parameter = AsParameter(attrib_key, current_maya_shading_node.attributes[attrib_key])
             current_shading_node.parameters.append(new_shading_node_parameter)
@@ -1950,9 +1982,9 @@ def build_as_shading_nodes(root_assembly, current_maya_shading_node):
 def export_container(render_settings_node):
 
     """ This function triggers the 3 main processes in exporting, scene caching, translation and saving"""
-    
+
     export_start_time = time.time()
-    
+
     params = get_maya_params(render_settings_node)
     maya_scene = get_maya_scene(params)
 
@@ -1961,7 +1993,7 @@ def export_container(render_settings_node):
 
     as_object_models = translate_maya_scene(params, maya_scene)
 
-    scene_translation_finish = time.time() 
+    scene_translation_finish = time.time()
     ms_commands.info('Scene translated in %.2f seconds' % (scene_translation_finish - scene_cache_finish))
 
     for as_object_model_key in as_object_models:
@@ -1973,9 +2005,9 @@ def export_container(render_settings_node):
         as_object_models[as_object_model_key].emit_xml(doc)
         doc.close()
 
-    save_finish_time = time.time() 
+    save_finish_time = time.time()
 
-    export_finish_time = time.time() 
+    export_finish_time = time.time()
 
     ms_commands.info('Export finished in %.2f seconds, See the script editor for details' % (export_finish_time - export_start_time))
 
@@ -1986,7 +2018,7 @@ def export_container(render_settings_node):
 
 def export(render_settings_node):
 
-    """ This function is a wrapper for export_container so that we can profile the export easily """ 
+    """ This function is a wrapper for export_container so that we can profile the export easily """
 
     if cmds.getAttr(render_settings_node + '.profile_export'):
         import cProfile
