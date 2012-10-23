@@ -21,24 +21,42 @@
 # THE SOFTWARE.
 #
 
-
-from xml.dom.minidom import parseString
+import argparse
+import datetime
 import os
+import random
+import shutil
+import subprocess
 import sys
 import time
-from datetime import datetime
-import shutil
-import random
+import xml.dom.minidom
 
+
+#--------------------------------------------------------------------------------------------------
+# Constants.
+#--------------------------------------------------------------------------------------------------
+
+OUTPUT_DIR = "_output"
+COMPLETED_DIR = "_completed"
+LOGS_DIR = "_logs"
+APPLESEED_BIN = "appleseed.cli"
+
+
+#--------------------------------------------------------------------------------------------------
+# Utility functions.
+#--------------------------------------------------------------------------------------------------
 
 def xstr(s):
-    return "n/a" if s is None else str(s)
-
+    return "N/A" if s is None else str(s)
 
 def safe_mkdir(dir):
     if not os.path.exists(dir):
         os.mkdir(dir)
 
+
+#--------------------------------------------------------------------------------------------------
+# Console class to write to the console, using colors on systems that support them.
+#--------------------------------------------------------------------------------------------------
 
 class Console:
     @staticmethod
@@ -47,7 +65,7 @@ class Console:
 
     @staticmethod
     def format_message(msg):
-        return "[{0}] {1}".format(datetime.now(), msg)
+        return "[{0}] {1}".format(datetime.datetime.now(), msg)
 
     @staticmethod
     def info(msg):
@@ -78,11 +96,15 @@ class Console:
             print("{0}".format(s))
 
 
+#--------------------------------------------------------------------------------------------------
+# Log class to write to log files.
+#--------------------------------------------------------------------------------------------------
+
 class Log:
     def __init__(self, path):
         self.path = path
         self.reset()
-        self.emit("# beginning logging {0}".format(datetime.now()))
+        self.emit("# Beginning logging at {0}.".format(datetime.datetime.now()))
 
     def reset(self):
         self.project_file = None
@@ -91,11 +113,11 @@ class Log:
 
     def begin_rendering(self, project_file):
         self.project_file = project_file
-        self.start_time = datetime.now()
+        self.start_time = datetime.datetime.now()
 
     def end_rendering(self):
-        self.end_time = datetime.now()
-        self.message("success")
+        self.end_time = datetime.datetime.now()
+        self.message("Completed")
         self.reset()
 
     def message(self, msg):
@@ -105,6 +127,10 @@ class Log:
         with open(self.path, "a") as file:
             file.write(msg + "\n")
 
+
+#--------------------------------------------------------------------------------------------------
+# Watching and rendering logic.
+#--------------------------------------------------------------------------------------------------
 
 def get_project_files(directory):
     project_files = []
@@ -117,7 +143,6 @@ def get_project_files(directory):
 
     return project_files
 
-
 def get_missing_project_dependencies(project_file):
     missing_deps = []
 
@@ -126,7 +151,7 @@ def get_missing_project_dependencies(project_file):
     with open(project_file, 'r') as file:
         data = file.read()
 
-    for entity in parseString(data).getElementsByTagName('parameter'):
+    for entity in xml.dom.minidom.parseString(data).getElementsByTagName('parameter'):
         if entity.getAttribute('name') == 'filename':
             filename = entity.getAttribute('value')
 
@@ -142,145 +167,123 @@ def get_missing_project_dependencies(project_file):
 
     return missing_deps
 
-
 def is_project_renderable(project_file):
     missing_deps = get_missing_project_dependencies(project_file)
 
     if len(missing_deps) == 0:
         return True
 
-    Console.error('MISSING DEPENDENCIES for "{0}":'.format(os.path.split(project_file)[1]))
+    Console.error('Missing dependencies for "{0}":'.format(os.path.split(project_file)[1]))
 
     for dep in missing_deps:
-        Console.error("  {0}".format(dep))
+        Console.error("    {0}".format(dep))
 
     return False
 
-
 def render_project(args, project_file):
-    Console.success('RENDERING "{0}"...'.format(project_file))
+    Console.success('Rendering "{0}"...'.format(project_file))
 
-    # rename the project file so others don't try to render it
-    in_progress_appendage = '.inprogress' if args['short_name'] is None else '.' + args['short_name']
-    os.rename(project_file, project_file + in_progress_appendage)
-    project_file += in_progress_appendage
+    # Rename the project file so others don't try to render it.
+    suffix = "." + args.user_name
+    os.rename(project_file, project_file + suffix)
+    project_file += suffix
 
-    # create shell command
+    # Create shell command.
     project_filename = os.path.split(project_file)[1]
     output_filename = os.path.splitext(project_filename)[0] + '.png'
-    output_filepath = os.path.join(args['watch_dir'], args['output_dir'], output_filename)
-    command = '{0} -o "{1}" "{2}"'.format(args['cli_path'], output_filepath, project_file)
+    output_filepath = os.path.join(args.watch_dir, OUTPUT_DIR, output_filename)
+    command = '{0} -o "{1}" "{2}"'.format(args.appleseed_bin_path, output_filepath, project_file)
 
-    # make sure the output directory exists
-    safe_mkdir(os.path.join(args['watch_dir'], args['output_dir']))
+    # Make sure the output directory exists.
+    safe_mkdir(os.path.join(args.watch_dir, OUTPUT_DIR))
 
-    # execute command
-    result = os.system(command)
+    # Execute command.
+    result = subprocess.call(command, shell=True)
     if result != 0:
-        Console.warning('file may not have rendered correctly: "{0}".'.format(project_file))
+        Console.warning('File may not have rendered correctly: "{0}".'.format(project_file))
 
-    # move the file into _completed directory
-    safe_mkdir(os.path.join(args['watch_dir'], args['completed_dir']))
-    move_dest = os.path.join(args['watch_dir'], args['completed_dir'], os.path.split(project_file)[1])
+    # Move the file into the completed directory.
+    safe_mkdir(os.path.join(args.watch_dir, COMPLETED_DIR))
+    move_dest = os.path.join(args.watch_dir, COMPLETED_DIR, os.path.split(project_file)[1])
     shutil.move(project_file, move_dest)
 
+def watch(args, log):
+    # Look for project files in the watch directory.
+    project_files = get_project_files(args.watch_dir)
 
-def print_usage():
-    print("usage:")
-    print("  -h, --help   print this help")
-    print("  ad=...       set appleseed bin directory")
-    print("  wd=...       set watch directory")
-    print("  sn=...       set short name, used to identify the file being rendered")
+    # No project file found.
+    if len(project_files) == 0:
+        Console.info("Nothing to render.")
+        return False
 
+    # Define random start point for list.
+    random_start_point = int(random.random() * (len(project_files) - 1))
+
+    # Iterate over reordered list of project files.
+    for project_file in project_files[random_start_point:] + project_files[:random_start_point]:
+        if is_project_renderable(project_file):
+            log.begin_rendering(project_file)
+            render_project(args, project_file)
+            log.end_rendering()
+            return True
+
+    # No renderable project file found.
+    return False
+
+def print_appleseed_version(args, log):
+    try:
+        p = subprocess.Popen([args.appleseed_bin_path, "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        version_string = p.communicate()[1].split('\r\n', 1)[0]
+        msg = "Running {0}.".format(version_string)
+        print(msg)
+        log.message(msg)
+    except OSError:
+        print("Failed to query {0} version.".format(APPLESEED_BIN))
+        sys.exit(1)
+
+
+#--------------------------------------------------------------------------------------------------
+# Entry point.
+#--------------------------------------------------------------------------------------------------
 
 def main():
-    if len(sys.argv) == 0:
-        print_usage()
-        return 0
+    # Parse the command line.
+    parser = argparse.ArgumentParser(description="Watch a directory and render any project file that appears in it.")
+    parser.add_argument("-a", dest="appleseed_dir", metavar="DIR", required=True, help="set appleseed binaries directory")
+    parser.add_argument("-w", dest="watch_dir", metavar="DIR", help="set watch directory")
+    parser.add_argument("-u", dest="user_name", metavar="NAME", help="set user name", default="anonymous")
+    args = parser.parse_args()
 
-    args = dict()
+    # If no watch directory is provided, watch the current directory.
+    if args.watch_dir is None:
+        args.watch_dir = os.getcwd()
 
-    args['output_dir'] = "_output"
-    args['completed_dir'] = "_completed"
-    args['log_dir'] = "_logs"
+    # Compute the path to the command line appleseed renderer.
+    args.appleseed_bin_path = os.path.join(args.appleseed_dir, APPLESEED_BIN)
 
-    args['appleseed_dir'] = None
-    args['watch_dir'] = None
-    args['short_name'] = None
-
-    for arg in sys.argv:
-        if arg == '-h' or arg == '--help':
-            print_usage()
-            return 0
-
-        split_arg = arg.split('=')
-
-        if split_arg[0] == 'ad':
-            args['appleseed_dir'] = split_arg[1]
-        elif split_arg[0] == 'wd':
-            args['watch_dir'] = split_arg[1]
-        elif split_arg[0] == 'sn':
-            args['short_name'] = split_arg[1]
-
-    if args['appleseed_dir'] is None:
-        print("no path to appleseed provided.")
-        print_usage()
-        return 1
-
-    if args['watch_dir'] is None:
-        args['watch_dir'] = os.getcwd()
-        print("no watch directory provided, watching working directory ({0}).".format(args['watch_dir']))
-
-    args['cli_path'] = os.path.join(args['appleseed_dir'], 'appleseed.cli')
-
-    log_dir = os.path.join(args['watch_dir'], args['log_dir'])
-    log_filename = args['short_name'] + ".log"
-
+    # Open the log file.
+    log_dir = os.path.join(args.watch_dir, LOGS_DIR)
+    log_filename = args.user_name + ".log"
     safe_mkdir(log_dir)
     log = Log(os.path.join(log_dir, log_filename))
 
+    print_appleseed_version(args, log)
+    print("Watching directory {0}.".format(args.watch_dir))
+
+    # Main watch loop.
     while True:
         try:
-            # look for project files in the watch directory
-            project_files = get_project_files(args['watch_dir'])
-
-            # go to sleep for a while if no project file is found
-            if len(project_files) == 0:
-                Console.info("nothing to render.")
-                time.sleep(3)
-                continue
-
-            # define random start point for list
-            random_start_point = int(random.random() * (len(project_files) - 1))
-
-            # iterate over reordered list of project files
-            found_project = False
-            for project_file in project_files[random_start_point:] + project_files[:random_start_point]:
-                if is_project_renderable(project_file):
-                    log.begin_rendering(project_file)
-                    render_project(args, project_file)
-                    log.end_rendering()
-                    found_project = True
-                    break
-
-            # immediately look for the next project after a project was rendered
-            if found_project:
-                continue
-
+            while watch(args, log): pass
+            time.sleep(3)
         except KeyboardInterrupt, SystemExit:
-            msg = "ctrl-c detected, exiting..."
+            msg = "Exiting..."
             Console.info(msg)
             log.message(msg)
             break
-
         except:
-            msg = "unexpected error: {0}.".format(sys.exc_info()[0])
+            msg = "Unexpected error: {0}.".format(sys.exc_info()[0])
             Console.error(msg)
             log.message(msg)
-            pass
-
-        # go to sleep for a while before the next cycle
-        time.sleep(3)
 
 if __name__ == '__main__':
     main()
