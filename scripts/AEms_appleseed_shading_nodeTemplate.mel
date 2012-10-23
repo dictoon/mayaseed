@@ -22,11 +22,9 @@
 //
 
 
-global proc AEms_appleseed_shading_nodeTemplate( string $nodeName )
-{
-    // include/call base class/node attributes
+global proc AEms_appleseed_shading_nodeTemplate(string $nodeName) {
     AEdependNodeTemplate $nodeName;
-    
+
     editorTemplate -addExtraControls;
     editorTemplate -endScrollLayout;
 }

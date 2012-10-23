@@ -290,8 +290,8 @@ global proc AEms_renderSettingsTemplate(string $nodeName) {
             editorTemplate -addControl "verbose_output";
         editorTemplate -endLayout;
 
-        AEdependNodeTemplate $nodeName;       // add any base class attributes
-        editorTemplate -addExtraControls;     // add any other attributes
+        AEdependNodeTemplate $nodeName;
+        editorTemplate -addExtraControls;
     editorTemplate -endScrollLayout;
 
     editorTemplate -endNoOptimize;

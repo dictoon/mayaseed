@@ -22,8 +22,7 @@
 //
 
 
-global proc AEms_environmentTemplate(string $nodeName)
-{
+global proc AEms_environmentTemplate(string $nodeName) {
    editorTemplate -beginScrollLayout;
       editorTemplate -beginLayout "appleseed Projection" -collapse false;
          editorTemplate -addControl "model";
@@ -36,9 +35,9 @@ global proc AEms_environmentTemplate(string $nodeName)
 
       editorTemplate -endLayout;
 
-      AEdependNodeTemplate $nodeName; // add any base class attributes
-      
-      editorTemplate -addExtraControls; // add any other attributes
+      AEdependNodeTemplate $nodeName;
+
+      editorTemplate -addExtraControls;
       editorTemplate -suppress "renderInfo";
       editorTemplate -suppress "renderLayerInfo";
       editorTemplate -suppress "drawOverride";
@@ -65,7 +64,7 @@ global proc AEms_environmentTemplate(string $nodeName)
       editorTemplate -suppress creationDate;
       editorTemplate -suppress containerType;
       editorTemplate -suppress localScale;
- 
+
       editorTemplate -suppress version;
       editorTemplate -suppress caching;
       editorTemplate -suppress nodeState;
