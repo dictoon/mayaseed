@@ -103,24 +103,26 @@ def normalizeRGB(color):
 #--------------------------------------------------------------------------------------------------
 
 def convert_connection_to_image(shader, attribute, dest_file, resolution=1024, pass_through=False):
-    
     dest_dir = os.path.split(dest_file)[0]
+
     if not os.path.exists(dest_dir):
         os.makedirs(dest_dir)
 
-    if not cmds.objExists(shader+'.'+attribute):
-        warning('error converting texture, no object named {0} exists'.format(shader+'.'+attribute))
+    plug_name = shader + '.' + attribute
+
+    if not cmds.objExists(plug_name):
+        warning('error converting texture, no object named {0} exists'.format(plug_name))
     else:
-        connection = cmds.listConnections(shader+'.'+attribute)
+        connection = cmds.listConnections(plug_name)
         if not connection:
-            warning( 'nothing connected to {0}, skipping conversion'.format(plug_name))
+            warning('nothing connected to {0}, skipping conversion'.format(plug_name))
         elif pass_through == True:
-            warning( '{0}: skipping conversion'.format(plug_name))
+            warning('{0}: skipping conversion'.format(plug_name))
         else:
             cmds.hyperShade(objects=shader)
             connected_object = cmds.ls(sl=True)[0]
             cmds.convertSolidTx(connection[0] ,connected_object ,fileImageName=dest_file, antiAlias=True, bm=3, fts=True, sp=True, alpha=True, doubleSided=True, resolutionX=resolution, resolutionY=resolution)
-        
+
         return dest_file
 
 #--------------------------------------------------------------------------------------------------
