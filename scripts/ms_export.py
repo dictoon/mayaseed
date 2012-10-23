@@ -1320,7 +1320,7 @@ class AsFrame():
     def __init__(self):
         self.name = 'beauty'
         self.camera = None
-        self.color_space = AsParameter('camera', 'srgb')
+        self.color_space = AsParameter('color_space', 'srgb')
         self.resolution = None
 
     def emit_xml(self, doc):
@@ -1982,7 +1982,7 @@ def export_container(render_settings_node):
 
     export_finish_time = time.time()
 
-    ms_commands.info('Export finished in %.2f seconds, See the script editor for details.' % (export_finish_time - export_start_time))
+    ms_commands.info('Export finished in %.2f seconds, see the script editor for details.' % (export_finish_time - export_start_time))
 
 
 #--------------------------------------------------------------------------------------------------
