@@ -93,7 +93,7 @@ def buildMenu():
     cmds.menuItem(divider=True, parent='ms_menu')
     cmds.menuItem('menu_export', subMenu=True, label='Export', to=True, parent='ms_menu')
     for render_settings_node in cmds.ls(type='ms_renderSettings'):
-        cmds.menuItem(label=render_settings_node, parent='menu_export', command=('import ms_export \nms_export.export("{0}")'.format(render_settings_node)))
+        cmds.menuItem(label=render_settings_node, parent='menu_export', command=('import ms_export \nreload(ms_export)\nms_export.export("{0}")'.format(render_settings_node)))
 
     # About
     cmds.menuItem(divider=True, parent='ms_menu')

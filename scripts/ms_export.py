@@ -1627,8 +1627,6 @@ def translate_maya_scene(params, maya_scene):
         as_camera.shutter_close_time.value = params['shutter_close_time']
 
         # dof specific camera settings
-        print '?? camera dof', camera.dof
-        print '??', params['export_all_cameras_as_thinlens']
         if camera.dof or params['export_all_cameras_as_thinlens']:
             as_camera.model = 'thinlens_camera'
             as_camera.focal_distance = AsParameter('focal_distance', camera.focal_distance_values[non_mb_sample_number])
