@@ -1320,7 +1320,7 @@ class AsFrame():
     def __init__(self):
         self.name = 'beauty'
         self.camera = None
-        self.color_space = AsParameter('color_space', 'srgb')
+        self.color_space = AsParameter('color_space', 'linear')
         self.resolution = None
 
     def emit_xml(self, doc):
@@ -1549,6 +1549,7 @@ def translate_maya_scene(params, maya_scene):
         as_output.frames.append(as_frame)
         # note: frame camera is set when the camera is retrieved for the scene element
         as_frame.resolution = AsParameter('resolution', '%i %i' % (params['output_res_width'], params['output_res_height']))
+        as_frame.color_space.value = params['output_color_space']
 
         # create configurations object
         as_configurations = AsConfigurations()
