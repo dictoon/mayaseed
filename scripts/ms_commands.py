@@ -644,10 +644,12 @@ def convert_lambert_material(material):
 #--------------------------------------------------------------------------------------------------
 
 def get_attached_materials(mesh_name):
-    shading_engine = cmds.listConnections(mesh_name, t='shadingEngine')
-    if shading_engine:
-        return cmds.listConnections(shading_engine[0] + ".surfaceShader")
-    return None
+    shading_engines = cmds.listConnections(mesh_name, t='shadingEngine')
+    materials = []
+    if shading_engines is not None:
+        for shading_engine in shading_engines:
+            materials.append(cmds.listConnections(shading_engine + ".surfaceShader")[0])
+    return materials
 
 
 #--------------------------------------------------------------------------------------------------
