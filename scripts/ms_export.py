@@ -31,6 +31,7 @@ import re
 import subprocess
 import sys
 import ms_commands
+reload(ms_commands)
 import ms_export_obj
 import time
 
