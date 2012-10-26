@@ -476,17 +476,13 @@ class MMesh(MTransformChild):
             self.has_deformation = True
 
         attached_material_names = ms_commands.get_attached_materials(self.name)
-        print attached_material_names
 
         if attached_material_names is not None:
             for material_name in attached_material_names:
                 if cmds.nodeType(material_name) == 'ms_appleseed_material':
                     self.materials.append(MMsMaterial(self.params, material_name))
 
-        print '?? name', self.name
-        print '?? attached mates', attached_material_names
         for mat in self.materials:
-            print '??', mat.name
 
     def add_deform_sample(self, export_root, geo_dir, time):
         file_name = '%s_%i_%i.obj' % (self.safe_short_name, self.id, time)
