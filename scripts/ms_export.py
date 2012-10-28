@@ -144,6 +144,7 @@ def get_maya_params(render_settings_node):
     params['convert_shading_nodes'] = cmds.getAttr(render_settings_node + '.convert_shading_nodes_to_textures')
     params['convert_textures_to_exr'] = cmds.getAttr(render_settings_node + '.convert_textures_to_exr')
     params['overwrite_existing_textures'] = cmds.getAttr(render_settings_node + '.overwrite_existing_textures')
+    params['overwrite_existing_geometry'] = cmds.getAttr(render_settings_node + '.overwrite_existing_geometry')
     params['export_camera_blur'] = cmds.getAttr(render_settings_node + '.export_camera_blur')
     params['exportMayaLights'] = cmds.getAttr(render_settings_node + '.export_maya_lights')
     params['export_transformation_blur'] = cmds.getAttr(render_settings_node + '.export_transformation_blur')
@@ -492,7 +493,9 @@ class MMesh(MTransformChild):
         self.mesh_file_names.append(output_file_path)
 
         # export mesh using absolute file path
-        self.params['obj_exporter'](self.name, os.path.join(export_root, output_file_path), overwrite=True)
+        absolute_file_path = os.path.join(export_root, output_file_path)
+        if not os.path.exists(absolute_file_path) or self.params['overwrite_existing_geometry']:
+            self.params['obj_exporter'](self.name, absolute_file_path, overwrite=True)
 
 
 #--------------------------------------------------------------------------------------------------

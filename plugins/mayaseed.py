@@ -86,6 +86,11 @@ def ms_renderSettings_nodeInitializer():
     overwrite_existing_textures_nAttr = OpenMaya.MFnNumericAttribute()
     ms_renderSettings.overwrite_existing_textures = overwrite_existing_textures_nAttr.create("overwrite_existing_textures", "overwrite_exrs", OpenMaya.MFnNumericData.kBoolean, True)
 
+    #  overwrite existing geometry
+    overwrite_existing_geometry_nAttr = OpenMaya.MFnNumericAttribute()
+    ms_renderSettings.overwrite_existing_geometry = overwrite_existing_geometry_nAttr.create("overwrite_existing_geometry", "overwrite_geo", OpenMaya.MFnNumericData.kBoolean, True)
+
+
     # export camera blur
     export_camera_blur_nAttr = OpenMaya.MFnNumericAttribute()
     ms_renderSettings.export_camera_blur = export_camera_blur_nAttr.create("export_camera_blur", "camera_blur", OpenMaya.MFnNumericData.kBoolean, False)
@@ -341,6 +346,8 @@ def ms_renderSettings_nodeInitializer():
     ms_renderSettings.addAttribute(ms_renderSettings.export_maya_lights)
     ms_renderSettings.addAttribute(ms_renderSettings.convert_textures_to_exr)
     ms_renderSettings.addAttribute(ms_renderSettings.overwrite_existing_textures)
+    ms_renderSettings.addAttribute(ms_renderSettings.overwrite_existing_geometry)
+
     ms_renderSettings.addAttribute(ms_renderSettings.export_camera_blur)
     ms_renderSettings.addAttribute(ms_renderSettings.export_transformation_blur)
     ms_renderSettings.addAttribute(ms_renderSettings.export_deformation_blur)

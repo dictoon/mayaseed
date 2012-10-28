@@ -213,6 +213,7 @@ global proc AEms_renderSettingsTemplate(string $nodeName) {
             editorTemplate -addControl "convert_shading_nodes_to_textures";
             editorTemplate -label "Convert Textures to OpenEXR" -addControl "convert_textures_to_exr";
             editorTemplate -label "Overwrite Existing Textures Files" -addControl "overwrite_existing_textures";
+            editorTemplate -label "Overwrite Existing Geometry Files" -addControl "overwrite_existing_geometry";
             editorTemplate -addSeparator;
             editorTemplate -addControl "export_maya_lights";
             editorTemplate -addSeparator;
