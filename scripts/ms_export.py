@@ -831,7 +831,8 @@ class AsParameter():
         self.value = value
 
     def emit_xml(self, doc):
-        doc.append_parameter(self.name, str(self.value))
+        if (self.value is not None) and self.value != '':
+            doc.append_parameter(self.name, str(self.value))
 
 
 #--------------------------------------------------------------------------------------------------
