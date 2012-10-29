@@ -264,7 +264,6 @@ def get_maya_scene(params):
         if not cmds.listRelatives(maya_transform, ap=True, fullPath=True):
             maya_root_transforms.append(MTransform(params, maya_transform, None))
 
-    start_time = cmds.currentTime(query=True)
     start_frame = int(start_time)
     end_frame = start_frame
     sample_increment = 1.0
@@ -291,6 +290,12 @@ def get_maya_scene(params):
     ms_commands.create_dir(os.path.join(params['output_directory'], texture_dir))
     geo_dir = '_geometry'
     ms_commands.create_dir(os.path.join(params['output_directory'], geo_dir))
+
+    environment = None
+    # get environment
+    if params['environment']:
+        environment = MMsEnvironment(params, params['environment'])
+        environment.add_environment_sample(params['output_directory'], texture_dir, 0)
 
     # add motion samples
     current_frame = start_frame
@@ -322,7 +327,7 @@ def get_maya_scene(params):
     # return to pre-export time
     cmds.currentTime(start_time)
 
-    return maya_root_transforms
+    return maya_root_transforms, environment
 
 
 #--------------------------------------------------------------------------------------------------
@@ -484,6 +489,7 @@ class MMesh(MTransformChild):
                     self.materials.append(MMsMaterial(self.params, material_name))
 
         for mat in self.materials:
+            pass
 
     def add_deform_sample(self, export_root, geo_dir, time):
         file_name = '%s_%i_%i.obj' % (self.safe_short_name, self.id, time)
@@ -602,6 +608,7 @@ class MMsEnvironment():
     """ Lightweight class representing Maya ms_environment nodes """
 
     def __init__(self, params, maya_ms_environment_node):
+        self.params = params
         self.name = maya_ms_environment_node
         self.safe_name = ms_commands.legalize_name(self.name)
 
@@ -613,13 +620,38 @@ class MMsEnvironment():
         # Latitude Longitude Map = 2
         # Mirrorball Map = 3
 
-        self.constant_exitance = cmds.getAttr(self.name + '.constant_exitance')
-        self.gradient_horizon_exitance = cmds.getAttr(self.name + '.gradient_horizon_exitance')
-        self.gradient_zenith_exitance = cmds.getAttr(self.name + '.gradient_zenith_exitance')
-        self.latitude_longitude_exitance = cmds.getAttr(self.name + '.latitude_longitude_exitance')
-        self.mirrorball_exitance = cmds.getAttr(self.name + '.mirrorball_exitance')
+        if self.model == 0:
+            self.model = "constant_environment_edf"
+        elif self.model == 1:
+            self.model = "gradient_environment_edf"
+        elif self.model == 2:
+            self.model = "latlong_map_environment_edf"
+        elif self.model == 3:
+            self.model = "mirrorball_map_environment_edf"
+
+        self.constant_exitance = MColorConnection(self.params, self.name + '.constant_exitance')
+        self.gradient_horizon_exitance = MColorConnection(self.params, self.name + '.gradient_horizon_exitance')
+        self.gradient_zenith_exitance = MColorConnection(self.params, self.name + '.gradient_zenith_exitance')
+        
+        self.latitude_longitude_exitance = self.get_connections(self.name + '.latitude_longitude_exitance')
+        self.mirrorball_exitance = self.get_connections(self.name + '.mirror_ball_exitance')
+
         self.exitance_multiplier = cmds.getAttr(self.name + '.exitance_multiplier')
 
+    def get_connections(self, attr_name):
+        connection = MColorConnection(self.params, attr_name)
+        if cmds.nodeType(connection.connected_node) == 'file':
+            texture_node = MFile(self.params, connection.connected_node)
+            return texture_node
+
+        else:
+            return None
+
+    def add_environment_sample(self, export_root, texture_dir, time):
+        if self.latitude_longitude_exitance is not None:
+            self.latitude_longitude_exitance.add_image_sample(export_root, texture_dir, time)
+        if self.mirrorball_exitance is not None:
+            self.mirrorball_exitance.add_image_sample(export_root, texture_dir, time)
 
 #--------------------------------------------------------------------------------------------------
 # MColor class.
@@ -1054,7 +1086,7 @@ class AsEnvironment():
         self.environment_edf = None
 
     def emit_xml(self, doc):
-        doc.start_element('environment name="%s" model="edf_environment_shader"' % self.name)
+        doc.start_element('environment name="%s" model="generic_environment"' % self.name)
         if self.environment_shader is not None:
             self.environment_shader.emit_xml(doc)
         self.environment_edf.emit_xml(doc)
@@ -1096,7 +1128,7 @@ class AsEnvironmentEdf():
         doc.start_element('environment_edf name="%s" model="%s"' % (self.name, self.model))
         for parameter in self.parameters:
             parameter.emit_xml(doc)
-        doc.end_element('environment')
+        doc.end_element('environment_edf')
 
 
 #--------------------------------------------------------------------------------------------------
@@ -1494,10 +1526,35 @@ def fetch_m_camera(m_transform, maya_camera_name):
 
 
 #--------------------------------------------------------------------------------------------------
+# m_color_connection_to_as_color function.
+#--------------------------------------------------------------------------------------------------
+
+def m_color_connection_to_as_color(m_color_connection, postfix=''):
+
+    as_color = AsColor()
+    as_color.name = m_color_connection.safe_name + postfix
+    as_color.RGB_color = m_color_connection.normalized_color
+    as_color.multiplier.value = m_color_connection.multiplier
+
+    return as_color
+
+#--------------------------------------------------------------------------------------------------
+# m_file_to_as_texture function.
+#--------------------------------------------------------------------------------------------------
+
+def m_file_to_as_texture(m_file, postfix='', file_number=0):
+
+    as_texture = AsTexture()
+    as_texture.name = m_file.safe_name + postfix
+    as_texture.file_name = AsParameter('filename', m_file.image_file_names[file_number])
+
+    return as_texture
+
+#--------------------------------------------------------------------------------------------------
 # traslate_maya_scene function.
 #--------------------------------------------------------------------------------------------------
 
-def translate_maya_scene(params, maya_scene):
+def translate_maya_scene(params, maya_scene, maya_environment):
 
     """ Main function for converting a cached Maya scene into an appleseed object hierarchy """
 
@@ -1612,6 +1669,55 @@ def translate_maya_scene(params, maya_scene):
 
         # begin scene object
         as_project.scene = AsScene()
+
+        # if present add the environment
+        if maya_environment is not None:
+            environment = AsEnvironment()
+            environment.name = maya_environment.safe_name
+
+            environment_edf = AsEnvironmentEdf()
+            environment_edf.name = maya_environment.safe_name + '_edf'
+            environment_edf.model = maya_environment.model
+
+            environment.environment_edf = AsParameter('environment_edf', environment_edf.name)
+
+            if environment_edf.model == 'constant_environment_edf':
+                constant_environment_color = m_color_connection_to_as_color(maya_environment.constant_exitance, '_constant_exitance')
+                environment_edf.parameters.append(AsParameter('exitance', constant_environment_color.name))
+                as_project.scene.colors.append(constant_environment_color)
+
+            elif environment_edf.model == 'gradient_environment_edf':
+                gradient_horizon_exitance = m_color_connection_to_as_color(maya_environment.gradient_horizon_exitance, '_horizon_exitance')
+                environment_edf.parameters.append(AsParameter('horizon_exitance', gradient_horizon_exitance.name))
+                as_project.scene.colors.append(gradient_horizon_exitance)
+
+                zenith_horizon_exitance = m_color_connection_to_as_color(maya_environment.gradient_zenith_exitance, '_zenith_exitance')
+                environment_edf.parameters.append(AsParameter('zenith_exitance', zenith_horizon_exitance.name))
+                as_project.scene.colors.append(zenith_horizon_exitance)
+
+            elif environment_edf.model == 'latlong_map_environment_edf':
+                lat_long_map = m_file_to_as_texture(maya_environment.latitude_longitude_exitance, '_texture')                
+                as_project.scene.textures.append(lat_long_map)
+                
+                lat_long_map_instance = lat_long_map.instantiate()
+                as_project.scene.texture_instances.append(lat_long_map_instance)
+
+                environment_edf.parameters.append(AsParameter('exitance', lat_long_map_instance.name))
+
+            elif environment_edf.model == 'mirrorball_map_environment_edf':
+                mirror_ball_map = m_file_to_as_texture(maya_environment.mirrorball_exitance, '_texture')
+                as_project.scene.textures.append(mirror_ball_map)
+                
+                mirror_ball_map_instance = mirror_ball_map.instantiate()
+                as_project.scene.texture_instances.append(mirror_ball_map_instance)
+
+                environment_edf.parameters.append(AsParameter('exitance', mirror_ball_map_instance.name))
+
+
+            environment_edf.parameters.append(AsParameter('exitance_multiplier', str(maya_environment.exitance_multiplier)))
+
+            as_project.scene.environment = environment
+            as_project.scene.environment_edfs.append(environment_edf)
 
         # retrieve camera from Maya scene cache and create as camera
         camera = None
@@ -1969,12 +2075,12 @@ def export_container(render_settings_node):
     export_start_time = time.time()
 
     params = get_maya_params(render_settings_node)
-    maya_scene = get_maya_scene(params)
+    maya_scene, maya_environment = get_maya_scene(params)
     scene_cache_finish_time = time.time()
 
     ms_commands.info('Scene cached for translation in %.2f seconds.' % (scene_cache_finish_time - export_start_time))
 
-    as_object_models = translate_maya_scene(params, maya_scene)
+    as_object_models = translate_maya_scene(params, maya_scene, maya_environment)
     scene_translation_finish_time = time.time()
 
     ms_commands.info('Scene translated in %.2f seconds.' % (scene_translation_finish_time - scene_cache_finish_time))
