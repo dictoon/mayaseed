@@ -1840,8 +1840,8 @@ def construct_transform_descendents(root_assembly, parent_assembly, matrix_stack
 
             if light.model == 'spotLight':
                 new_light.model = 'spot_light'
-                new_light.inner_angle = parameter('inner_angle', light.inner_angle)
-                new_light.outer_angle = parameter('outer_angle', light.outer_angle)
+                new_light.inner_angle = AsParameter('inner_angle', light.inner_angle)
+                new_light.outer_angle = AsParameter('outer_angle', light.outer_angle)
             else:
                 new_light.model = 'point_light'
 
