@@ -1549,7 +1549,11 @@ def m_file_to_as_texture(m_file, postfix='', file_number=0):
     as_texture.name = m_file.safe_name + postfix
     as_texture.file_name = AsParameter('filename', m_file.image_file_names[file_number])
 
-    return as_texture
+    as_texture_instance = as_texture.instantiate()
+    if m_file.alpha_is_luminance:
+        as_texture_instance.alpha_mode.value = 'luminance'
+
+    return as_texture, as_texture_instance
 
 #--------------------------------------------------------------------------------------------------
 # traslate_maya_scene function.
@@ -1697,23 +1701,20 @@ def translate_maya_scene(params, maya_scene, maya_environment):
                 as_project.scene.colors.append(zenith_horizon_exitance)
 
             elif environment_edf.model == 'latlong_map_environment_edf':
-                lat_long_map = m_file_to_as_texture(maya_environment.latitude_longitude_exitance, '_texture')                
-                as_project.scene.textures.append(lat_long_map)
+                lat_long_map, lat_long_map_instance = m_file_to_as_texture(maya_environment.latitude_longitude_exitance, '_texture')                
                 
-                lat_long_map_instance = lat_long_map.instantiate()
+                as_project.scene.textures.append(lat_long_map)
                 as_project.scene.texture_instances.append(lat_long_map_instance)
 
                 environment_edf.parameters.append(AsParameter('exitance', lat_long_map_instance.name))
 
             elif environment_edf.model == 'mirrorball_map_environment_edf':
-                mirror_ball_map = m_file_to_as_texture(maya_environment.mirrorball_exitance, '_texture')
-                as_project.scene.textures.append(mirror_ball_map)
+                mirror_ball_map, mirror_ball_map_instance = m_file_to_as_texture(maya_environment.mirrorball_exitance, '_texture')
                 
-                mirror_ball_map_instance = mirror_ball_map.instantiate()
+                as_project.scene.textures.append(mirror_ball_map)
                 as_project.scene.texture_instances.append(mirror_ball_map_instance)
 
                 environment_edf.parameters.append(AsParameter('exitance', mirror_ball_map_instance.name))
-
 
             environment_edf.parameters.append(AsParameter('exitance_multiplier', str(maya_environment.exitance_multiplier)))
 
@@ -1902,14 +1903,8 @@ def construct_appleseed_material_network(root_assembly, ms_material):
 
     if materials[0] is None and materials[1] is None:
         if ms_material.alpha_map is not None:
-            alpha_texture = AsTexture()
-            alpha_texture.name = ms_material.alpha_map.safe_name
-            alpha_texture.file_name = AsParameter('filename', ms_material.alpha_map.image_file_names[0])
+            alpha_texture, alpha_texture_instance = m_file_to_as_texture(ms_material.alpha_map)
             root_assembly.textures.append(alpha_texture)
-
-            alpha_texture_instance = alpha_texture.instantiate()
-            if ms_material.alpha_map.alpha_is_luminance:
-                alpha_texture_instance.alpha_mode.value = 'luminance'
             root_assembly.texture_instances.append(alpha_texture_instance)
 
         # if the materials are not yet defined construct them
@@ -1926,13 +1921,11 @@ def construct_appleseed_material_network(root_assembly, ms_material):
                 new_surface_shader = build_as_shading_nodes(root_assembly, ms_material.surface_shader_front)
                 front_material.surface_shader = AsParameter('surface_shader', new_surface_shader.name)
             if ms_material.normal_map_front is not None:
-                new_texture = AsTexture()
-                new_texture.name = ms_material.normal_map_front.safe_name
-                new_texture.file_name = AsParameter('filename', ms_material.normal_map_front.image_file_names[0])
+                new_texture, new_texture_instance = m_file_to_as_texture(ms_material.normal_map_front)
                 root_assembly.textures.append(new_texture)
-                new_texture_instance = new_texture.instantiate()
                 root_assembly.texture_instances.append(new_texture_instance)
                 front_material.normal_map = AsParameter('normal_map', new_texture_instance.name)
+
             if ms_material.alpha_map is not None:
                 front_material.alpha_map = AsParameter('alpha_map', alpha_texture_instance.name)
 
@@ -1952,13 +1945,11 @@ def construct_appleseed_material_network(root_assembly, ms_material):
                 new_surface_shader = build_as_shading_nodes(root_assembly, ms_material.surface_shader_back)
                 back_material.surface_shader = AsParameter('surface_shader', new_surface_shader.name)
             if ms_material.normal_map_back is not None:
-                new_texture = AsTexture()
-                new_texture.name = ms_material.normal_map_back.safe_name
-                new_texture.file_name = AsParameter('filename', ms_material.normal_map_back.image_file_names[0])
+                new_texture, new_texture_instance = m_file_to_as_texture(ms_material.normal_map_back)
                 root_assembly.textures.append(new_texture)
-                new_texture_instance = new_texture.instantiate()
                 root_assembly.texture_instances.append(new_texture_instance)
                 back_material.normal_map = AsParameter('normal_map', new_texture_instance.name)
+                
             if ms_material.alpha_map is not None:
                 back_material.alpha_map = AsParameter('alpha_map', alpha_texture_instance.name)
 
