@@ -1359,7 +1359,7 @@ class AsFrame():
     def __init__(self):
         self.name = 'beauty'
         self.camera = None
-        self.color_space = AsParameter('color_space', 'linear')
+        self.color_space = AsParameter('color_space', 'linear_rgb')
         self.resolution = None
 
     def emit_xml(self, doc):
