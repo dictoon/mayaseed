@@ -86,47 +86,6 @@ def check_export_cancelled():
         cmds.progressWindow(endProgress=1)
         raise RuntimeError('Export Cancelled.')
 
-
-#--------------------------------------------------------------------------------------------------
-# write_transform function.
-#--------------------------------------------------------------------------------------------------
-
-def write_transform(doc, scale, object=False, motion=False, motion_samples=2):
-    if motion:
-        sample_interval = 1.0 / (motion_samples - 1)
-
-        start_time = cmds.currentTime(query=True)
-        cmds.select(object)
-
-        for i in range(motion_samples):
-            cmds.currentTime(start_time + sample_interval * i)
-            cmds.refresh()
-            write_single_transform(doc, object, i, scale)
-
-        cmds.currentTime(start_time)
-        cmds.select(cl=True)
-    else:
-        write_single_transform(doc, object, 0, scale)
-
-def write_single_transform(doc, object, time, scale):
-    doc.start_element('transform time="{0}"'.format(time))
-
-    if scale != 1.0:
-        doc.append_element('scaling value="{0}"'.format(scale))
-
-    if object:
-        m = cmds.xform(object, query=True, ws=True, matrix=True)
-
-        doc.start_element('matrix')
-        doc.append_line('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(m[0], m[4], m[ 8], m[12]))
-        doc.append_line('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(m[1], m[5], m[ 9], m[13]))
-        doc.append_line('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(m[2], m[6], m[10], m[14]))
-        doc.append_line('{0:.15f} {1:.15f} {2:.15f} {3:.15f}'.format(m[3], m[7], m[11], m[15]))
-        doc.end_element('matrix')
-
-    doc.end_element('transform')
-
-
 #--------------------------------------------------------------------------------------------------
 # get_maya_params function.
 #--------------------------------------------------------------------------------------------------
@@ -1949,7 +1908,7 @@ def construct_appleseed_material_network(root_assembly, ms_material):
                 root_assembly.textures.append(new_texture)
                 root_assembly.texture_instances.append(new_texture_instance)
                 back_material.normal_map = AsParameter('normal_map', new_texture_instance.name)
-                
+
             if ms_material.alpha_map is not None:
                 back_material.alpha_map = AsParameter('alpha_map', alpha_texture_instance.name)
 
