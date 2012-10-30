@@ -1901,14 +1901,13 @@ def construct_appleseed_material_network(root_assembly, ms_material):
             materials[1] = material
 
     if materials[0] is None and materials[1] is None:
-
         if ms_material.alpha_map is not None:
             alpha_texture = AsTexture()
             alpha_texture.name = ms_material.alpha_map.safe_name
             alpha_texture.file_name = AsParameter('filename', ms_material.alpha_map.image_file_names[0])
             root_assembly.textures.append(alpha_texture)
-            alpha_texture_instance = alpha_texture.instantiate()
 
+            alpha_texture_instance = alpha_texture.instantiate()
             if ms_material.alpha_map.alpha_is_luminance:
                 alpha_texture_instance.alpha_mode.value = 'luminance'
             root_assembly.texture_instances.append(alpha_texture_instance)
