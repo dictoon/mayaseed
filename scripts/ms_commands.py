@@ -498,6 +498,11 @@ def convert_selected_materials():
         convert_material(material)
 
 def convert_material(material):
+
+    if material == 'lambert1':
+        info('Cannot convert default material "lambert1"'):
+        return
+
     material_type = cmds.nodeType(material)
 
     if material_type == 'phong' or material_type == 'blinn':
