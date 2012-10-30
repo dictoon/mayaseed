@@ -500,7 +500,7 @@ def convert_selected_materials():
 def convert_material(material):
 
     if material == 'lambert1':
-        info('Cannot convert default material "lambert1"'):
+        info('Cannot convert default material "lambert1"')
         return
 
     material_type = cmds.nodeType(material)
