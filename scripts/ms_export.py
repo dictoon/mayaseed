@@ -615,7 +615,7 @@ class MMsEnvironment():
             self.mirrorball_exitance.add_image_sample(export_root, texture_dir, time)
 
 #--------------------------------------------------------------------------------------------------
-# MColor class.
+# MColorConnection class.
 #--------------------------------------------------------------------------------------------------
 
 class MColorConnection():
@@ -627,6 +627,7 @@ class MColorConnection():
             self.safe_name = ms_commands.legalize_name(self.name)
             self.color_value = cmds.getAttr(self.name)
             self.normalized_color = ms_commands.normalizeRGB(cmds.getAttr(self.name)[0])[:3]
+            self.is_black = self.normalized_color == (0,0,0)
             self.multiplier = ms_commands.normalizeRGB(cmds.getAttr(self.name)[0])[3]
             self.connected_node = ms_commands.get_connected_node(self.name)
             if self.connected_node is not None:
@@ -755,12 +756,17 @@ class MGenericMaterial():
             if self.alpha.connected_node is not None:
                 self.alpha = MFile(self.params, self.alpha.connected_node)
                 self.textures.append(self.alpha)
+            elif self.alpha.is_black:
+                self.alpha = None
+
 
         elif cmds.attributeQuery('outTransparency', node=self.name, exists=True):
             self.alpha = MColorConnection(self.params, self.name + '.outTransparency')
             if self.alpha.connected_node is not None:
                 self.alpha = MFile(self.params, self.alpha.connected_node)
                 self.textures.append(self.alpha)
+            elif self.alpha.is_black:
+                self.alpha = None
 
         # work out incandescence component
         if cmds.attributeQuery('incandescence', node=self.name, exists=True):
@@ -768,13 +774,16 @@ class MGenericMaterial():
             if self.incandescence.connected_node is not None:
                 self.incandescence = MFile(self.params, self.incandescence.connected_node)
                 self.textures.append(self.incandescence)
+            elif self.incandescence.is_black:
+                self.incandescence = None
 
         elif cmds.attributeQuery('outColor', node=self.name, exists=True):
             self.incandescence = MColorConnection(self.params, self.name + '.outColor')
             if self.incandescence.connected_node is not None:
                 self.incandescence = MFile(self.params, self.incandescence.connected_node)
                 self.textures.append(self.incandescence)
-
+            elif self.incandescence.is_black:
+                self.incandescence = None
 
 #--------------------------------------------------------------------------------------------------
 # MMsShadingNode class.
