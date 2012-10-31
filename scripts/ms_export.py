@@ -307,7 +307,7 @@ def add_scene_sample(m_transform, transform_blur, deform_blur, camera_blur, curr
 
     for mesh in m_transform.child_meshes:
         if (frame_sample_number == 1) or force_sample:
-            for material in mesh.materials:
+            for material in (mesh.ms_materials + mesh.generic_materials):
                 for texture in material.textures:
                     if texture.is_animated or force_sample:
                         texture.add_image_sample(export_root, tex_dir, current_frame)
@@ -433,7 +433,8 @@ class MMesh(MTransformChild):
         MMesh.object_counter += 1
 
         self.mesh_file_names = []
-        self.materials = []
+        self.ms_materials = []
+        self.generic_materials = []
         self.has_deformation = False
 
         if cmds.listConnections(self.name + '.inMesh') is not None:
@@ -445,10 +446,11 @@ class MMesh(MTransformChild):
         if attached_material_names is not None:
             for material_name in attached_material_names:
                 if cmds.nodeType(material_name) == 'ms_appleseed_material':
-                    self.materials.append(MMsMaterial(self.params, material_name))
+                    self.ms_materials.append(MMsMaterial(self.params, material_name))
 
-        for mat in self.materials:
-            pass
+                else:
+                    self.generic_materials.append(MGenericMaterial(self.params, material_name))
+
 
     def add_deform_sample(self, export_root, geo_dir, time):
         file_name = '%s_%i_%i.obj' % (self.safe_short_name, self.id, time)
@@ -708,6 +710,70 @@ class MMsMaterial():
 
         else:
             return None
+
+#--------------------------------------------------------------------------------------------------
+# MGenericMaterial class.
+#--------------------------------------------------------------------------------------------------
+
+
+class MGenericMaterial():
+
+    """Generic material class representing all non ms_material materials in the maya scene"""
+
+    def __init__(self, params, maya_material_name):
+        self.params = params
+        self.name = maya_material_name
+        self.safe_name = ms_commands.legalize_name(self.name)
+
+        self.diffuse = None
+        self.alpha = None
+        self.incandescence = None
+
+        self.textures = []
+
+        # work out diffuse component
+        if cmds.attributeQuery('color', node=self.name, exists=True):
+            self.diffuse = MColorConnection(self.params, self.name + '.color')
+            if self.diffuse.connected_node is not None:
+                self.diffuse = MFile(self.params, self.diffuse.connected_node)
+                self.textures.append(self.diffuse)
+
+        elif cmds.attributeQuery('outColor', node=self.name, exists=True):
+            self.diffuse = MColorConnection(self.params, self.name + '.outColor')
+            if self.diffuse.connected_node is not None:
+                self.diffuse = MFile(self.params, self.diffuse.connected_node)
+                self.textures.append(self.diffuse)
+
+        # work out specular component
+        if cmds.attributeQuery('specularColor', node=self.name, exists=True):
+            # code should be added here when an appleseed phong/blinn maode is added
+            pass
+
+        # work out alpha component
+        if cmds.attributeQuery('transparency', node=self.name, exists=True):
+            self.alpha = MColorConnection(self.params, self.name + '.transparency')
+            if self.alpha.connected_node is not None:
+                self.alpha = MFile(self.params, self.alpha.connected_node)
+                self.textures.append(self.alpha)
+
+        elif cmds.attributeQuery('outTransparency', node=self.name, exists=True):
+            self.alpha = MColorConnection(self.params, self.name + '.outTransparency')
+            if self.alpha.connected_node is not None:
+                self.alpha = MFile(self.params, self.alpha.connected_node)
+                self.textures.append(self.alpha)
+
+        # work out incandescence component
+        if cmds.attributeQuery('incandescence', node=self.name, exists=True):
+            self.incandescence = MColorConnection(self.params, self.name + '.incandescence')
+            if self.incandescence.connected_node is not None:
+                self.incandescence = MFile(self.params, self.incandescence.connected_node)
+                self.textures.append(self.incandescence)
+
+        elif cmds.attributeQuery('outColor', node=self.name, exists=True):
+            self.incandescence = MColorConnection(self.params, self.name + '.outColor')
+            if self.incandescence.connected_node is not None:
+                self.incandescence = MFile(self.params, self.incandescence.connected_node)
+                self.textures.append(self.incandescence)
 
 
 #--------------------------------------------------------------------------------------------------
@@ -1831,23 +1897,99 @@ def construct_transform_descendents(root_assembly, parent_assembly, matrix_stack
             mesh_instance.transforms.append(mesh_transform)
 
             # translate materials and assign
-            for maya_material in mesh.materials:
-                as_materials = construct_appleseed_material_network(root_assembly, maya_material)
+            for maya_ms_material in mesh.ms_materials:
+                as_materials = convert_maya_ms_material_network(root_assembly, maya_ms_material)
 
                 if as_materials is not None:
                     if as_materials[0] is not None:
-                        mesh_instance.material_assignments.append(AsObjectInstanceMaterialAssignment(maya_material.safe_name, 'front', as_materials[0].name))
+                        mesh_instance.material_assignments.append(AsObjectInstanceMaterialAssignment(maya_ms_material.safe_name, 'front', as_materials[0].name))
                     if as_materials[1] is not None:
-                        mesh_instance.material_assignments.append(AsObjectInstanceMaterialAssignment(maya_material.safe_name, 'back', as_materials[1].name))
+                        mesh_instance.material_assignments.append(AsObjectInstanceMaterialAssignment(maya_ms_material.safe_name, 'back', as_materials[1].name))
+
+
+            for maya_generic_material in mesh.generic_materials:
+                as_material = convert_maya_generic_material(root_assembly, maya_generic_material)
+                
+                mesh_instance.material_assignments.append(AsObjectInstanceMaterialAssignment(maya_generic_material.safe_name, 'front', as_material.name))
+                mesh_instance.material_assignments.append(AsObjectInstanceMaterialAssignment(maya_generic_material.safe_name, 'back', as_material.name))
+
+
 
             current_assembly.object_instances.append(mesh_instance)
 
+#--------------------------------------------------------------------------------------------------
+# convert_maya_generic_material function.
+#--------------------------------------------------------------------------------------------------
+
+def convert_maya_generic_material(root_assembly, generic_material):
+
+    # check if material already exits in the root assembly
+    for material in root_assembly.materials:
+        if material.name == generic_material.safe_name:
+            return material
+
+    new_material = AsMaterial()
+    new_material.name = generic_material.safe_name
+    root_assembly.materials.append(new_material)
+
+    new_bsdf = AsBsdf()
+    new_bsdf.name = generic_material.safe_name + '_bsdf'
+    new_bsdf.model = 'lambertian_brdf'
+    root_assembly.bsdfs.append(new_bsdf)
+    new_material.bsdf = AsParameter('bsdf', new_bsdf.name)
+
+    if generic_material.diffuse.__class__.__name__ == 'MFile':
+        bsdf_texture, bsdf_texture_instance = m_file_to_as_texture(generic_material.diffuse)
+        new_bsdf.parameters.append(AsParameter('reflectance', bsdf_texture_instance.name))
+        root_assembly.textures.append(bsdf_texture)
+        root_assembly.texture_instances.append(bsdf_texture_instance)
+    else:
+        bsdf_color = m_color_connection_to_as_color(generic_material.diffuse)
+        new_bsdf.parameters.append(AsParameter('reflectance', bsdf_color.name))
+        root_assembly.colors.append(bsdf_color)
+
+    if generic_material.incandescence is not None:
+        new_edf = AsEdf()
+        new_edf.name = generic_material.safe_name + '_edf'
+        new_edf.model = 'diffuse_edf'
+        root_assembly.edfs.append(new_edf)
+        new_material.edf = AsParameter('edf', new_edf.name)
+
+        if generic_material.incandescence.__class__.__name__ == 'MFile':
+            edf_texture, edf_texture_instance = m_file_to_as_texture(generic_material.incandescence)
+            new_edf.parameters.append(AsParameter('exitance', edf_texture_instance.name))
+            root_assembly.textures.append(edf_texture)
+            root_assembly.texture_instances.append(edf_texture_instance)
+        else:
+            edf_color = m_color_connection_to_as_color(generic_material.incandescence)
+            new_edf.parameters.append(AsParameter('exitance', edf_color.name))
+            root_assembly.colors.append(edf_color)
+
+    if generic_material.alpha is not None:
+        new_surface_shader = AsSurfaceShader()
+        new_surface_shader.name = generic_material.safe_name + '_surface_shader'
+        new_surface_shader.model = 'physical_surface_shader'
+        root_assembly.surface_shaders.append(new_surface_shader)
+        new_material.surface_shader = AsParameter('surface_shader', new_surface_shader.name)
+
+        if generic_material.alpha.__class__.__name__ == 'MFile':
+            alpha_texture, alpha_texture_instance = m_file_to_as_texture(generic_material.alpha)
+            new_surface_shader.parameters.append(AsParameter('exitance', alpha_texture_instance.name))
+            root_assembly.textures.append(alpha_texture)
+            root_assembly.texture_instances.append(alpha_texture_instance)
+        else:
+            alpha_color = m_color_connection_to_as_color(generic_material.alpha)
+            new_surface_shader.parameters.append(AsParameter('exitance', alpha_color.name))
+            root_assembly.colors.append(alpha_color)
+
+    return new_material
+
 
 #--------------------------------------------------------------------------------------------------
-# construct_appleseed_material_network function.
+# convert_maya_ms_material_network function.
 #--------------------------------------------------------------------------------------------------
 
-def construct_appleseed_material_network(root_assembly, ms_material):
+def convert_maya_ms_material_network(root_assembly, ms_material):
 
     """ constructs a AsMaterial from an MMsMaterial """
 
