@@ -114,6 +114,7 @@ def normalizeRGB(color):
 #--------------------------------------------------------------------------------------------------
 
 def convert_connection_to_image(shader, attribute, dest_file, resolution=1024, pass_through=False):
+
     dest_dir = os.path.split(dest_file)[0]
 
     create_dir(dest_dir)
