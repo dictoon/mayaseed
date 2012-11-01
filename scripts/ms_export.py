@@ -1960,9 +1960,9 @@ def construct_transform_descendents(root_assembly, parent_assembly, matrix_stack
 def convert_maya_generic_material(root_assembly, generic_material):
 
     # check if material already exits in the root assembly
-    for material in root_assembly.materials:
-        if material.name == generic_material.safe_name:
-            return material
+    new_material = get_from_list(root_assembly.materials, generic_material.safe_name)
+    if new_material is not None:
+        return new_material
 
     new_material = AsMaterial()
     new_material.name = generic_material.safe_name
@@ -1975,12 +1975,13 @@ def convert_maya_generic_material(root_assembly, generic_material):
     new_material.bsdf = AsParameter('bsdf', new_bsdf.name)
 
     if generic_material.diffuse.__class__.__name__ == 'MFile':
-        bsdf_texture, bsdf_texture_instance = m_file_to_as_texture(generic_material.diffuse)
+        bsdf_texture, bsdf_texture_instance = m_file_to_as_texture(generic_material.diffuse, '_bsdf')
         new_bsdf.parameters.append(AsParameter('reflectance', bsdf_texture_instance.name))
         root_assembly.textures.append(bsdf_texture)
         root_assembly.texture_instances.append(bsdf_texture_instance)
     else:
-        bsdf_color = m_color_connection_to_as_color(generic_material.diffuse)
+        bsdf_color = m_color_connection_to_as_color(generic_material.diffuse, '_bsdf')
+        if bsdf_color.multiplier.value > 1 : bsdf_color.multiplier.value = 1
         new_bsdf.parameters.append(AsParameter('reflectance', bsdf_color.name))
         root_assembly.colors.append(bsdf_color)
 
@@ -1992,12 +1993,12 @@ def convert_maya_generic_material(root_assembly, generic_material):
         new_material.edf = AsParameter('edf', new_edf.name)
 
         if generic_material.incandescence.__class__.__name__ == 'MFile':
-            edf_texture, edf_texture_instance = m_file_to_as_texture(generic_material.incandescence)
+            edf_texture, edf_texture_instance = m_file_to_as_texture(generic_material.incandescence, '_edf')
             new_edf.parameters.append(AsParameter('exitance', edf_texture_instance.name))
             root_assembly.textures.append(edf_texture)
             root_assembly.texture_instances.append(edf_texture_instance)
         else:
-            edf_color = m_color_connection_to_as_color(generic_material.incandescence)
+            edf_color = m_color_connection_to_as_color(generic_material.incandescence, '_edf')
             new_edf.parameters.append(AsParameter('exitance', edf_color.name))
             root_assembly.colors.append(edf_color)
 
