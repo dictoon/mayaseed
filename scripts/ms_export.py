@@ -307,10 +307,14 @@ def add_scene_sample(m_transform, transform_blur, deform_blur, camera_blur, curr
 
     for mesh in m_transform.child_meshes:
         if (frame_sample_number == 1) or force_sample:
-            for material in (mesh.ms_materials + mesh.generic_materials):
+            for material in mesh.ms_materials:
                 for texture in material.textures:
                     if texture.is_animated or force_sample:
                         texture.add_image_sample(export_root, tex_dir, current_frame)
+            for material in mesh.generic_materials:
+                for texture in material.textures:
+                    if texture.is_animated or force_sample:
+                        texture.add_image_sample(export_root, tex_dir, current_frame)               
 
     for camera in m_transform.child_cameras:
         if camera_blur or force_sample or (frame_sample_number == 1):
@@ -862,8 +866,9 @@ class MMsShadingNode():
 
                     # else if it's a Maya texture node
                     elif color_connection.connected_node_type == 'file':
-                        texture_node = m_file_from_color_connection(self.params, color_connection.connected_node)
+                        texture_node = MFile(self.params, color_connection.connected_node)
                         self.textures += [texture_node]
+                        attribute_value = texture_node
 
                 # no node is connected, just use the color value
                 else:
@@ -2159,6 +2164,7 @@ def build_as_shading_nodes(root_assembly, current_maya_shading_node):
             current_shading_node.parameters.append(new_shading_node_parameter)
 
         elif current_maya_shading_node.attributes[attrib_key].__class__.__name__ == 'MFile':
+
             new_texture_entity = get_from_list(root_assembly.textures, current_maya_shading_node.attributes[attrib_key].safe_name)
 
             if new_texture_entity is None:
