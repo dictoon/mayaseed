@@ -561,6 +561,10 @@ class MFile():
             self.resolved_image_name = ms_commands.get_file_texture_name(self.name)
             self.is_animated = cmds.getAttr(self.name + '.useFrameExtension')
             self.alpha_is_luminance = cmds.getAttr(self.name + '.alphaIsLuminance')
+            
+            self.filtering_mode = cmds.getAttr((self.name + '.filterType'), asString=True)
+
+            # Off, Mipmap, Box, Quadratic, Quartic, Guassian 
 
             texture_placement_node = ms_commands.get_connected_node(self.name + '.uvCoord')
             if texture_placement_node is not None:
@@ -1618,6 +1622,9 @@ def m_file_to_as_texture(m_file, postfix='', file_number=0):
     as_texture_instance = as_texture.instantiate()
     if m_file.alpha_is_luminance:
         as_texture_instance.alpha_mode.value = 'luminance'
+
+    if m_file.filtering_mode == 'Off':
+        as_texture_instance.filtering_mode.value = 'nearest'
 
     return as_texture, as_texture_instance
 
