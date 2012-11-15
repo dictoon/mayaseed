@@ -564,7 +564,7 @@ class MFile():
             
             self.filtering_mode = cmds.getAttr((self.name + '.filterType'), asString=True)
 
-            # Off, Mipmap, Box, Quadratic, Quartic, Guassian 
+            # Off, Mipmap, Box, Quadratic, Quartic, Gaussian 
 
             texture_placement_node = ms_commands.get_connected_node(self.name + '.uvCoord')
             if texture_placement_node is not None:
