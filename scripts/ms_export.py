@@ -1023,7 +1023,7 @@ class AsTextureInstance():
     def __init__(self, as_texture):
         self.name = '%s_instance_%i' % (as_texture.name, len(as_texture.instances))
         self.texture = as_texture
-        self.addressing_mode = AsParameter('addressing_mode', 'wrap')
+        self.addressing_mode = AsParameter('addressing_mode', 'warp')
         self.filtering_mode = AsParameter('filtering_mode', 'bilinear')
         self.alpha_mode = AsParameter('alpha_mode', 'alpha_channel')
 
