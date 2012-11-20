@@ -38,7 +38,7 @@ import random
 # Constants.
 #--------------------------------------------------------------------------------------------------
 
-MAYASEED_VERSION = '0.3.1'
+MAYASEED_VERSION = '0.3.1i'
 MAYASEED_URL = 'https://github.com/jonathantopf/mayaseed'
 APPLESEED_URL = 'http://appleseedhq.net/'
 ROOT_DIRECTORY = os.path.split((os.path.dirname(inspect.getfile(inspect.currentframe()))))[0]
@@ -48,7 +48,7 @@ ROOT_DIRECTORY = os.path.split((os.path.dirname(inspect.getfile(inspect.currentf
 # Show About dialog.
 #--------------------------------------------------------------------------------------------------
 
-class msInfoDial():
+class ms_info_dial():
     def __init__(self):
         if cmds.window('ms_info_window', query=True, exists=True):
             cmds.deleteUI('ms_info_window')
