@@ -677,6 +677,10 @@ def initializePlugin(obj):
     try:
         if not cmds.pluginInfo('objExport', query=True, loaded=True):
             cmds.loadPlugin('objExport')
+        if not cmds.pluginInfo('ms_appleseed_material.py', query=True, loaded=True):
+            cmds.loadPlugin('ms_appleseed_material.py')
+        if not cmds.pluginInfo('ms_appleseed_shading_node.py', query=True, loaded=True):
+            cmds.loadPlugin('ms_appleseed_shading_node.py')
     except: 
         print 'objExport plugin could not be loaded, cannot load mayaseed'
 
