@@ -741,7 +741,7 @@ class MMsMaterial():
                 return shading_node
 
             elif connection.connected_node_type == 'file':
-                texture_node = m_file_from_color_connection(self.params, connection.connected_node)
+                texture_node = MFile(self.params, connection.connected_node)
                 self.textures += [texture_node]
                 return texture_node
 
