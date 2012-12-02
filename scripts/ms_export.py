@@ -1910,7 +1910,7 @@ def construct_transform_descendents(root_assembly, parent_assembly, matrix_stack
             new_light.exitance = AsParameter('exitance', light_color.name)
             new_light.transform = AsTransform()
             if current_matrix_stack is not []:
-                new_light.transform.martices = current_matrix_stack
+                new_light.transform.matrices = current_matrix_stack
 
             if light.model == 'spotLight':
                 new_light.model = 'spot_light'
