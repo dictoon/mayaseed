@@ -1321,6 +1321,7 @@ class AsLight():
         self.name = None
         self.model = None
         self.exitance = None
+        self.exitance_multiplier = AsParameter('exitance_multiplier', 1)
         self.inner_angle = None
         self.outer_angle = None
         self.transform = None
@@ -1328,6 +1329,7 @@ class AsLight():
     def emit_xml(self, doc):
         doc.start_element('light name="%s" model="%s"' % (self.name, self.model))
         self.exitance.emit_xml(doc)
+        self.exitance_multiplier.emit_xml(doc)
         if self.model == 'spot_light':
             self.inner_angle.emit_xml(doc)
             self.outer_angle.emit_xml(doc)
@@ -1909,17 +1911,22 @@ def construct_transform_descendents(root_assembly, parent_assembly, matrix_stack
 
         for light in maya_transform.child_lights:
 
+
+
+            new_light = AsLight()
+            new_light.name = light.safe_name
+
+            new_light.exitance_multiplier.value = light.multiplier
+
             if light.color.__class__.__name__ == 'MFile':
                 light_color_file, light_color =  m_file_to_as_texture(light.color, '_light_color')
                 current_assembly.textures.append(light_color_file)
                 current_assembly.texture_instances.append(light_color)
             else:
                 light_color = m_color_connection_to_as_color(light.color, '_light_color')
+                new_light.exitance_multiplier.value = new_light.exitance_multiplier.value * light_color.multiplier
                 current_assembly.colors.append(light_color)
 
-
-            new_light = AsLight()
-            new_light.name = light.safe_name
             new_light.exitance = AsParameter('exitance', light_color.name)
             new_light.transform = AsTransform()
             if current_matrix_stack is not []:
