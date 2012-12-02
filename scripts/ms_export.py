@@ -314,7 +314,12 @@ def add_scene_sample(m_transform, transform_blur, deform_blur, camera_blur, curr
             for material in mesh.generic_materials:
                 for texture in material.textures:
                     if texture.is_animated or force_sample:
-                        texture.add_image_sample(export_root, tex_dir, current_frame)               
+                        texture.add_image_sample(export_root, tex_dir, current_frame) 
+
+    for light in m_transform.child_lights:
+        if light.color.__class__.__name__ == 'MFile':
+            if light.color.is_animated or force_sample:
+                light.color.add_image_sample(export_root, tex_dir, current_frame) 
 
     for camera in m_transform.child_cameras:
         if camera_blur or force_sample or (frame_sample_number == 1):
@@ -493,13 +498,16 @@ class MLight(MTransformChild):
 
     def __init__(self, params, maya_light_name, MTransform_object):
         MTransformChild.__init__(self, params, maya_light_name, MTransform_object)
-        self.color = cmds.getAttr(self.name + '.color')
+        self.color = MColorConnection(self.params, self.name + '.color')
+        if self.color.connected_node is not None:
+            self.color = MFile(self.params, self.color.connected_node)
         self.multiplier = cmds.getAttr(self.name+'.intensity')
         self.decay = cmds.getAttr(self.name+'.decayRate')
         self.model = cmds.nodeType(self.name)
         if self.model == 'spotLight':
             self.inner_angle = cmds.getAttr(self.name + '.coneAngle')
             self.outer_angle = cmds.getAttr(self.name + '.coneAngle') + cmds.getAttr(self.name + '.penumbraAngle')
+    
 
 
 #--------------------------------------------------------------------------------------------------
@@ -516,6 +524,7 @@ class MCamera(MTransformChild):
         # In Maya cameras are descendents of transforms like other objects but in appleseed they exist outside
         # of the main assembly. For this reason we include the world space matrix as an attribute of the camera's
         # transform even though it's not a 'correct' representation of the Maya scene.
+
         self.world_space_matrices = []
 
         self.dof = cmds.getAttr(self.name + '.depthOfField')
@@ -1899,11 +1908,15 @@ def construct_transform_descendents(root_assembly, parent_assembly, matrix_stack
             construct_transform_descendents(root_assembly, current_assembly, current_matrix_stack, transform, mb_sample_number_list, non_mb_sample_number, camera_blur, transformation_blur, object_blur)
 
         for light in maya_transform.child_lights:
-            light_color = AsColor()
-            light_color.name = light.name + '_color'
-            light_color.RGB_color = light.color[0]
-            light_color.multiplier.value = light.multiplier
-            current_assembly.colors.append(light_color)
+
+            if light.color.__class__.__name__ == 'MFile':
+                light_color_file, light_color =  m_file_to_as_texture(light.color, '_light_color')
+                current_assembly.textures.append(light_color_file)
+                current_assembly.texture_instances.append(light_color)
+            else:
+                light_color = m_color_connection_to_as_color(light.color, '_light_color')
+                current_assembly.colors.append(light_color)
+
 
             new_light = AsLight()
             new_light.name = light.safe_name
