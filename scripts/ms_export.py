@@ -1924,7 +1924,7 @@ def construct_transform_descendents(root_assembly, parent_assembly, matrix_stack
                 current_assembly.texture_instances.append(light_color)
             else:
                 light_color = m_color_connection_to_as_color(light.color, '_light_color')
-                new_light.exitance_multiplier.value = new_light.exitance_multiplier.value * light_color.multiplier
+                new_light.exitance_multiplier.value = new_light.exitance_multiplier.value * light_color.multiplier.value
                 current_assembly.colors.append(light_color)
 
             new_light.exitance = AsParameter('exitance', light_color.name)
