@@ -219,12 +219,17 @@ def convert_texture_to_exr(file_path, export_root, texture_dir, overwrite=True, 
 #--------------------------------------------------------------------------------------------------
 
 def shape_is_exportable(node_name):
+
     # check if the node exists
     if not cmds.objExists(node_name):
         return False
 
     # check if the node has a visibility attribute meaning it's a DAG node
     if not cmds.attributeQuery('visibility', node=node_name, exists=True):
+        return False
+
+    # check if the visibility set to off
+    if not cmds.getAttr(node_name + '.visibility'):
         return False
 
     # check to see if it's an intermediate mesh
