@@ -650,6 +650,7 @@ class MMsEnvironment():
         if self.mirrorball_exitance is not None:
             self.mirrorball_exitance.add_image_sample(export_root, texture_dir, time)
 
+
 #--------------------------------------------------------------------------------------------------
 # MColorConnection class.
 #--------------------------------------------------------------------------------------------------
@@ -741,7 +742,7 @@ class MMsMaterial():
                 return shading_node
 
             elif connection.connected_node_type == 'file':
-                texture_node = m_file_from_color_connection(self.params, connection.connected_node)
+                texture_node = m_file_from_color_connection(self.params, connection)
                 self.textures += [texture_node]
                 return texture_node
 
@@ -820,6 +821,7 @@ class MGenericMaterial():
                 self.textures.append(self.incandescence)
             elif self.incandescence.is_black:
                 self.incandescence = None
+
 
 #--------------------------------------------------------------------------------------------------
 # MMsShadingNode class.
