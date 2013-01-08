@@ -38,7 +38,7 @@ import random
 # Constants.
 #--------------------------------------------------------------------------------------------------
 
-MAYASEED_VERSION = '0.3.1'
+MAYASEED_VERSION = '0.3.2'
 MAYASEED_URL = 'https://github.com/jonathantopf/mayaseed'
 APPLESEED_URL = 'http://appleseedhq.net/'
 ROOT_DIRECTORY = os.path.split((os.path.dirname(inspect.getfile(inspect.currentframe()))))[0]
@@ -48,7 +48,7 @@ ROOT_DIRECTORY = os.path.split((os.path.dirname(inspect.getfile(inspect.currentf
 # Show About dialog.
 #--------------------------------------------------------------------------------------------------
 
-class msInfoDial():
+class ms_info_dial():
     def __init__(self):
         if cmds.window('ms_info_window', query=True, exists=True):
             cmds.deleteUI('ms_info_window')
@@ -219,12 +219,17 @@ def convert_texture_to_exr(file_path, export_root, texture_dir, overwrite=True, 
 #--------------------------------------------------------------------------------------------------
 
 def shape_is_exportable(node_name):
+
     # check if the node exists
     if not cmds.objExists(node_name):
         return False
 
     # check if the node has a visibility attribute meaning it's a DAG node
     if not cmds.attributeQuery('visibility', node=node_name, exists=True):
+        return False
+
+    # check if the visibility set to off
+    if not cmds.getAttr(node_name + '.visibility'):
         return False
 
     # check to see if it's an intermediate mesh
