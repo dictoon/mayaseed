@@ -1,4 +1,3 @@
-
 #
 # Copyright (c) 2012 Jonathan Topf
 #
@@ -36,7 +35,6 @@ import ms_export_obj
 import time
 
 inch_to_meter = 0.02539999983236
-
 
 #--------------------------------------------------------------------------------------------------
 # WriteXml class.
@@ -85,6 +83,7 @@ def check_export_cancelled():
     if cmds.progressWindow(query=True, isCancelled=True):
         cmds.progressWindow(endProgress=1)
         raise RuntimeError('Export Cancelled.')
+
 
 #--------------------------------------------------------------------------------------------------
 # get_maya_params function.
@@ -345,6 +344,7 @@ def m_file_from_color_connection(params, m_color_connection):
 
     return None
 
+
 #--------------------------------------------------------------------------------------------------
 # MTransform class.
 #--------------------------------------------------------------------------------------------------
@@ -507,7 +507,6 @@ class MLight(MTransformChild):
         if self.model == 'spotLight':
             self.inner_angle = cmds.getAttr(self.name + '.coneAngle')
             self.outer_angle = cmds.getAttr(self.name + '.coneAngle') + cmds.getAttr(self.name + '.penumbraAngle')
-    
 
 
 #--------------------------------------------------------------------------------------------------
@@ -659,6 +658,7 @@ class MMsEnvironment():
         if self.mirrorball_exitance is not None:
             self.mirrorball_exitance.add_image_sample(export_root, texture_dir, time)
 
+
 #--------------------------------------------------------------------------------------------------
 # MColorConnection class.
 #--------------------------------------------------------------------------------------------------
@@ -757,10 +757,10 @@ class MMsMaterial():
         else:
             return None
 
+
 #--------------------------------------------------------------------------------------------------
 # MGenericMaterial class.
 #--------------------------------------------------------------------------------------------------
-
 
 class MGenericMaterial():
 
@@ -829,6 +829,7 @@ class MGenericMaterial():
                 self.textures.append(self.incandescence)
             elif self.incandescence.is_black:
                 self.incandescence = None
+
 
 #--------------------------------------------------------------------------------------------------
 # MMsShadingNode class.
@@ -1620,6 +1621,7 @@ def m_color_connection_to_as_color(m_color_connection, postfix=''):
 
     return as_color
 
+
 #--------------------------------------------------------------------------------------------------
 # m_file_to_as_texture function.
 #--------------------------------------------------------------------------------------------------
@@ -1638,6 +1640,7 @@ def m_file_to_as_texture(m_file, postfix='', file_number=0):
         as_texture_instance.filtering_mode.value = 'nearest'
 
     return as_texture, as_texture_instance
+
 
 #--------------------------------------------------------------------------------------------------
 # traslate_maya_scene function.
@@ -1981,9 +1984,8 @@ def construct_transform_descendents(root_assembly, parent_assembly, matrix_stack
                 mesh_instance.material_assignments.append(AsObjectInstanceMaterialAssignment(maya_generic_material.safe_name, 'front', as_material.name))
                 mesh_instance.material_assignments.append(AsObjectInstanceMaterialAssignment(maya_generic_material.safe_name, 'back', as_material.name))
 
-
-
             current_assembly.object_instances.append(mesh_instance)
+
 
 #--------------------------------------------------------------------------------------------------
 # convert_maya_generic_material function.
@@ -2274,3 +2276,5 @@ def export(render_settings_node):
         cProfile.run(command)
     else:
         export_container(render_settings_node)
+
+        
