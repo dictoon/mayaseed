@@ -307,8 +307,9 @@ def add_scene_sample(m_transform, transform_blur, deform_blur, camera_blur, curr
 
     if deform_blur or initial_sample:
         for mesh in m_transform.child_meshes:
-            if mesh.has_deformation or initial_sample:
-                mesh.add_deform_sample(export_root, geo_dir, current_frame)
+            if mesh.has_deformation or (current_frame == start_frame):
+                if initial_sample:
+                    mesh.add_deform_sample(export_root, geo_dir, current_frame)
 
     for mesh in m_transform.child_meshes:
         if (frame_sample_number == 1) or initial_sample:
@@ -1956,7 +1957,10 @@ def construct_transform_descendents(root_assembly, parent_assembly, matrix_stack
             new_mesh.has_deformation = mesh.has_deformation
 
             if not object_blur or not new_mesh.has_deformation:
-                new_mesh.file_names = AsParameter('filename', mesh.mesh_file_names[non_mb_sample_number])
+                if new_mesh.has_deformation:
+                    new_mesh.file_names = AsParameter('filename', mesh.mesh_file_names[non_mb_sample_number])
+                else:
+                    new_mesh.file_names = AsParameter('filename', mesh.mesh_file_names[0])
             else:
                 file_names = AsParameters('filename')
                 for i in mb_sample_number_list:
