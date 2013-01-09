@@ -1,3 +1,4 @@
+
 #
 # Copyright (c) 2012 Jonathan Topf
 #
@@ -35,6 +36,7 @@ import ms_export_obj
 import time
 
 inch_to_meter = 0.02539999983236
+
 
 #--------------------------------------------------------------------------------------------------
 # WriteXml class.
@@ -116,7 +118,7 @@ def get_maya_params(render_settings_node):
     params['animated_textures'] = cmds.getAttr(render_settings_node + '.export_animated_textures')
     params['scene_scale'] = 1.0
 
-    if not (params['export_transformation_blur'] or params['export_deformation_blur'] or params['export_camera_blur']):
+    if not (params['export_transformation_blur'] or params['export_deformation_blur'] or params['export_camera_blur'] or params['export_animation']):
         params['motion_samples'] = 1
     elif params['motion_samples'] < 2:
         ms_commands.warning('Motion samples must be >= 2, using 2.')
@@ -265,16 +267,17 @@ def get_maya_scene(params):
         ms_commands.info("Adding motion samples, frame {0}...".format(current_frame))
 
         # if this is the first sample force a sample
-        if (current_frame == start_frame):
-            force_sample = True
+        if (current_frame == start_frame) or (frame_sample_number == 1):
+            initial_sample = True
         else:
-            force_sample = False
+            initial_sample = False
 
         for transform in maya_root_transforms:
-            add_scene_sample(transform, params['export_transformation_blur'], params['export_deformation_blur'], params['export_camera_blur'], current_frame, start_frame, frame_sample_number, force_sample, params['output_directory'], geo_dir, texture_dir)
+            add_scene_sample(transform, params['export_transformation_blur'], params['export_deformation_blur'], params['export_camera_blur'], current_frame, start_frame, frame_sample_number, initial_sample, params['output_directory'], geo_dir, texture_dir)
 
 
         frame_sample_number += 1
+
         if frame_sample_number == params['motion_samples']:
             frame_sample_number = 1
 
@@ -292,42 +295,45 @@ def get_maya_scene(params):
 # add_scene_sample function.
 #--------------------------------------------------------------------------------------------------
 
-def add_scene_sample(m_transform, transform_blur, deform_blur, camera_blur, current_frame, start_frame, frame_sample_number, force_sample, export_root, geo_dir, tex_dir):
 
-    if transform_blur or force_sample:
+# needs mechanism to sample frames for camera and transforms on whole frame numbers for non mb scenes
+
+def add_scene_sample(m_transform, transform_blur, deform_blur, camera_blur, current_frame, start_frame, frame_sample_number, initial_sample, export_root, geo_dir, tex_dir):
+
+    if transform_blur or initial_sample:
         m_transform.add_transform_sample()
-        if (frame_sample_number == 1) or force_sample:
+        if (frame_sample_number == 1) or initial_sample:
             m_transform.add_visibility_sample()
 
-    if deform_blur or force_sample:
+    if deform_blur or initial_sample:
         for mesh in m_transform.child_meshes:
-            if mesh.has_deformation or force_sample:
+            if mesh.has_deformation or initial_sample:
                 mesh.add_deform_sample(export_root, geo_dir, current_frame)
 
     for mesh in m_transform.child_meshes:
-        if (frame_sample_number == 1) or force_sample:
+        if (frame_sample_number == 1) or initial_sample:
             for material in mesh.ms_materials:
                 for texture in material.textures:
-                    if texture.is_animated or force_sample:
+                    if texture.is_animated or initial_sample:
                         texture.add_image_sample(export_root, tex_dir, current_frame)
             for material in mesh.generic_materials:
                 for texture in material.textures:
-                    if texture.is_animated or force_sample:
+                    if texture.is_animated or initial_sample:
                         texture.add_image_sample(export_root, tex_dir, current_frame) 
 
     for light in m_transform.child_lights:
         if light.color.__class__.__name__ == 'MFile':
-            if light.color.is_animated or force_sample:
+            if light.color.is_animated or initial_sample:
                 light.color.add_image_sample(export_root, tex_dir, current_frame) 
 
     for camera in m_transform.child_cameras:
-        if camera_blur or force_sample or (frame_sample_number == 1):
+        if camera_blur or initial_sample or (frame_sample_number == 1):
             camera.add_matrix_sample()
         if (frame_sample_number == 1):
             camera.add_focal_distance_sample()
 
     for transform in m_transform.child_transforms:
-        add_scene_sample(transform, transform_blur, deform_blur, camera_blur, current_frame, start_frame, frame_sample_number, force_sample, export_root, geo_dir, tex_dir)
+        add_scene_sample(transform, transform_blur, deform_blur, camera_blur, current_frame, start_frame, frame_sample_number, initial_sample, export_root, geo_dir, tex_dir)
 
 
 #--------------------------------------------------------------------------------------------------
@@ -951,7 +957,6 @@ class AsColor():
         self.wavelength_range = '400.0, 700.0'
 
     def emit_xml(self, doc):
-        ms_commands.info('Writing color %s...' % self.name)
         doc.start_element('color name="%s"' % self.name)
         self.color_space.emit_xml(doc)
         self.multiplier.emit_xml(doc)
@@ -1914,8 +1919,6 @@ def construct_transform_descendents(root_assembly, parent_assembly, matrix_stack
 
         for light in maya_transform.child_lights:
 
-
-
             new_light = AsLight()
             new_light.name = light.safe_name
 
@@ -1953,7 +1956,7 @@ def construct_transform_descendents(root_assembly, parent_assembly, matrix_stack
             new_mesh.has_deformation = mesh.has_deformation
 
             if not object_blur or not new_mesh.has_deformation:
-                new_mesh.file_names = AsParameter('filename', mesh.mesh_file_names[0])
+                new_mesh.file_names = AsParameter('filename', mesh.mesh_file_names[non_mb_sample_number])
             else:
                 file_names = AsParameters('filename')
                 for i in mb_sample_number_list:
@@ -2277,4 +2280,4 @@ def export(render_settings_node):
     else:
         export_container(render_settings_node)
 
-        
+
