@@ -266,8 +266,8 @@ def get_maya_scene(params):
 
         ms_commands.info("Adding motion samples, frame {0}...".format(current_frame))
 
-        # if this is the first sample force a sample
-        if (current_frame == start_frame) or (frame_sample_number == 1):
+        # if this is the first sample of a frame set initial_sample True
+        if frame_sample_number == 1:
             initial_sample = True
         else:
             initial_sample = False
