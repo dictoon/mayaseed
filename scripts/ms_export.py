@@ -200,6 +200,7 @@ def get_maya_params(render_settings_node):
         ms_commands.warning("No native obj exporter found, exporting using Python obj exporter.")
         params['obj_exporter'] = ms_export_obj.export
 
+    params['autodetect_alpha'] = cmds.getAttr(render_settings_node + '.autodetect_alpha')
     return params
 
 
@@ -572,6 +573,9 @@ class MFile():
             self.resolved_image_name = ms_commands.get_file_texture_name(self.name)
             self.is_animated = cmds.getAttr(self.name + '.useFrameExtension')
             self.alpha_is_luminance = cmds.getAttr(self.name + '.alphaIsLuminance')
+            self.autodetect_alpha = False
+            if params['autodetect_alpha']:
+                self.autodetect_alpha = True
             
             self.filtering_mode = cmds.getAttr((self.name + '.filterType'), asString=True)
 
@@ -1635,8 +1639,11 @@ def m_file_to_as_texture(m_file, postfix='', file_number=0):
     as_texture.file_name = AsParameter('filename', m_file.image_file_names[file_number])
 
     as_texture_instance = as_texture.instantiate()
-    if m_file.alpha_is_luminance:
-        as_texture_instance.alpha_mode.value = 'luminance'
+    if m_file.autodetect_alpha:
+        as_texture_instance.alpha_mode.value = 'detect'
+    else:
+        if m_file.alpha_is_luminance:
+            as_texture_instance.alpha_mode.value = 'luminance'
 
     if m_file.filtering_mode == 'Off':
         as_texture_instance.filtering_mode.value = 'nearest'

@@ -332,6 +332,9 @@ def ms_renderSettings_nodeInitializer():
     profile_export_nAttr = OpenMaya.MFnNumericAttribute()
     ms_renderSettings.profile_export = profile_export_nAttr.create("profile_export", "profile_export", OpenMaya.MFnNumericData.kBoolean, False)
 
+    # autodetect alpha
+    autodetect_alpha_nAttr = OpenMaya.MFnNumericAttribute()
+    ms_renderSettings.autodetect_alpha = autodetect_alpha_nAttr.create("autodetect_alpha", "autodetect_alpha", OpenMaya.MFnNumericData.kBoolean, False)
 
     # add attributes
     ms_renderSettings.addAttribute(ms_renderSettings.export_button)
@@ -395,6 +398,7 @@ def ms_renderSettings_nodeInitializer():
     ms_renderSettings.addAttribute(ms_renderSettings.gtr_sampler)
 
     ms_renderSettings.addAttribute(ms_renderSettings.profile_export)
+    ms_renderSettings.addAttribute(ms_renderSettings.autodetect_alpha)
 
 #--------------------------------------------------------------------------------------------------
 # ms_environment node.
