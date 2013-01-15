@@ -332,10 +332,6 @@ def ms_renderSettings_nodeInitializer():
     profile_export_nAttr = OpenMaya.MFnNumericAttribute()
     ms_renderSettings.profile_export = profile_export_nAttr.create("profile_export", "profile_export", OpenMaya.MFnNumericData.kBoolean, False)
 
-    # verobse output
-    verbose_output_nAttr = OpenMaya.MFnNumericAttribute()
-    ms_renderSettings.verbose_output = verbose_output_nAttr.create("verbose_output", "verbose_output", OpenMaya.MFnNumericData.kBoolean, False)
-
 
     # add attributes
     ms_renderSettings.addAttribute(ms_renderSettings.export_button)
@@ -399,7 +395,6 @@ def ms_renderSettings_nodeInitializer():
     ms_renderSettings.addAttribute(ms_renderSettings.gtr_sampler)
 
     ms_renderSettings.addAttribute(ms_renderSettings.profile_export)
-    ms_renderSettings.addAttribute(ms_renderSettings.verbose_output)
 
 #--------------------------------------------------------------------------------------------------
 # ms_environment node.

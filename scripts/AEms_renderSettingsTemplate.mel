@@ -288,7 +288,6 @@ global proc AEms_renderSettingsTemplate(string $nodeName) {
 
         editorTemplate -beginLayout "Advanced Settings" -collapse true;
             editorTemplate -addControl "profile_export";
-            editorTemplate -addControl "verbose_output";
         editorTemplate -endLayout;
 
         AEdependNodeTemplate $nodeName;
