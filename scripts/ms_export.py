@@ -86,6 +86,7 @@ def check_export_cancelled():
         cmds.progressWindow(endProgress=1)
         raise RuntimeError('Export Cancelled.')
 
+
 #--------------------------------------------------------------------------------------------------
 # get_maya_params function.
 #--------------------------------------------------------------------------------------------------
@@ -117,7 +118,7 @@ def get_maya_params(render_settings_node):
     params['animated_textures'] = cmds.getAttr(render_settings_node + '.export_animated_textures')
     params['scene_scale'] = 1.0
 
-    if not (params['export_transformation_blur'] or params['export_deformation_blur'] or params['export_camera_blur']):
+    if not (params['export_transformation_blur'] or params['export_deformation_blur'] or params['export_camera_blur'] or params['export_animation']):
         params['motion_samples'] = 1
     elif params['motion_samples'] < 2:
         ms_commands.warning('Motion samples must be >= 2, using 2.')
@@ -199,7 +200,7 @@ def get_maya_params(render_settings_node):
         ms_commands.warning("No native obj exporter found, exporting using Python obj exporter.")
         params['obj_exporter'] = ms_export_obj.export
 
-    params['verbose_output'] = cmds.getAttr(render_settings_node + '.verbose_output')
+    params['autodetect_alpha'] = cmds.getAttr(render_settings_node + '.autodetect_alpha')
     return params
 
 
@@ -265,17 +266,18 @@ def get_maya_scene(params):
 
         ms_commands.info("Adding motion samples, frame {0}...".format(current_frame))
 
-        # if this is the first sample force a sample
-        if (current_frame == start_frame):
-            force_sample = True
+        # if this is the first sample of a frame set initial_sample True
+        if frame_sample_number == 1:
+            initial_sample = True
         else:
-            force_sample = False
+            initial_sample = False
 
         for transform in maya_root_transforms:
-            add_scene_sample(transform, params['export_transformation_blur'], params['export_deformation_blur'], params['export_camera_blur'], current_frame, start_frame, frame_sample_number, force_sample, params['output_directory'], geo_dir, texture_dir)
+            add_scene_sample(transform, params['export_transformation_blur'], params['export_deformation_blur'], params['export_camera_blur'], current_frame, start_frame, frame_sample_number, initial_sample, params['output_directory'], geo_dir, texture_dir)
 
 
         frame_sample_number += 1
+
         if frame_sample_number == params['motion_samples']:
             frame_sample_number = 1
 
@@ -293,42 +295,47 @@ def get_maya_scene(params):
 # add_scene_sample function.
 #--------------------------------------------------------------------------------------------------
 
-def add_scene_sample(m_transform, transform_blur, deform_blur, camera_blur, current_frame, start_frame, frame_sample_number, force_sample, export_root, geo_dir, tex_dir):
 
-    if transform_blur or force_sample:
+# needs mechanism to sample frames for camera and transforms on whole frame numbers for non mb scenes
+
+def add_scene_sample(m_transform, transform_blur, deform_blur, camera_blur, current_frame, start_frame, frame_sample_number, initial_sample, export_root, geo_dir, tex_dir):
+
+    if transform_blur or initial_sample:
         m_transform.add_transform_sample()
-        if (frame_sample_number == 1) or force_sample:
+        if (frame_sample_number == 1) or initial_sample:
             m_transform.add_visibility_sample()
 
-    if deform_blur or force_sample:
+    if deform_blur or initial_sample:
         for mesh in m_transform.child_meshes:
-            if mesh.has_deformation or force_sample:
-                mesh.add_deform_sample(export_root, geo_dir, current_frame)
+            # Only add a sample if this is the first frame to be exported or if it has some deformation
+            if mesh.has_deformation or (current_frame == start_frame):
+                if initial_sample:
+                    mesh.add_deform_sample(export_root, geo_dir, current_frame)
 
     for mesh in m_transform.child_meshes:
-        if (frame_sample_number == 1) or force_sample:
+        if (frame_sample_number == 1) or initial_sample:
             for material in mesh.ms_materials:
                 for texture in material.textures:
-                    if texture.is_animated or force_sample:
+                    if texture.is_animated or initial_sample:
                         texture.add_image_sample(export_root, tex_dir, current_frame)
             for material in mesh.generic_materials:
                 for texture in material.textures:
-                    if texture.is_animated or force_sample:
+                    if texture.is_animated or initial_sample:
                         texture.add_image_sample(export_root, tex_dir, current_frame) 
 
     for light in m_transform.child_lights:
         if light.color.__class__.__name__ == 'MFile':
-            if light.color.is_animated or force_sample:
+            if light.color.is_animated or initial_sample:
                 light.color.add_image_sample(export_root, tex_dir, current_frame) 
 
     for camera in m_transform.child_cameras:
-        if camera_blur or force_sample or (frame_sample_number == 1):
+        if camera_blur or initial_sample or (frame_sample_number == 1):
             camera.add_matrix_sample()
         if (frame_sample_number == 1):
             camera.add_focal_distance_sample()
 
     for transform in m_transform.child_transforms:
-        add_scene_sample(transform, transform_blur, deform_blur, camera_blur, current_frame, start_frame, frame_sample_number, force_sample, export_root, geo_dir, tex_dir)
+        add_scene_sample(transform, transform_blur, deform_blur, camera_blur, current_frame, start_frame, frame_sample_number, initial_sample, export_root, geo_dir, tex_dir)
 
 
 #--------------------------------------------------------------------------------------------------
@@ -345,6 +352,7 @@ def m_file_from_color_connection(params, m_color_connection):
 
     return None
 
+
 #--------------------------------------------------------------------------------------------------
 # MTransform class.
 #--------------------------------------------------------------------------------------------------
@@ -355,8 +363,6 @@ class MTransform():
 
     def __init__(self, params, maya_transform_name, parent):
         self.params = params
-        if self.params['verbose_output']:
-            ms_commands.info("Creating MTransform {0}...".format(maya_transform_name))
         self.name = maya_transform_name
         self.safe_name = ms_commands.legalize_name(self.name)
         self.parent = parent
@@ -429,8 +435,6 @@ class MTransformChild():
 
     def __init__(self, params, maya_entity_name, MTransform_object):
         self.params = params
-        if self.params['verbose_output']:
-            ms_commands.info("Creating {0}: {1}...".format(self.__class__.__name__, maya_entity_name))
         self.name = maya_entity_name
         self.short_name = self.name.split('|')[-1]
         self.safe_name = ms_commands.legalize_name(self.name)
@@ -507,7 +511,6 @@ class MLight(MTransformChild):
         if self.model == 'spotLight':
             self.inner_angle = cmds.getAttr(self.name + '.coneAngle')
             self.outer_angle = cmds.getAttr(self.name + '.coneAngle') + cmds.getAttr(self.name + '.penumbraAngle')
-    
 
 
 #--------------------------------------------------------------------------------------------------
@@ -570,6 +573,9 @@ class MFile():
             self.resolved_image_name = ms_commands.get_file_texture_name(self.name)
             self.is_animated = cmds.getAttr(self.name + '.useFrameExtension')
             self.alpha_is_luminance = cmds.getAttr(self.name + '.alphaIsLuminance')
+            self.autodetect_alpha = False
+            if params['autodetect_alpha']:
+                self.autodetect_alpha = True
             
             self.filtering_mode = cmds.getAttr((self.name + '.filterType'), asString=True)
 
@@ -758,10 +764,10 @@ class MMsMaterial():
         else:
             return None
 
+
 #--------------------------------------------------------------------------------------------------
 # MGenericMaterial class.
 #--------------------------------------------------------------------------------------------------
-
 
 class MGenericMaterial():
 
@@ -952,7 +958,6 @@ class AsColor():
         self.wavelength_range = '400.0, 700.0'
 
     def emit_xml(self, doc):
-        ms_commands.info('Writing color %s...' % self.name)
         doc.start_element('color name="%s"' % self.name)
         self.color_space.emit_xml(doc)
         self.multiplier.emit_xml(doc)
@@ -1622,6 +1627,7 @@ def m_color_connection_to_as_color(m_color_connection, postfix=''):
 
     return as_color
 
+
 #--------------------------------------------------------------------------------------------------
 # m_file_to_as_texture function.
 #--------------------------------------------------------------------------------------------------
@@ -1633,13 +1639,17 @@ def m_file_to_as_texture(m_file, postfix='', file_number=0):
     as_texture.file_name = AsParameter('filename', m_file.image_file_names[file_number])
 
     as_texture_instance = as_texture.instantiate()
-    if m_file.alpha_is_luminance:
-        as_texture_instance.alpha_mode.value = 'luminance'
+    if m_file.autodetect_alpha:
+        as_texture_instance.alpha_mode.value = 'detect'
+    else:
+        if m_file.alpha_is_luminance:
+            as_texture_instance.alpha_mode.value = 'luminance'
 
     if m_file.filtering_mode == 'Off':
         as_texture_instance.filtering_mode.value = 'nearest'
 
     return as_texture, as_texture_instance
+
 
 #--------------------------------------------------------------------------------------------------
 # traslate_maya_scene function.
@@ -1651,7 +1661,7 @@ def translate_maya_scene(params, maya_scene, maya_environment):
 
     # create dict for storing appleseed object models into
     # the key will be the file path to save the project too
-    as_object_models = dict()
+    as_object_models = []
 
     # initialize frame list with single default value
     frame_list = [int(cmds.currentTime(query=True))]
@@ -1872,7 +1882,7 @@ def translate_maya_scene(params, maya_scene, maya_environment):
         file_name = base_file_name.replace("#", str(frame_number).zfill(4))
         project_file_path = os.path.join(params['output_directory'], file_name)
 
-        as_object_models[project_file_path] = as_project
+        as_object_models.append((project_file_path, as_project))
 
     return as_object_models
 
@@ -1913,8 +1923,6 @@ def construct_transform_descendents(root_assembly, parent_assembly, matrix_stack
 
         for light in maya_transform.child_lights:
 
-
-
             new_light = AsLight()
             new_light.name = light.safe_name
 
@@ -1952,7 +1960,11 @@ def construct_transform_descendents(root_assembly, parent_assembly, matrix_stack
             new_mesh.has_deformation = mesh.has_deformation
 
             if not object_blur or not new_mesh.has_deformation:
-                new_mesh.file_names = AsParameter('filename', mesh.mesh_file_names[0])
+                # If the mesh has no deformation there will only be one sample so always take the first sample.
+                if new_mesh.has_deformation:
+                    new_mesh.file_names = AsParameter('filename', mesh.mesh_file_names[non_mb_sample_number])
+                else:
+                    new_mesh.file_names = AsParameter('filename', mesh.mesh_file_names[0])
             else:
                 file_names = AsParameters('filename')
                 for i in mb_sample_number_list:
@@ -1983,9 +1995,8 @@ def construct_transform_descendents(root_assembly, parent_assembly, matrix_stack
                 mesh_instance.material_assignments.append(AsObjectInstanceMaterialAssignment(maya_generic_material.safe_name, 'front', as_material.name))
                 mesh_instance.material_assignments.append(AsObjectInstanceMaterialAssignment(maya_generic_material.safe_name, 'back', as_material.name))
 
-
-
             current_assembly.object_instances.append(mesh_instance)
+
 
 #--------------------------------------------------------------------------------------------------
 # convert_maya_generic_material function.
@@ -2249,12 +2260,12 @@ def export_container(render_settings_node):
 
     ms_commands.info('Scene translated in %.2f seconds.' % (scene_translation_finish_time - scene_cache_finish_time))
 
-    for as_object_model_key in as_object_models:
-        ms_commands.info('Saving %s...' % as_object_model_key)
-        doc = WriteXml(as_object_model_key)
+    for as_object in as_object_models:
+        ms_commands.info('Saving %s...' % as_object[0])
+        doc = WriteXml(as_object[0])
         doc.append_line('<?xml version="1.0" encoding="UTF-8"?>')
         doc.append_line('<!-- File generated by Mayaseed version {0} -->'.format(ms_commands.MAYASEED_VERSION))
-        as_object_models[as_object_model_key].emit_xml(doc)
+        as_object[1].emit_xml(doc)
         doc.close()
 
     export_finish_time = time.time()
@@ -2276,3 +2287,5 @@ def export(render_settings_node):
         cProfile.run(command)
     else:
         export_container(render_settings_node)
+
+
