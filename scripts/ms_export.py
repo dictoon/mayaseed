@@ -573,10 +573,7 @@ class MFile():
             self.resolved_image_name = ms_commands.get_file_texture_name(self.name)
             self.is_animated = cmds.getAttr(self.name + '.useFrameExtension')
             self.alpha_is_luminance = cmds.getAttr(self.name + '.alphaIsLuminance')
-            self.autodetect_alpha = False
-            if params['autodetect_alpha']:
-                self.autodetect_alpha = True
-            
+            self.autodetect_alpha = params['autodetect_alpha']
             self.filtering_mode = cmds.getAttr((self.name + '.filterType'), asString=True)
 
             # Off, Mipmap, Box, Quadratic, Quartic, Gaussian 
