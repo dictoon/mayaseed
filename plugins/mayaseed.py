@@ -152,7 +152,7 @@ def ms_renderSettings_nodeInitializer():
     ms_renderSettings.export_all_cameras = export_all_cameras_nAttr.create("export_all_cameras", "export_all_cams", OpenMaya.MFnNumericData.kBoolean)
     # export all cameras as thin lens bool attribute
     export_all_cameras_as_thin_lens_nAttr = OpenMaya.MFnNumericAttribute()
-    ms_renderSettings.export_all_cameras_as_thin_lens = export_all_cameras_as_thin_lens_nAttr.create("export_all_cameras_as_thinlens", "export_thinlens", OpenMaya.MFnNumericData.kBoolean)
+    ms_renderSettings.export_all_cameras_as_thin_lens = export_all_cameras_as_thin_lens_nAttr.create("export_all_cameras_as_thin_lens", "export_thinlens", OpenMaya.MFnNumericData.kBoolean)
     # interpret sets as assemblies bool attribute
     interpret_sets_as_assemblies_nAttr = OpenMaya.MFnNumericAttribute()
     ms_renderSettings.interpret_sets_as_assemblies = interpret_sets_as_assemblies_nAttr.create("interpret_sets_as_assemblies", "sets_as_assemblies", OpenMaya.MFnNumericData.kBoolean)
