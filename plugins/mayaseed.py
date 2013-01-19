@@ -334,7 +334,7 @@ def ms_renderSettings_nodeInitializer():
 
     # autodetect alpha
     autodetect_alpha_nAttr = OpenMaya.MFnNumericAttribute()
-    ms_renderSettings.autodetect_alpha = autodetect_alpha_nAttr.create("autodetect_alpha", "autodetect_alpha", OpenMaya.MFnNumericData.kBoolean, False)
+    ms_renderSettings.autodetect_alpha = autodetect_alpha_nAttr.create("autodetect_alpha", "autodetect_alpha", OpenMaya.MFnNumericData.kBoolean, True)
 
     # add attributes
     ms_renderSettings.addAttribute(ms_renderSettings.export_button)
