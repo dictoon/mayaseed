@@ -1134,6 +1134,7 @@ class AsCamera():
         self.diaphragm_tilt_angle = AsParameter('diaphragm_tilt_angle', '0.0')
         self.shutter_open_time = AsParameter('shutter_open_time', '0.0')
         self.shutter_close_time = AsParameter('shutter_close_time', '1.0')
+        self.controller_target = AsParameter('controller_target', '0 0 0')
         self.transforms = []
 
     def emit_xml(self, doc):
@@ -1143,6 +1144,7 @@ class AsCamera():
         self.focal_length.emit_xml(doc)
         self.shutter_open_time.emit_xml(doc)
         self.shutter_close_time.emit_xml(doc)
+        self.controller_target.emit_xml(doc)
 
         if self.model == 'thinlens_camera':
             self.focal_distance.emit_xml(doc)
