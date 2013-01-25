@@ -245,7 +245,7 @@ global proc AEms_renderSettingsTemplate(string $nodeName) {
         editorTemplate -beginLayout "Camera Settings" -collapse true;
             editorTemplate -addControl "export_all_cameras";
             editorTemplate -addSeparator;
-            editorTemplate -addControl "export_all_cameras_as_thinlens";
+            editorTemplate -addControl "export_all_cameras_as_thin_lens";
         editorTemplate -endLayout;
 
         editorTemplate -beginLayout "Assembly Settings" -collapse true;
