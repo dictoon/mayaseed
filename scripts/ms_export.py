@@ -132,7 +132,7 @@ def get_maya_params(render_settings_node):
 
     # Cameras.
     # params['sceneCameraExportAllCameras'] = cmds.checkBox('ms_sceneCameraExportAllCameras', query=True, value=True)
-    params['export_all_cameras_as_thinlens'] = cmds.getAttr(render_settings_node + '.export_all_cameras_as_thinlens')
+    params['export_all_cameras_as_thin_lens'] = cmds.getAttr(render_settings_node + '.export_all_cameras_as_thin_lens')
 
     # Output.
     if cmds.listConnections(render_settings_node + '.camera'):
@@ -1837,7 +1837,7 @@ def translate_maya_scene(params, maya_scene, maya_environment):
         as_camera.shutter_close_time.value = params['shutter_close_time']
 
         # dof specific camera settings
-        if camera.dof or params['export_all_cameras_as_thinlens']:
+        if camera.dof or params['export_all_cameras_as_thin_lens']:
             as_camera.model = 'thinlens_camera'
             as_camera.focal_distance = AsParameter('focal_distance', camera.focal_distance_values[non_mb_sample_number])
             as_camera.f_stop = AsParameter('f_stop', camera.f_stop)
