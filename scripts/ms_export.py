@@ -533,21 +533,22 @@ class MCamera(MTransformChild):
         self.dof = cmds.getAttr(self.name + '.depthOfField')
         self.focal_distance_values = []
         self.focus_region_scale = cmds.getAttr(self.name + '.focusRegionScale')
-        self.focal_length = float(cmds.getAttr(self.name + '.focalLength')) / 1000
+        self.focal_length = float(cmds.getAttr(self.name + '.focalLength')) / 10
         self.f_stop = self.focus_region_scale * cmds.getAttr(self.name + '.fStop')
 
         maya_resolution_aspect = float(self.params['output_res_width']) / float(self.params['output_res_height'])
         maya_film_aspect = cmds.getAttr(self.name + '.horizontalFilmAperture') / cmds.getAttr(self.name + '.verticalFilmAperture')
 
         if maya_resolution_aspect > maya_film_aspect:
-            self.film_width = float(cmds.getAttr(self.name + '.horizontalFilmAperture')) * inch_to_meter
+            self.film_width = float(cmds.getAttr(self.name + '.horizontalFilmAperture')) * inch_to_meter * 100
             self.film_height = self.film_width / maya_resolution_aspect
         else:
-            self.film_height = float(cmds.getAttr(self.name + '.verticalFilmAperture')) * inch_to_meter
+            self.film_height = float(cmds.getAttr(self.name + '.verticalFilmAperture')) * inch_to_meter * 100
             self.film_width = self.film_height * maya_resolution_aspect
 
     def add_matrix_sample(self):
-        self.world_space_matrices.append(cmds.xform(self.transform.name, query=True, matrix=True, ws=True))
+        world_space_matrix = cmds.xform(self.transform.name, query=True, matrix=True, ws=True)
+        self.world_space_matrices.append(ms_commands.matrix_remove_scale(world_space_matrix))
 
     def add_focal_distance_sample(self):
         self.focal_distance_values.append(cmds.getAttr(self.name + '.focusDistance') )
