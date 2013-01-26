@@ -32,7 +32,7 @@ import subprocess
 from xml.dom.minidom import parseString
 import ms_export_obj
 import random
-
+import math
 
 #--------------------------------------------------------------------------------------------------
 # Constants.
@@ -675,3 +675,80 @@ def warning(message):
 
 def error(message):
     cmds.error(message)
+
+
+#--------------------------------------------------------------------------------------------------
+# vector functions.
+#--------------------------------------------------------------------------------------------------
+
+def vector_get_length(v):
+    
+    return math.sqrt((v[0] * v[0]) + (v[1] * v[1]) + (v[2] * v[2]))
+
+#--------------------------------------------------------------------------------------------------
+# matrix functions.
+#--------------------------------------------------------------------------------------------------
+
+# a maya matrix is represented as [0,0,0,0 ,0,0,0,0 ,0,0,0,0 ,0,0,0,0]
+# 0 4 8  12
+# 1 5 9  13
+# 2 6 10 14
+# 3 7 11 15
+
+def matrix_multiply(transform_matrix, m):
+    
+    result = [0,0,0,0 ,0,0,0,0 ,0,0,0,0 ,0,0,0,0]
+
+
+    return [(m[0] * transform_matrix[0])  + (m[4] * transform_matrix[1])  + (m[ 8] * transform_matrix[ 2]) + (m[12] * transform_matrix[3]),
+            (m[1] * transform_matrix[0])  + (m[5] * transform_matrix[1])  + (m[ 9] * transform_matrix[ 2]) + (m[13] * transform_matrix[3]),
+            (m[2] * transform_matrix[0])  + (m[6] * transform_matrix[1])  + (m[10] * transform_matrix[ 2]) + (m[14] * transform_matrix[3]),
+            (m[3] * transform_matrix[0])  + (m[7] * transform_matrix[1])  + (m[11] * transform_matrix[ 2]) + (m[15] * transform_matrix[3]),
+
+            (m[0] * transform_matrix[4])  + (m[4] * transform_matrix[5])  + (m[ 8] * transform_matrix[ 6]) + (m[12] * transform_matrix[7]),
+            (m[1] * transform_matrix[4])  + (m[5] * transform_matrix[5])  + (m[ 9] * transform_matrix[ 6]) + (m[13] * transform_matrix[7]),
+            (m[2] * transform_matrix[4])  + (m[6] * transform_matrix[5])  + (m[10] * transform_matrix[ 6]) + (m[14] * transform_matrix[7]),
+            (m[3] * transform_matrix[4])  + (m[7] * transform_matrix[5])  + (m[11] * transform_matrix[ 6]) + (m[15] * transform_matrix[7]),
+
+            (m[0] * transform_matrix[8])  + (m[4] * transform_matrix[9])  + (m[8]  * transform_matrix[10]) + (m[12] * transform_matrix[11]),
+            (m[1] * transform_matrix[8])  + (m[5] * transform_matrix[9])  + (m[9]  * transform_matrix[10]) + (m[13] * transform_matrix[11]),
+            (m[2] * transform_matrix[8])  + (m[6] * transform_matrix[9])  + (m[10] * transform_matrix[10]) + (m[14] * transform_matrix[11]),
+            (m[3] * transform_matrix[8])  + (m[7] * transform_matrix[9])  + (m[11] * transform_matrix[10]) + (m[15] * transform_matrix[11]),
+
+            (m[0] * transform_matrix[12]) + (m[4] * transform_matrix[13]) + (m[ 8] * transform_matrix[14]) + (m[12] * transform_matrix[15]),
+            (m[1] * transform_matrix[12]) + (m[5] * transform_matrix[13]) + (m[ 9] * transform_matrix[14]) + (m[13] * transform_matrix[15]),
+            (m[2] * transform_matrix[12]) + (m[6] * transform_matrix[13]) + (m[10] * transform_matrix[14]) + (m[14] * transform_matrix[15]),
+            (m[3] * transform_matrix[12]) + (m[7] * transform_matrix[13]) + (m[11] * transform_matrix[14]) + (m[15] * transform_matrix[15]),]
+
+
+def matrix_get_scale(m):
+    
+    x_scale = vector_get_length([m[0], m[1], m[ 2]])
+    y_scale = vector_get_length([m[4], m[5], m[ 6]])
+    z_scale = vector_get_length([m[8], m[9], m[10]])
+
+    return [x_scale, y_scale, z_scale]
+
+
+def matrix_remove_scale(m):
+    
+    scale = matrix_get_scale(m)
+    inverse_scale = [1/scale[0],0,0,0, 0,1/scale[1],0,0, 0,0,1/scale[2],0, 0,0,0,1]
+
+    return matrix_multiply(m, inverse_scale)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
