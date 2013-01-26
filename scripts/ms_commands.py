@@ -358,13 +358,16 @@ def add_color_attr(node_name, attribute_name, default_value=(0,0,0)):
 # Create shading node.
 #--------------------------------------------------------------------------------------------------
 
-def create_shading_node(model, entity_defs_obj=False):
+def create_shading_node(model, name=None, entity_defs_obj=False):
     if entity_defs_obj:
         entity_defs = entity_defs_obj
     else:
         entity_defs = get_entity_defs(os.path.join(ROOT_DIRECTORY, 'scripts', 'appleseedEntityDefs.xml'))
 
-    shading_node_name = cmds.shadingNode('ms_appleseed_shading_node', asUtility=True, name=model)
+    if name is not None:
+        shading_node_name = cmds.shadingNode('ms_appleseed_shading_node', asUtility=True, name=name)
+    else:
+        shading_node_name = cmds.shadingNode('ms_appleseed_shading_node', asUtility=True, name=model)
 
     cmds.addAttr(shading_node_name, longName='node_model', dt="string")
     cmds.setAttr((shading_node_name + '.node_model'), model, type="string", lock=True)
