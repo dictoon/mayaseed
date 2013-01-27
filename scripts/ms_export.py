@@ -1875,6 +1875,21 @@ def translate_maya_scene(params, maya_scene, maya_environment):
         root_assembly_instance.transforms.append(AsTransform())
         as_project.scene.assembly_instances.append(root_assembly_instance)
 
+        # create default material
+        default_material = AsMaterial()
+        default_material.name = 'as_default_material'
+
+        default_surface_shader = AsSurfaceShader()
+        default_surface_shader.name = 'as_default_surface_shader'
+        default_surface_shader.model = 'constant_surface_shader'
+        default_surface_shader.parameters.append(AsParameter('color', '0'))
+        default_surface_shader.parameters.append(AsParameter('alpha_multiplier', '0'))
+
+        default_material.surface_shader = AsParameter('surface_shader', default_surface_shader.name)
+
+        root_assembly.surface_shaders.append(default_surface_shader)
+        root_assembly.materials.append(default_material)
+
         for transform in maya_scene:
             construct_transform_descendents(root_assembly, root_assembly, [], transform, mb_sample_number_list, non_mb_sample_number, params['export_camera_blur'], params['export_transformation_blur'], params['export_deformation_blur'])
 
@@ -1985,11 +2000,16 @@ def construct_transform_descendents(root_assembly, parent_assembly, matrix_stack
                 as_materials = convert_maya_ms_material_network(root_assembly, maya_ms_material)
 
                 if as_materials is not None:
+                    
                     if as_materials[0] is not None:
                         mesh_instance.material_assignments.append(AsObjectInstanceMaterialAssignment(maya_ms_material.safe_name, 'front', as_materials[0].name))
+                    else:
+                        mesh_instance.material_assignments.append(AsObjectInstanceMaterialAssignment('0', 'front', 'as_default_material'))
+                    
                     if as_materials[1] is not None:
                         mesh_instance.material_assignments.append(AsObjectInstanceMaterialAssignment(maya_ms_material.safe_name, 'back', as_materials[1].name))
-
+                    else:
+                        mesh_instance.material_assignments.append(AsObjectInstanceMaterialAssignment('0', 'back', 'as_default_material'))
 
             for maya_generic_material in mesh.generic_materials:
                 as_material = convert_maya_generic_material(root_assembly, maya_generic_material)
