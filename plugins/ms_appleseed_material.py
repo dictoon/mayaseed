@@ -158,11 +158,11 @@ def nodeInitializer():
     numericAttributeFn.setDefault( 0.0,0.0,0.0 )
     appleseed_material.addAttribute( appleseed_material.surface_shader_frontAttribute )
     
-    # normal_map_front Attribute
-    appleseed_material.normal_map_frontAttribute = numericAttributeFn.createColor( 'normal_map_front_color', 'normal_map_front' )
+    # displacement_map_front Attribute
+    appleseed_material.displacement_map_frontAttribute = numericAttributeFn.createColor( 'displacement_map_front_color', 'displacement_map_front' )
     numericAttributeFn.setStorable( True )
     numericAttributeFn.setDefault( 0.0,0.0,0.0 )
-    appleseed_material.addAttribute( appleseed_material.normal_map_frontAttribute )
+    appleseed_material.addAttribute( appleseed_material.displacement_map_frontAttribute )
 
     # back ***************************
 
@@ -189,13 +189,32 @@ def nodeInitializer():
     numericAttributeFn.setDefault( 0.0,0.0,0.0 )
     appleseed_material.addAttribute( appleseed_material.surface_shader_backAttribute )
     
-    # normal_map_back Attribute
-    appleseed_material.normal_map_backAttribute = numericAttributeFn.createColor( 'normal_map_back_color', 'normal_map_back' )
+    # displacement_map_back Attribute
+    appleseed_material.displacement_map_backAttribute = numericAttributeFn.createColor( 'displacement_map_back_color', 'displacement_map_back' )
     numericAttributeFn.setStorable( True )
     numericAttributeFn.setDefault( 0.0,0.0,0.0 )
-    appleseed_material.addAttribute( appleseed_material.normal_map_backAttribute )
+    appleseed_material.addAttribute( appleseed_material.displacement_map_backAttribute )
 
+    # displacement mode
+    displacement_mode_enumAttr = OpenMaya.MFnEnumAttribute()
+    appleseed_material.displacement_mode = displacement_mode_enumAttr.create("displacement_mode", "displacement_mode")
+    displacement_mode_enumAttr.addField("bump", 0)
+    displacement_mode_enumAttr.addField("normal", 1)
+    appleseed_material.addAttribute( appleseed_material.displacement_mode )
 
+    # normal map up
+    normal_map_up_enumAttr = OpenMaya.MFnEnumAttribute()
+    appleseed_material.normal_map_up = normal_map_up_enumAttr.create("normal_map_up", "normal_map_up")
+    normal_map_up_enumAttr.addField("y", 0)
+    normal_map_up_enumAttr.addField("z", 1)
+    appleseed_material.addAttribute( appleseed_material.normal_map_up )
+
+    # bump amplitude
+    bump_amplitude_AttrInt = OpenMaya.MFnNumericAttribute()
+    appleseed_material.bump_amplitude = bump_amplitude_AttrInt.create("bump_amplitude", "bump_amplitude", OpenMaya.MFnNumericData.kInt, 1)
+    bump_amplitude_AttrInt.setHidden(False)
+    bump_amplitude_AttrInt.setKeyable(True)
+    appleseed_material.addAttribute( appleseed_material.bump_amplitude )
 
     # alpha_map Attribute
     appleseed_material.alpha_mapAttribute = numericAttributeFn.createColor( 'alpha_map_color', 'alpha_map' )
@@ -203,13 +222,12 @@ def nodeInitializer():
     numericAttributeFn.setDefault( 0.0,0.0,0.0 )
     appleseed_material.addAttribute( appleseed_material.alpha_mapAttribute )
 
-    #hardware Color Attribute
+    # hardware Color Attribute
     appleseed_material.hardwareColInAttribute = numericAttributeFn.createColor( 'hardware_color_in', 'hci' )
     numericAttributeFn.setStorable( True )
     numericAttributeFn.setDefault( 0.5,0.5,0.5 )
     appleseed_material.addAttribute( appleseed_material.hardwareColInAttribute )
     
-
     #==================================
     # OUTPUT NODE ATTRIBUTE(S)
     #==================================    
