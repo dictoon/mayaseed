@@ -1878,6 +1878,7 @@ def translate_maya_scene(params, maya_scene, maya_environment):
         # create default material
         default_material = AsMaterial()
         default_material.name = 'as_default_material'
+        default_material.alpha_map = AsParameter('alpha_map', '0')
 
         default_surface_shader = AsSurfaceShader()
         default_surface_shader.name = 'as_default_surface_shader'
