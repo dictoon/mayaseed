@@ -402,7 +402,8 @@ class MTransform():
         if light_names is not None:
             self.has_children = True
             for light_name in light_names:
-                self.child_lights.append(MLight(params, light_name, self))
+                if (cmds.nodeType(light_name) == 'pointLight') or (cmds.nodeType(light_name) == 'spotLight'):
+                    self.child_lights.append(MLight(params, light_name, self))
 
         camera_names = cmds.listRelatives(self.name, type='camera', fullPath=True)
         if camera_names is not None:
@@ -533,21 +534,22 @@ class MCamera(MTransformChild):
         self.dof = cmds.getAttr(self.name + '.depthOfField')
         self.focal_distance_values = []
         self.focus_region_scale = cmds.getAttr(self.name + '.focusRegionScale')
-        self.focal_length = float(cmds.getAttr(self.name + '.focalLength')) / 1000
+        self.focal_length = float(cmds.getAttr(self.name + '.focalLength')) / 10
         self.f_stop = self.focus_region_scale * cmds.getAttr(self.name + '.fStop')
 
         maya_resolution_aspect = float(self.params['output_res_width']) / float(self.params['output_res_height'])
         maya_film_aspect = cmds.getAttr(self.name + '.horizontalFilmAperture') / cmds.getAttr(self.name + '.verticalFilmAperture')
 
         if maya_resolution_aspect > maya_film_aspect:
-            self.film_width = float(cmds.getAttr(self.name + '.horizontalFilmAperture')) * inch_to_meter
+            self.film_width = float(cmds.getAttr(self.name + '.horizontalFilmAperture')) * inch_to_meter * 100
             self.film_height = self.film_width / maya_resolution_aspect
         else:
-            self.film_height = float(cmds.getAttr(self.name + '.verticalFilmAperture')) * inch_to_meter
+            self.film_height = float(cmds.getAttr(self.name + '.verticalFilmAperture')) * inch_to_meter * 100
             self.film_width = self.film_height * maya_resolution_aspect
 
     def add_matrix_sample(self):
-        self.world_space_matrices.append(cmds.xform(self.transform.name, query=True, matrix=True, ws=True))
+        world_space_matrix = cmds.xform(self.transform.name, query=True, matrix=True, ws=True)
+        self.world_space_matrices.append(ms_commands.matrix_remove_scale(world_space_matrix))
 
     def add_focal_distance_sample(self):
         self.focal_distance_values.append(cmds.getAttr(self.name + '.focusDistance') )
@@ -573,10 +575,7 @@ class MFile():
             self.resolved_image_name = ms_commands.get_file_texture_name(self.name)
             self.is_animated = cmds.getAttr(self.name + '.useFrameExtension')
             self.alpha_is_luminance = cmds.getAttr(self.name + '.alphaIsLuminance')
-            self.autodetect_alpha = False
-            if params['autodetect_alpha']:
-                self.autodetect_alpha = True
-            
+            self.autodetect_alpha = params['autodetect_alpha']
             self.filtering_mode = cmds.getAttr((self.name + '.filterType'), asString=True)
 
             # Off, Mipmap, Box, Quadratic, Quartic, Gaussian 
@@ -728,9 +727,10 @@ class MMsMaterial():
                                    self.surface_shader_front,
                                    self.surface_shader_back]
 
-            self.textures = self.textures + [self.normal_map_front,
-                                             self.normal_map_back,
-                                             self.alpha_map]
+            for texture in [self.normal_map_front, self.normal_map_back, self.alpha_map]:
+                if texture is not None:
+                    self.textures.append(texture)
+
 
         else:
             self.bsdf_back, self.edf_back, self.surface_shader_back, self.normal_map_back = self.bsdf_front, self.edf_front, self.surface_shader_front, self.normal_map_front
@@ -1137,6 +1137,7 @@ class AsCamera():
         self.diaphragm_tilt_angle = AsParameter('diaphragm_tilt_angle', '0.0')
         self.shutter_open_time = AsParameter('shutter_open_time', '0.0')
         self.shutter_close_time = AsParameter('shutter_close_time', '1.0')
+        self.controller_target = AsParameter('controller_target', '0 0 0')
         self.transforms = []
 
     def emit_xml(self, doc):
@@ -1146,6 +1147,7 @@ class AsCamera():
         self.focal_length.emit_xml(doc)
         self.shutter_open_time.emit_xml(doc)
         self.shutter_close_time.emit_xml(doc)
+        self.controller_target.emit_xml(doc)
 
         if self.model == 'thinlens_camera':
             self.focal_distance.emit_xml(doc)
