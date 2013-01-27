@@ -511,7 +511,7 @@ class MLight(MTransformChild):
         self.model = cmds.nodeType(self.name)
         if self.model == 'spotLight':
             self.inner_angle = cmds.getAttr(self.name + '.coneAngle')
-            self.outer_angle = cmds.getAttr(self.name + '.coneAngle') + cmds.getAttr(self.name + '.penumbraAngle')
+            self.outer_angle = cmds.getAttr(self.name + '.coneAngle') +  (2 * cmds.getAttr(self.name + '.penumbraAngle'))
 
 
 #--------------------------------------------------------------------------------------------------
