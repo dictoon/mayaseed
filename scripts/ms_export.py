@@ -402,7 +402,8 @@ class MTransform():
         if light_names is not None:
             self.has_children = True
             for light_name in light_names:
-                self.child_lights.append(MLight(params, light_name, self))
+                if (cmds.nodeType(light_name) == 'pointLight') or (cmds.nodeType(light_name) == 'spotLight'):
+                    self.child_lights.append(MLight(params, light_name, self))
 
         camera_names = cmds.listRelatives(self.name, type='camera', fullPath=True)
         if camera_names is not None:
@@ -726,9 +727,10 @@ class MMsMaterial():
                                    self.surface_shader_front,
                                    self.surface_shader_back]
 
-            self.textures = self.textures + [self.normal_map_front,
-                                             self.normal_map_back,
-                                             self.alpha_map]
+            for texture in [self.normal_map_front, self.normal_map_back, self.alpha_map]:
+                if texture is not None:
+                    self.textures.append(texture)
+
 
         else:
             self.bsdf_back, self.edf_back, self.surface_shader_back, self.normal_map_back = self.bsdf_front, self.edf_front, self.surface_shader_front, self.normal_map_front
