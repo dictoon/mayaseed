@@ -258,7 +258,7 @@ def has_shader_connected(node_name):
     if not cmds.connectionInfo(shadingEngine + '.surfaceShader', sourceFromDestination=True).split('.')[0]:
         return False
 
-    return True
+    return cmds.connectionInfo(shadingEngine + '.surfaceShader', sourceFromDestination=True).split('.')[0]
 
 
 #--------------------------------------------------------------------------------------------------
