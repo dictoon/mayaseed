@@ -710,15 +710,18 @@ class MMsMaterial():
         self.bsdf_front = self.get_connections(self.name + '.BSDF_front_color')
         self.edf_front = self.get_connections(self.name + '.EDF_front_color')
         self.surface_shader_front = self.get_connections(self.name + '.surface_shader_front_color')
-        self.normal_map_front = self.get_connections(self.name + '.normal_map_front_color')
+        self.displacement_map_front = self.get_connections(self.name + '.displacement_map_front_color')
         self.alpha_map = self.get_connections(self.name + '.alpha_map_color')
+        self.displacement_mode = cmds.getAttr(self.name + '.displacement_mode')
+        self.bump_amplitude = cmds.getAttr(self.name + '.bump_amplitude')
+        self.normal_map_up = cmds.getAttr(self.name + '.normal_map_up')
 
         # only use front shaders on back if box is checked
         if not self.duplicate_shaders:
             self.bsdf_back = self.get_connections(self.name + '.BSDF_back_color')
             self.edf_back = self.get_connections(self.name + '.EDF_back_color')
             self.surface_shader_back = self.get_connections(self.name + '.surface_shader_back_color')
-            self.normal_map_back = self.get_connections(self.name + '.normal_map_back_color')
+            self.displacement_map_back = self.get_connections(self.name + '.displacement_map_back_color')
 
             self.shading_nodes += [self.bsdf_front,
                                    self.bsdf_back,
@@ -727,20 +730,20 @@ class MMsMaterial():
                                    self.surface_shader_front,
                                    self.surface_shader_back]
 
-            for texture in [self.normal_map_front, self.normal_map_back, self.alpha_map]:
+            for texture in [self.displacement_map_front, self.displacement_map_back, self.alpha_map]:
                 if texture is not None:
                     self.textures.append(texture)
 
 
         else:
-            self.bsdf_back, self.edf_back, self.surface_shader_back, self.normal_map_back = self.bsdf_front, self.edf_front, self.surface_shader_front, self.normal_map_front
+            self.bsdf_back, self.edf_back, self.surface_shader_back, self.displacement_map_back = self.bsdf_front, self.edf_front, self.surface_shader_front, self.displacement_map_front
 
             self.shading_nodes += [self.bsdf_front,
                                    self.edf_front,
                                    self.surface_shader_front]
 
-            if self.normal_map_front is not None:
-                  self.textures.append(self.normal_map_front)
+            if self.displacement_map_front is not None:
+                  self.textures.append(self.displacement_map_front)
             if self.alpha_map is not None:
                 self.textures.append(self.alpha_map)
 
@@ -1235,7 +1238,10 @@ class AsMaterial():
         self.edf = None
         self.surface_shader = None
         self.alpha_map = None
-        self.normal_map = None
+        self.displacement_map = None
+        self.displacement_mode = None
+        self.bump_amplitude = None
+        self.normal_map_up = None
 
     def emit_xml(self, doc):
         doc.start_element('material name="%s" model="%s"' % (self.name, self.model))
@@ -1252,8 +1258,17 @@ class AsMaterial():
         if self.alpha_map is not None:
             self.alpha_map.emit_xml(doc)
 
-        if self.normal_map is not None:
-            self.normal_map.emit_xml(doc)
+        if self.displacement_map is not None:
+            self.displacement_map.emit_xml(doc)
+
+        if self.displacement_mode is not None:
+            self.displacement_mode.emit_xml(doc)
+
+        if self.bump_amplitude is not None:
+            self.bump_amplitude.emit_xml(doc)
+
+        if self.normal_map_up is not None:
+            self.normal_map_up.emit_xml(doc)
 
         doc.end_element('material')
 
@@ -2113,6 +2128,20 @@ def convert_maya_ms_material_network(root_assembly, ms_material):
             root_assembly.textures.append(alpha_texture)
             root_assembly.texture_instances.append(alpha_texture_instance)
 
+        normal_map_up = None
+        displacement_mode = None
+        bump_amplitude = None
+        # create displacement attributes
+        if ms_material.displacement_mode == 0:
+            displacement_mode = AsParameter('displacement_mode', 'bump')
+            bump_amplitude = AsParameter('bump_amplitude', str(ms_material.bump_amplitude))
+        else:
+            displacement_mode = AsParameter('displacement_mode', 'normal')
+            if ms_material.normal_map_up == '0':
+                normal_map_up = AsParameter('normal_map_up', 'y')
+            else:
+                normal_map_up = AsParameter('normal_map_up', 'z')
+
         # if the materials are not yet defined construct them
         if ms_material.enable_front:
             front_material = AsMaterial()
@@ -2126,11 +2155,24 @@ def convert_maya_ms_material_network(root_assembly, ms_material):
             if ms_material.surface_shader_front is not None:
                 new_surface_shader = build_as_shading_nodes(root_assembly, ms_material.surface_shader_front)
                 front_material.surface_shader = AsParameter('surface_shader', new_surface_shader.name)
-            if ms_material.normal_map_front is not None:
-                new_texture, new_texture_instance = m_file_to_as_texture(ms_material.normal_map_front)
-                root_assembly.textures.append(new_texture)
-                root_assembly.texture_instances.append(new_texture_instance)
-                front_material.normal_map = AsParameter('normal_map', new_texture_instance.name)
+            if ms_material.displacement_map_front is not None:
+
+                texture, texture_instance = m_file_to_as_texture(ms_material.displacement_map_front)
+                existing_texture = get_from_list(root_assembly.textures, texture.name)
+                existing_texture_instance = get_from_list(root_assembly.texture_instances, texture_instance.name)
+
+                if existing_texture is None:
+                    root_assembly.textures.append(texture)
+                    root_assembly.texture_instances.append(texture_instance)
+                else:
+                    texture = existing_texture
+                    texture_instance = existing_texture_instance
+
+                front_material.displacement_map = AsParameter('displacement_map', texture_instance.name)
+
+                front_material.displacement_mode = displacement_mode
+                front_material.bump_amplitude = bump_amplitude
+                front_material.normal_map_up = normal_map_up
 
             if ms_material.alpha_map is not None:
                 front_material.alpha_map = AsParameter('alpha_map', alpha_texture_instance.name)
@@ -2150,11 +2192,25 @@ def convert_maya_ms_material_network(root_assembly, ms_material):
             if ms_material.surface_shader_back is not None:
                 new_surface_shader = build_as_shading_nodes(root_assembly, ms_material.surface_shader_back)
                 back_material.surface_shader = AsParameter('surface_shader', new_surface_shader.name)
-            if ms_material.normal_map_back is not None:
-                new_texture, new_texture_instance = m_file_to_as_texture(ms_material.normal_map_back)
-                root_assembly.textures.append(new_texture)
-                root_assembly.texture_instances.append(new_texture_instance)
-                back_material.normal_map = AsParameter('normal_map', new_texture_instance.name)
+            if ms_material.displacement_map_back is not None:
+
+                texture, texture_instance = m_file_to_as_texture(ms_material.displacement_map_back)
+                existing_texture = get_from_list(root_assembly.textures, texture.name)
+                existing_texture_instance = get_from_list(root_assembly.texture_instances, texture_instance.name)
+
+                if existing_texture is None:
+                    root_assembly.textures.append(texture)
+                    root_assembly.texture_instances.append(texture_instance)
+                else:
+                    texture = existing_texture
+                    texture_instance = existing_texture_instance
+
+                back_material.displacement_map = AsParameter('displacement_map', texture_instance.name)
+
+                back_material.displacement_mode = displacement_mode
+                back_material.bump_amplitude = bump_amplitude
+                back_material.normal_map_up = normal_map_up
+
 
             if ms_material.alpha_map is not None:
                 back_material.alpha_map = AsParameter('alpha_map', alpha_texture_instance.name)
