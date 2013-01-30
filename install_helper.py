@@ -10,6 +10,7 @@ def install(userSetup_file, install_dir):
     file = open(userSetup_file, 'r')
     file_contents = file.read()
     file.close()
+
     file = open(userSetup_file, 'w')
 
     inside_block = False
@@ -22,18 +23,14 @@ def install(userSetup_file, install_dir):
 
     separator = ';' if sys.platform == 'win32' or sys.platform == 'win64' else ':'
 
-    file.write('\n')
-    file.write('\n')
     file.write('// ' + installation_name + '  -------------------------------------------------------------------------------\n')
     file.write('\n')
-    file.write('$env_script_path = `getenv MAYA_SCRIPT_PATH`;\n')
-    file.write('$env_plugin_path = `getenv MAYA_PLUG_IN_PATH`;\n')
-    file.write('putenv MAYA_SCRIPT_PATH ($env_script_path + \"{0}{1}\");\n'.format(separator, os.path.join(install_dir, 'scripts')))
-    file.write('$env_script_path = `getenv MAYA_SCRIPT_PATH`;\n')
-    file.write('putenv MAYA_SCRIPT_PATH ($env_script_path + \"{0}{1}\");\n'.format(separator, os.path.join(install_dir, 'graphics')))
-    file.write('putenv MAYA_PLUG_IN_PATH ($env_plugin_path + \"{0}{1}\");\n'.format(separator, os.path.join(install_dir, 'plugins')))
+    file.write('putenv "MAYA_SCRIPT_PATH" (`getenv "MAYA_SCRIPT_PATH"` + \"{0}{1}\");\n'.format(separator, os.path.join(install_dir, 'scripts')))
+    file.write('putenv "MAYA_SCRIPT_PATH" (`getenv "MAYA_SCRIPT_PATH"` + \"{0}{1}\");\n'.format(separator, os.path.join(install_dir, 'graphics')))
+    file.write('putenv "MAYA_PLUG_IN_PATH" (`getenv "MAYA_PLUG_IN_PATH"` + \"{0}{1}\");\n'.format(separator, os.path.join(install_dir, 'plugins')))
     file.write('\n')
     file.write('// ' + installation_name + '  -------------------------------------------------------------------------------\n')
+
     file.close()
 
     cmds.confirmDialog(title=installation_name + ' install', message='All done! Just restart Maya and enable any plugins not already enabled in the plugin manager.', button='OK')

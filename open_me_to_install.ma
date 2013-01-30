@@ -88,27 +88,12 @@ createNode script -n "install";
 //import install_helper
 //reload(install_helper)
 //sys.path.remove(scene_dir)
-//if ((sys.platform == 'win32') or (sys.platform == 'win64')):
-//    for path in mel.eval('getenv MAYA_SCRIPT_PATH').split(';'):
-//       if os.path.exists(path):
-//           for file in os.listdir(path):
-//               if file == 'userSetup.mel':
-//                    user_setup_file = os.path.join(path, file)
-//                    if not user_setup_file:
-//                        user_setup_file = os.path.join('{0}/'.format(mel.eval('getenv MAYA_SCRIPT_PATH').split(';')[2]), 'user_setup.mel')
-//                        file = open(user_setup_file, 'w')
-//                        file.close()
-//else:
-//    for path in mel.eval('getenv MAYA_SCRIPT_PATH').split(':'):
-//        if os.path.exists(path):
-//            for file in os.listdir(path):
-//                if file == 'userSetup.mel':
-//                    user_setup_file = os.path.join(path, file)
-//                    if not user_setup_file:
-//                        user_setup_file = os.path.join('{0}/'.format(mel.eval('getenv MAYA_SCRIPT_PATH').split(':')[1]), 'user_setup.mel')
-//                        file = open(user_setup_file, 'w')
-//                        file.close()
-//print user_setup_file
+//separator = ';' if sys.platform == 'win32' or sys.platform == 'win64' else ':'
+//for path in mel.eval('getenv MAYA_SCRIPT_PATH').split(separator):
+//    if os.path.exists(path):
+//        for file in os.listdir(path):
+//            if file == 'userSetup.mel':
+//                user_setup_file = os.path.join(path, file)
 //install_helper.install(user_setup_file, scene_dir)
 
 createNode script -n "uiConfigurationScriptNode";
