@@ -14,11 +14,11 @@ def install(userSetup_file, install_dir):
 
     inside_block = False
     for line in file_contents.split('\n'):
-      if line[:len(installation_name) + 3] == '// ' + installation_name:
+      is_block_delimiter = line[:len(installation_name) + 3] == '// ' + installation_name
+      if is_block_delimiter:
         inside_block = not inside_block
-      if not inside_block:
-        if not line[:len(installation_name) + 3] == '// ' + installation_name:
-            file.write(line + '\n')
+      if not inside_block and not is_block_delimiter:
+        file.write(line + '\n')
 
     separator = ';' if sys.platform == 'win32' or sys.platform == 'win64' else ':'
 
@@ -28,10 +28,10 @@ def install(userSetup_file, install_dir):
     file.write('\n')
     file.write('$env_script_path = `getenv MAYA_SCRIPT_PATH`;\n')
     file.write('$env_plugin_path = `getenv MAYA_PLUG_IN_PATH`;\n')
-    file.write('putenv MAYA_SCRIPT_PATH ($env_script_path + \"' + separator + os.path.join('{0}/'.format(install_dir), 'scripts') +  '\");\n')
+    file.write('putenv MAYA_SCRIPT_PATH ($env_script_path + \"{0}{1}\");\n'.format(separator, os.path.join(install_dir, 'scripts')))
     file.write('$env_script_path = `getenv MAYA_SCRIPT_PATH`;\n')
-    file.write('putenv MAYA_SCRIPT_PATH ($env_script_path + \"' + separator + os.path.join('{0}/'.format(install_dir), 'graphics') + '\");\n')
-    file.write('putenv MAYA_PLUG_IN_PATH ($env_plugin_path + \"' + separator + os.path.join('{0}/'.format(install_dir), 'plugins') + '\");\n')
+    file.write('putenv MAYA_SCRIPT_PATH ($env_script_path + \"{0}{1}\");\n'.format(separator, os.path.join(install_dir, 'graphics')))
+    file.write('putenv MAYA_PLUG_IN_PATH ($env_plugin_path + \"{0}{1}\");\n'.format(separator, os.path.join(install_dir, 'plugins')))
     file.write('\n')
     file.write('// ' + installation_name + '  -------------------------------------------------------------------------------\n')
     file.close()
