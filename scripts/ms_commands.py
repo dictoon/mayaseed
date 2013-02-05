@@ -739,19 +739,3 @@ def matrix_remove_scale(m):
     inverse_scale = [1/scale[0],0,0,0, 0,1/scale[1],0,0, 0,0,1/scale[2],0, 0,0,0,1]
 
     return matrix_multiply(m, inverse_scale)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
