@@ -201,6 +201,8 @@ def get_maya_params(render_settings_node):
         params['obj_exporter'] = ms_export_obj.export
 
     params['autodetect_alpha'] = cmds.getAttr(render_settings_node + '.autodetect_alpha')
+    params['force_linear_texture_interpretation'] = cmds.getAttr(render_settings_node + '.force_linear_texture_interpretation')
+    params['force_linear_color_interpretation'] = cmds.getAttr(render_settings_node + '.force_linear_color_interpretation')
     return params
 
 
@@ -1649,7 +1651,7 @@ def m_color_connection_to_as_color(m_color_connection, postfix=''):
 # m_file_to_as_texture function.
 #--------------------------------------------------------------------------------------------------
 
-def m_file_to_as_texture(m_file, postfix='', file_number=0):
+def m_file_to_as_texture(params, m_file, postfix='', file_number=0):
 
     as_texture = AsTexture()
     as_texture.name = m_file.safe_name + postfix
@@ -1661,6 +1663,9 @@ def m_file_to_as_texture(m_file, postfix='', file_number=0):
     else:
         if m_file.alpha_is_luminance:
             as_texture_instance.alpha_mode.value = 'luminance'
+
+    if params['force_linear_texture_interpretation']:
+        as_texture.color_space.value = 'linear_rgb'
 
     if m_file.filtering_mode == 'Off':
         as_texture_instance.filtering_mode.value = 'nearest'
@@ -1814,7 +1819,7 @@ def translate_maya_scene(params, maya_scene, maya_environment):
                 as_project.scene.colors.append(zenith_horizon_exitance)
 
             elif environment_edf.model == 'latlong_map_environment_edf':
-                lat_long_map, lat_long_map_instance = m_file_to_as_texture(maya_environment.latitude_longitude_exitance, '_texture')                
+                lat_long_map, lat_long_map_instance = m_file_to_as_texture(params, maya_environment.latitude_longitude_exitance, '_texture')                
                 
                 as_project.scene.textures.append(lat_long_map)
                 as_project.scene.texture_instances.append(lat_long_map_instance)
@@ -1822,7 +1827,7 @@ def translate_maya_scene(params, maya_scene, maya_environment):
                 environment_edf.parameters.append(AsParameter('exitance', lat_long_map_instance.name))
 
             elif environment_edf.model == 'mirrorball_map_environment_edf':
-                mirror_ball_map, mirror_ball_map_instance = m_file_to_as_texture(maya_environment.mirrorball_exitance, '_texture')
+                mirror_ball_map, mirror_ball_map_instance = m_file_to_as_texture(params, maya_environment.mirrorball_exitance, '_texture')
                 
                 as_project.scene.textures.append(mirror_ball_map)
                 as_project.scene.texture_instances.append(mirror_ball_map_instance)
@@ -1907,7 +1912,7 @@ def translate_maya_scene(params, maya_scene, maya_environment):
         root_assembly.materials.append(default_material)
 
         for transform in maya_scene:
-            construct_transform_descendents(root_assembly, root_assembly, [], transform, mb_sample_number_list, non_mb_sample_number, params['export_camera_blur'], params['export_transformation_blur'], params['export_deformation_blur'])
+            construct_transform_descendents(params, root_assembly, root_assembly, [], transform, mb_sample_number_list, non_mb_sample_number, params['export_camera_blur'], params['export_transformation_blur'], params['export_deformation_blur'])
 
         # end construction of as project hierarchy ************************************************
 
@@ -1924,7 +1929,7 @@ def translate_maya_scene(params, maya_scene, maya_environment):
 # construct_transform_descendents function.
 #--------------------------------------------------------------------------------------------------
 
-def construct_transform_descendents(root_assembly, parent_assembly, matrix_stack, maya_transform, mb_sample_number_list, non_mb_sample_number, camera_blur, transformation_blur, object_blur):
+def construct_transform_descendents(params, root_assembly, parent_assembly, matrix_stack, maya_transform, mb_sample_number_list, non_mb_sample_number, camera_blur, transformation_blur, object_blur):
 
     """ this function recursivley builds an as object hierarchy from a Maya scene """
 
@@ -1952,7 +1957,7 @@ def construct_transform_descendents(root_assembly, parent_assembly, matrix_stack
                 sample_index += 1
 
         for transform in maya_transform.child_transforms:
-            construct_transform_descendents(root_assembly, current_assembly, current_matrix_stack, transform, mb_sample_number_list, non_mb_sample_number, camera_blur, transformation_blur, object_blur)
+            construct_transform_descendents(params, root_assembly, current_assembly, current_matrix_stack, transform, mb_sample_number_list, non_mb_sample_number, camera_blur, transformation_blur, object_blur)
 
         for light in maya_transform.child_lights:
 
@@ -1962,7 +1967,7 @@ def construct_transform_descendents(root_assembly, parent_assembly, matrix_stack
             new_light.exitance_multiplier.value = light.multiplier
 
             if light.color.__class__.__name__ == 'MFile':
-                light_color_file, light_color =  m_file_to_as_texture(light.color, '_light_color')
+                light_color_file, light_color =  m_file_to_as_texture(params, light.color, '_light_color')
                 current_assembly.textures.append(light_color_file)
                 current_assembly.texture_instances.append(light_color)
             else:
@@ -2013,7 +2018,7 @@ def construct_transform_descendents(root_assembly, parent_assembly, matrix_stack
 
             # translate materials and assign
             for maya_ms_material in mesh.ms_materials:
-                as_materials = convert_maya_ms_material_network(root_assembly, maya_ms_material)
+                as_materials = convert_maya_ms_material_network(params, root_assembly, maya_ms_material)
 
                 if as_materials is not None:
                     
@@ -2058,7 +2063,7 @@ def convert_maya_generic_material(root_assembly, generic_material):
     new_material.bsdf = AsParameter('bsdf', new_bsdf.name)
 
     if generic_material.diffuse.__class__.__name__ == 'MFile':
-        bsdf_texture, bsdf_texture_instance = m_file_to_as_texture(generic_material.diffuse, '_bsdf')
+        bsdf_texture, bsdf_texture_instance = m_file_to_as_texture(params, generic_material.diffuse, '_bsdf')
         new_bsdf.parameters.append(AsParameter('reflectance', bsdf_texture_instance.name))
         root_assembly.textures.append(bsdf_texture)
         root_assembly.texture_instances.append(bsdf_texture_instance)
@@ -2076,7 +2081,7 @@ def convert_maya_generic_material(root_assembly, generic_material):
         new_material.edf = AsParameter('edf', new_edf.name)
 
         if generic_material.incandescence.__class__.__name__ == 'MFile':
-            edf_texture, edf_texture_instance = m_file_to_as_texture(generic_material.incandescence, '_edf')
+            edf_texture, edf_texture_instance = m_file_to_as_texture(params, generic_material.incandescence, '_edf')
             new_edf.parameters.append(AsParameter('exitance', edf_texture_instance.name))
             root_assembly.textures.append(edf_texture)
             root_assembly.texture_instances.append(edf_texture_instance)
@@ -2093,7 +2098,7 @@ def convert_maya_generic_material(root_assembly, generic_material):
 
     if generic_material.alpha is not None:
         if generic_material.alpha.__class__.__name__ == 'MFile':
-            alpha_texture, alpha_texture_instance = m_file_to_as_texture(generic_material.alpha)
+            alpha_texture, alpha_texture_instance = m_file_to_as_texture(params, generic_material.alpha)
             new_surface_shader.parameters.append(AsParameter('exitance', alpha_texture_instance.name))
             root_assembly.textures.append(alpha_texture)
             root_assembly.texture_instances.append(alpha_texture_instance)
@@ -2109,7 +2114,7 @@ def convert_maya_generic_material(root_assembly, generic_material):
 # convert_maya_ms_material_network function.
 #--------------------------------------------------------------------------------------------------
 
-def convert_maya_ms_material_network(root_assembly, ms_material):
+def convert_maya_ms_material_network(params, root_assembly, ms_material):
 
     """ constructs a AsMaterial from an MMsMaterial """
 
@@ -2124,7 +2129,7 @@ def convert_maya_ms_material_network(root_assembly, ms_material):
 
     if materials[0] is None and materials[1] is None:
         if ms_material.alpha_map is not None:
-            alpha_texture, alpha_texture_instance = m_file_to_as_texture(ms_material.alpha_map)
+            alpha_texture, alpha_texture_instance = m_file_to_as_texture(params, ms_material.alpha_map)
             root_assembly.textures.append(alpha_texture)
             root_assembly.texture_instances.append(alpha_texture_instance)
 
@@ -2147,17 +2152,17 @@ def convert_maya_ms_material_network(root_assembly, ms_material):
             front_material = AsMaterial()
             front_material.name = ms_material.safe_name + '_front'
             if ms_material.bsdf_front is not None:
-                new_bsdf = build_as_shading_nodes(root_assembly, ms_material.bsdf_front)
+                new_bsdf = build_as_shading_nodes(params, root_assembly, ms_material.bsdf_front)
                 front_material.bsdf = AsParameter('bsdf', new_bsdf.name)
             if ms_material.edf_front is not None:
-                new_edf = build_as_shading_nodes(root_assembly, ms_material.edf_front)
+                new_edf = build_as_shading_nodes(params, root_assembly, ms_material.edf_front)
                 front_material.edf = AsParameter('edf', new_edf.name)
             if ms_material.surface_shader_front is not None:
-                new_surface_shader = build_as_shading_nodes(root_assembly, ms_material.surface_shader_front)
+                new_surface_shader = build_as_shading_nodes(params, root_assembly, ms_material.surface_shader_front)
                 front_material.surface_shader = AsParameter('surface_shader', new_surface_shader.name)
             if ms_material.displacement_map_front is not None:
 
-                texture, texture_instance = m_file_to_as_texture(ms_material.displacement_map_front)
+                texture, texture_instance = m_file_to_as_texture(params, ms_material.displacement_map_front)
                 existing_texture = get_from_list(root_assembly.textures, texture.name)
                 existing_texture_instance = get_from_list(root_assembly.texture_instances, texture_instance.name)
 
@@ -2184,17 +2189,17 @@ def convert_maya_ms_material_network(root_assembly, ms_material):
             back_material = AsMaterial()
             back_material.name = ms_material.safe_name + '_back'
             if ms_material.bsdf_back is not None:
-                new_bsdf = build_as_shading_nodes(root_assembly, ms_material.bsdf_back)
+                new_bsdf = build_as_shading_nodes(params, root_assembly, ms_material.bsdf_back)
                 back_material.bsdf = AsParameter('bsdf', new_bsdf.name)
             if ms_material.edf_back is not None:
-                new_edf = build_as_shading_nodes(root_assembly, ms_material.edf_back)
+                new_edf = build_as_shading_nodes(params, root_assembly, ms_material.edf_back)
                 back_material.edf = AsParameter('edf', new_edf.name)
             if ms_material.surface_shader_back is not None:
-                new_surface_shader = build_as_shading_nodes(root_assembly, ms_material.surface_shader_back)
+                new_surface_shader = build_as_shading_nodes(params, root_assembly, ms_material.surface_shader_back)
                 back_material.surface_shader = AsParameter('surface_shader', new_surface_shader.name)
             if ms_material.displacement_map_back is not None:
 
-                texture, texture_instance = m_file_to_as_texture(ms_material.displacement_map_back)
+                texture, texture_instance = m_file_to_as_texture(params, ms_material.displacement_map_back)
                 existing_texture = get_from_list(root_assembly.textures, texture.name)
                 existing_texture_instance = get_from_list(root_assembly.texture_instances, texture_instance.name)
 
@@ -2240,10 +2245,11 @@ def get_from_list(list, name):
 # build_as_shading_nodes function.
 #--------------------------------------------------------------------------------------------------
 
-def build_as_shading_nodes(root_assembly, current_maya_shading_node):
+def build_as_shading_nodes(params, root_assembly, current_maya_shading_node):
 
-    """ takes a Maya MMsShading node and returns a AsEdf, AsBsdf or AsSurfaceSahder """
+    """ takes a Maya MMsShading node and returns a AsEdf, AsBsdf or AsSurfaceShader"""
 
+    # the connection is an edf, bsdf or surface_shader
     current_shading_node = None
     if current_maya_shading_node.type == 'bsdf':
         current_shading_node = get_from_list(root_assembly.bsdfs, current_maya_shading_node.safe_name)
@@ -2274,10 +2280,16 @@ def build_as_shading_nodes(root_assembly, current_maya_shading_node):
 
     for attrib_key in current_maya_shading_node.attributes:
         if current_maya_shading_node.attributes[attrib_key].__class__.__name__ == 'MMsShadingNode':
-            new_shading_node = get_from_list(shading_nodes, current_maya_shading_node.attributes[attrib_key].safe_name)
+            new_shading_node = get_from_list(root_assembly.edfs, current_maya_shading_node.attributes[attrib_key].safe_name)
 
             if new_shading_node is None:
-                new_shading_node = build_as_shading_nodes(root_assembly, current_maya_shading_node.attributes[attrib_key])
+                new_shading_node = get_from_list(root_assembly.bsdfs, current_maya_shading_node.attributes[attrib_key].safe_name)
+
+            if new_shading_node is None:
+                new_shading_node = get_from_list(root_assembly.surface_shaders, current_maya_shading_node.attributes[attrib_key].safe_name)
+
+            if new_shading_node is None:
+                new_shading_node = build_as_shading_nodes(params, root_assembly, current_maya_shading_node.attributes[attrib_key])
 
             new_shading_node_parameter = AsParameter(attrib_key, new_shading_node.name)
             current_shading_node.parameters.append(new_shading_node_parameter)
@@ -2287,13 +2299,10 @@ def build_as_shading_nodes(root_assembly, current_maya_shading_node):
             new_texture_entity = get_from_list(root_assembly.textures, current_maya_shading_node.attributes[attrib_key].safe_name)
 
             if new_texture_entity is None:
-                new_texture_entity = AsTexture()
-                new_texture_entity.name = current_maya_shading_node.attributes[attrib_key].safe_name
-                new_texture_entity.file_name = AsParameter('filename', current_maya_shading_node.attributes[attrib_key].image_file_names[0])
-                root_assembly.textures.append(new_texture_entity)
+                new_texture_entity, new_texture_instance = m_file_to_as_texture(params, current_maya_shading_node.attributes[attrib_key])
 
-            new_texture_instance = new_texture_entity.instantiate()
-            root_assembly.texture_instances.append(new_texture_instance)
+                root_assembly.textures.append(new_texture_entity)
+                root_assembly.texture_instances.append(new_texture_instance)
 
             new_shading_node_parameter = AsParameter(attrib_key, new_texture_instance.name)
             current_shading_node.parameters.append(new_shading_node_parameter)
@@ -2306,6 +2315,8 @@ def build_as_shading_nodes(root_assembly, current_maya_shading_node):
                 new_color_entity.name = current_maya_shading_node.attributes[attrib_key].safe_name
                 new_color_entity.RGB_color = current_maya_shading_node.attributes[attrib_key].normalized_color
                 new_color_entity.multiplier.value = current_maya_shading_node.attributes[attrib_key].multiplier
+                if params['force_linear_color_interpretation']:
+                    new_color_entity.color_space.value = 'linear_rgb'
                 root_assembly.colors.append(new_color_entity)
 
             new_shading_node_parameter = AsParameter(attrib_key, new_color_entity.name)
