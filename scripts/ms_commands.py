@@ -364,32 +364,29 @@ def create_shading_node(model, name=None, entity_defs_obj=False):
     else:
         entity_defs = get_entity_defs(os.path.join(ROOT_DIRECTORY, 'scripts', 'appleseedEntityDefs.xml'))
 
-    if name is not None:
-        shading_node_name = cmds.shadingNode('ms_appleseed_shading_node', asUtility=True, name=name)
-    else:
-        shading_node_name = cmds.shadingNode('ms_appleseed_shading_node', asUtility=True, name=model)
+    shading_node_name = cmds.shadingNode('ms_appleseed_shading_node', asUtility=True, name=name if name is not None else model)
 
     cmds.addAttr(shading_node_name, longName='node_model', dt="string")
-    cmds.setAttr((shading_node_name + '.node_model'), model, type="string", lock=True)
+    cmds.setAttr(shading_node_name + '.node_model', model, type="string", lock=True)
 
     cmds.addAttr(shading_node_name, longName='node_type', dt="string")
-    cmds.setAttr((shading_node_name + '.node_type'), entity_defs[model].type, type="string", lock=True)
+    cmds.setAttr(shading_node_name + '.node_type', entity_defs[model].type, type="string", lock=True)
     
     for entity_key in entity_defs.keys():
         if entity_key == model:
             for attr_key in entity_defs[entity_key].attributes.keys():
-                if entity_defs[entity_key].attributes[attr_key].type == 'entity_picker':
-
+                attr = entity_defs[entity_key].attributes[attr_key]
+                if attr.type == 'entity_picker':
                     # if there is a default value, use it
-                    if entity_defs[entity_key].attributes[attr_key].default_value:
-                        default_value = float(entity_defs[entity_key].attributes[attr_key].default_value)
-                        add_color_attr(shading_node_name, attr_key, (default_value,default_value,default_value))
+                    if attr.default_value:
+                        default_value = float(attr.default_value)
+                        add_color_attr(shading_node_name, attr_key, (default_value, default_value, default_value))
                     else:
                         add_color_attr(shading_node_name, attr_key)
-
-                elif entity_defs[entity_key].attributes[attr_key].type == 'text_box':
+                elif attr.type == 'text_box':
                      cmds.addAttr(shading_node_name, longName=attr_key, dt="string")
-                     cmds.setAttr((shading_node_name + '.' + attr_key), entity_defs[entity_key].attributes[attr_key].default_value, type="string")
+                     cmds.setAttr(shading_node_name + '.' + attr_key, attr.default_value, type="string")
+            break
 
     return shading_node_name
 
@@ -507,7 +504,6 @@ def convert_selected_materials():
         convert_material(material)
 
 def convert_material(material):
-
     if material == 'lambert1':
         info('Cannot convert default material "lambert1"')
         return
@@ -528,7 +524,7 @@ def convert_material(material):
 def convert_phong_blinn_material(material):
     info('converting shader ' + material)
 
-    new_material_node = cmds.shadingNode('ms_appleseed_material', asShader=True, name=(material + '_translation')) 
+    new_material_node = cmds.shadingNode('ms_appleseed_material', asShader=True, name=material + '_translation')
 
     # set random hardware color
     cmds.setAttr(new_material_node + '.hardware_color_in', random.random(), random.random(), random.random(), type='float3')
@@ -685,8 +681,8 @@ def error(message):
 #--------------------------------------------------------------------------------------------------
 
 def vector_get_length(v):
-    
     return math.sqrt((v[0] * v[0]) + (v[1] * v[1]) + (v[2] * v[2]))
+
 
 #--------------------------------------------------------------------------------------------------
 # matrix functions.
@@ -699,9 +695,7 @@ def vector_get_length(v):
 # 3 7 11 15
 
 def matrix_multiply(transform_matrix, m):
-    
-    result = [0,0,0,0 ,0,0,0,0 ,0,0,0,0 ,0,0,0,0]
-
+    result = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
 
     return [(m[0] * transform_matrix[0])  + (m[4] * transform_matrix[1])  + (m[ 8] * transform_matrix[ 2]) + (m[12] * transform_matrix[3]),
             (m[1] * transform_matrix[0])  + (m[5] * transform_matrix[1])  + (m[ 9] * transform_matrix[ 2]) + (m[13] * transform_matrix[3]),
@@ -723,19 +717,19 @@ def matrix_multiply(transform_matrix, m):
             (m[2] * transform_matrix[12]) + (m[6] * transform_matrix[13]) + (m[10] * transform_matrix[14]) + (m[14] * transform_matrix[15]),
             (m[3] * transform_matrix[12]) + (m[7] * transform_matrix[13]) + (m[11] * transform_matrix[14]) + (m[15] * transform_matrix[15]),]
 
-
 def matrix_get_scale(m):
-    
     x_scale = vector_get_length([m[0], m[1], m[ 2]])
     y_scale = vector_get_length([m[4], m[5], m[ 6]])
     z_scale = vector_get_length([m[8], m[9], m[10]])
 
     return [x_scale, y_scale, z_scale]
 
-
 def matrix_remove_scale(m):
-    
     scale = matrix_get_scale(m)
-    inverse_scale = [1/scale[0],0,0,0, 0,1/scale[1],0,0, 0,0,1/scale[2],0, 0,0,0,1]
+    
+    inverse_scale = [1.0 / scale[0], 0.0, 0.0, 0.0,
+                     0.0, 1.0 / scale[1], 0.0, 0.0,
+                     0.0, 0.0, 1.0 / scale[2], 0.0,
+                     0.0, 0.0, 0.0, 1.0]
 
     return matrix_multiply(m, inverse_scale)
