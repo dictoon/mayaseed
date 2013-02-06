@@ -334,7 +334,15 @@ def ms_renderSettings_nodeInitializer():
 
     # autodetect alpha
     autodetect_alpha_nAttr = OpenMaya.MFnNumericAttribute()
-    ms_renderSettings.autodetect_alpha = autodetect_alpha_nAttr.create("autodetect_alpha", "autodetect_alpha", OpenMaya.MFnNumericData.kBoolean, True)
+    ms_renderSettings.autodetect_alpha = autodetect_alpha_nAttr.create("autodetect_alpha", "autodetect_alpha", OpenMaya.MFnNumericData.kBoolean, False)
+
+    # force_linear_texture_interpretation
+    force_linear_texture_interpretation_nAttr = OpenMaya.MFnNumericAttribute()
+    ms_renderSettings.force_linear_texture_interpretation = force_linear_texture_interpretation_nAttr.create("force_linear_texture_interpretation", "force_linear_texture_interpretation", OpenMaya.MFnNumericData.kBoolean, False)
+
+    # force_linear_color_interpretation
+    force_linear_color_interpretation_nAttr = OpenMaya.MFnNumericAttribute()
+    ms_renderSettings.force_linear_color_interpretation = force_linear_color_interpretation_nAttr.create("force_linear_color_interpretation", "force_linear_color_interpretation", OpenMaya.MFnNumericData.kBoolean, False)
 
     # add attributes
     ms_renderSettings.addAttribute(ms_renderSettings.export_button)
@@ -399,6 +407,10 @@ def ms_renderSettings_nodeInitializer():
 
     ms_renderSettings.addAttribute(ms_renderSettings.profile_export)
     ms_renderSettings.addAttribute(ms_renderSettings.autodetect_alpha)
+
+    ms_renderSettings.addAttribute(ms_renderSettings.force_linear_texture_interpretation)
+    ms_renderSettings.addAttribute(ms_renderSettings.force_linear_color_interpretation)
+
 
 #--------------------------------------------------------------------------------------------------
 # ms_environment node.
