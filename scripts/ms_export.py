@@ -2244,7 +2244,7 @@ def build_as_shading_nodes(root_assembly, current_maya_shading_node):
 
     """ takes a Maya MMsShading node and returns a AsEdf, AsBsdf or AsSurfaceShader"""
 
-    # the connection is am edf, bsdf or surface_shader
+    # the connection is an edf, bsdf or surface_shader
     current_shading_node = None
     if current_maya_shading_node.type == 'bsdf':
         current_shading_node = get_from_list(root_assembly.bsdfs, current_maya_shading_node.safe_name)
@@ -2280,8 +2280,8 @@ def build_as_shading_nodes(root_assembly, current_maya_shading_node):
             if new_shading_node is None:
                 new_shading_node = get_from_list(root_assembly.bsdfs, current_maya_shading_node.attributes[attrib_key].safe_name)
 
-                if new_shading_node is None:
-                    new_shading_node = get_from_list(root_assembly.surface_shaders, current_maya_shading_node.attributes[attrib_key].safe_name)
+            if new_shading_node is None:
+                new_shading_node = get_from_list(root_assembly.surface_shaders, current_maya_shading_node.attributes[attrib_key].safe_name)
 
             if new_shading_node is None:
                 new_shading_node = build_as_shading_nodes(root_assembly, current_maya_shading_node.attributes[attrib_key])
