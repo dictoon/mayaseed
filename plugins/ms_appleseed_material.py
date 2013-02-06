@@ -21,7 +21,6 @@
 # THE SOFTWARE.
 #
 
-
 import sys
 import maya.OpenMaya as OpenMaya
 import maya.OpenMayaMPx as OpenMayaMPx
@@ -32,16 +31,16 @@ kPluginNodeName = 'ms_appleseed_material'
 kPluginNodeClassify = 'shader/surface'
 kPluginNodeId = OpenMaya.MTypeId(0x00334)
 
-##########################################################
-# Plug-in 
-##########################################################
+
+#--------------------------------------------------------------------------------------------------
+# Plug-in.
+#--------------------------------------------------------------------------------------------------
+
 class appleseed_material(OpenMayaMPx.MPxNode):
-    # Define the static variables to which we will assign the node's attributes
-    # in nodeInitializer() defined below.
+    # Define the static variables to which we will assign the node's attributes in nodeInitializer() defined below.
     surfacePointAttribute = OpenMaya.MObject()   
     outColorAttribute = OpenMaya.MObject()
     hardwareColorAttribute = OpenMaya.MObject()
-    
     render_layerAttribute = OpenMaya.MObject()
     BSDF_frontAttribute = OpenMaya.MObject()
     EDF_frontAttribute = OpenMaya.MObject()
@@ -49,20 +48,11 @@ class appleseed_material(OpenMayaMPx.MPxNode):
     alpha_mapAttribute = OpenMaya.MObject()
     normal_map_frontAttribute = OpenMaya.MObject()
 
-
-
     def __init__(self):
-        ''' Constructor. '''
         OpenMayaMPx.MPxNode.__init__(self)
- 
-##########################################################
-# Plug-in compute.
-##########################################################
 
     def compute(self, pPlug, pDataBlock):
-
-        if (( pPlug == appleseed_material.outColorAttribute ) or ( pPlug == appleseed_material.hardwareColorAttribute )):
-            
+        if pPlug == appleseed_material.outColorAttribute or pPlug == appleseed_material.hardwareColorAttribute:
             # Get the data handles corresponding to your attributes among the values in the data block.
             surfacePointDataHandle = pDataBlock.inputValue( appleseed_material.surfacePointAttribute )
             BSDF_frontDataHandle = pDataBlock.inputValue( appleseed_material.BSDF_frontAttribute )
@@ -71,7 +61,7 @@ class appleseed_material(OpenMayaMPx.MPxNode):
             # Obtain the (x,y,z) location of the currently rendered point in camera coordinates.
             surfacePoint = surfacePointDataHandle.asFloatVector()
             
-            # Get the BSDF_front and hardware Color values.
+            # Get the BSDF_front and hardware color values.
             BSDF_frontValue = BSDF_frontDataHandle.asFloatVector()
             hardwareValue = hardwareColorDataHandle.asFloatVector()
 
@@ -91,22 +81,18 @@ class appleseed_material(OpenMayaMPx.MPxNode):
             hardwareColorDataHandle.setMFloatVector( hardwareColor )
             hardwareColorDataHandle.setClean()
 
-            # cmds.setAttr(+'.hardwareColor', 1,0,0)
-
         else:
             return OpenMaya.kUnknownParameter
 
 
-
-##########################################################
+#--------------------------------------------------------------------------------------------------
 # Plug-in initialization.
-##########################################################
-def nodeCreator():
+#--------------------------------------------------------------------------------------------------
 
+def nodeCreator():
     return OpenMayaMPx.asMPxPtr( appleseed_material() )
 
 def nodeInitializer():
-
     # Create a numeric attribute function set, since our attributes will all be defined by numeric types.
     numericAttributeFn = OpenMaya.MFnNumericAttribute()
     
@@ -143,25 +129,25 @@ def nodeInitializer():
     # BSDF_front Attribute
     appleseed_material.BSDF_frontAttribute = numericAttributeFn.createColor( 'BSDF_front_color', 'BSDF_front' )
     numericAttributeFn.setStorable( True )
-    numericAttributeFn.setDefault( 0.0,0.0,0.0 )
+    numericAttributeFn.setDefault(0.0, 0.0, 0.0)
     appleseed_material.addAttribute( appleseed_material.BSDF_frontAttribute )
     
     # EDF_front Attribute
     appleseed_material.EDF_frontAttribute = numericAttributeFn.createColor( 'EDF_front_color', 'EDF_front' )
     numericAttributeFn.setStorable( True )
-    numericAttributeFn.setDefault( 0.0,0.0,0.0 )
+    numericAttributeFn.setDefault(0.0, 0.0, 0.0)
     appleseed_material.addAttribute( appleseed_material.EDF_frontAttribute )
     
     # surface_shader_front Attribute
     appleseed_material.surface_shader_frontAttribute = numericAttributeFn.createColor( 'surface_shader_front_color', 'surface_shader_front' )
     numericAttributeFn.setStorable( True )
-    numericAttributeFn.setDefault( 0.0,0.0,0.0 )
+    numericAttributeFn.setDefault(0.0, 0.0, 0.0)
     appleseed_material.addAttribute( appleseed_material.surface_shader_frontAttribute )
     
     # displacement_map_front Attribute
     appleseed_material.displacement_map_frontAttribute = numericAttributeFn.createColor( 'displacement_map_front_color', 'displacement_map_front' )
     numericAttributeFn.setStorable( True )
-    numericAttributeFn.setDefault( 0.0,0.0,0.0 )
+    numericAttributeFn.setDefault(0.0, 0.0, 0.0)
     appleseed_material.addAttribute( appleseed_material.displacement_map_frontAttribute )
 
     # back ***************************
@@ -174,25 +160,25 @@ def nodeInitializer():
     # BSDF_back Attribute
     appleseed_material.BSDF_backAttribute = numericAttributeFn.createColor( 'BSDF_back_color', 'BSDF_back' )
     numericAttributeFn.setStorable( True )
-    numericAttributeFn.setDefault( 0.0,0.0,0.0 )
+    numericAttributeFn.setDefault(0.0, 0.0, 0.0)
     appleseed_material.addAttribute( appleseed_material.BSDF_backAttribute )
     
     # EDF_back Attribute
     appleseed_material.EDF_backAttribute = numericAttributeFn.createColor( 'EDF_back_color', 'EDF_back' )
     numericAttributeFn.setStorable( True )
-    numericAttributeFn.setDefault( 0.0,0.0,0.0 )
+    numericAttributeFn.setDefault(0.0, 0.0, 0.0)
     appleseed_material.addAttribute( appleseed_material.EDF_backAttribute )
     
     # surface_shader_back Attribute
     appleseed_material.surface_shader_backAttribute = numericAttributeFn.createColor( 'surface_shader_back_color', 'surface_shader_back' )
     numericAttributeFn.setStorable( True )
-    numericAttributeFn.setDefault( 0.0,0.0,0.0 )
+    numericAttributeFn.setDefault(0.0, 0.0, 0.0)
     appleseed_material.addAttribute( appleseed_material.surface_shader_backAttribute )
     
     # displacement_map_back Attribute
     appleseed_material.displacement_map_backAttribute = numericAttributeFn.createColor( 'displacement_map_back_color', 'displacement_map_back' )
     numericAttributeFn.setStorable( True )
-    numericAttributeFn.setDefault( 0.0,0.0,0.0 )
+    numericAttributeFn.setDefault(0.0, 0.0, 0.0)
     appleseed_material.addAttribute( appleseed_material.displacement_map_backAttribute )
 
     # displacement mode
@@ -219,7 +205,7 @@ def nodeInitializer():
     # alpha_map Attribute
     appleseed_material.alpha_mapAttribute = numericAttributeFn.createColor( 'alpha_map_color', 'alpha_map' )
     numericAttributeFn.setStorable( True )
-    numericAttributeFn.setDefault( 0.0,0.0,0.0 )
+    numericAttributeFn.setDefault(0.0, 0.0, 0.0)
     appleseed_material.addAttribute( appleseed_material.alpha_mapAttribute )
 
     # hardware Color Attribute
@@ -257,7 +243,6 @@ def nodeInitializer():
     appleseed_material.attributeAffects( appleseed_material.hardwareColInAttribute, appleseed_material.outColorAttribute )
 
 def initializePlugin( mobject ):
-    ''' Initializes the plug-in. '''
     mplugin = OpenMayaMPx.MFnPlugin( mobject )
     try:
         mplugin.registerNode( kPluginNodeName, kPluginNodeId, nodeCreator, 
@@ -267,11 +252,9 @@ def initializePlugin( mobject ):
         raise
 
 def uninitializePlugin( mobject ):
-    ''' Unitializes the plug-in. '''
     mplugin = OpenMayaMPx.MFnPlugin( mobject )
     try:
         mplugin.deregisterNode( kPluginNodeId )
     except:
         sys.stderr.write( "Failed to deregister node: " + kPluginNodeName )
         raise
-
