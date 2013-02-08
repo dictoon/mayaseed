@@ -534,49 +534,47 @@ def convert_phong_blinn_material(material):
     specular_color_connection = get_connected_node(material + '.specularColor')
     transparency_connection = get_connected_node(material + '.transparency')
     # bump_connection = get_connected_node(material + '.bumpMapping')
-
-    bsdf = create_shading_node('ashikhmin_brdf')
-    cmds.connectAttr(bsdf + '.outColor', new_material_node + '.BSDF_front_color')
-
-    # edf = create_shading_node('diffuse_edf')
-    # cmds.connectAttr(edf + '.outColor', new_material_node + '.EDF_color')
-
+    
     surface_shader = create_shading_node('physical_surface_shader')
     cmds.connectAttr(surface_shader + '.outColor', new_material_node + '.surface_shader_front_color')
 
-    # diffuse
-    color_value = cmds.getAttr(material + '.color')[0]
-    cmds.setAttr(bsdf + '.diffuse_reflectance', color_value[0], color_value[1], color_value[2], type='float3')
+    mix_brdf = create_shading_node('bsdf_mix')
+    cmds.setAttr(mix_brdf + '.weight0', 1.0, 1.0, 1.0, type='float3')       # diffuse BRDF
+    cmds.setAttr(mix_brdf + '.weight1', 0.2, 0.2, 0.2, type='float3')       # glossy BRDF
+    cmds.connectAttr(mix_brdf + '.outColor', new_material_node + '.BSDF_front_color')
+
+    # diffuse component
+    diffuse_brdf = create_shading_node('lambertian_brdf')
+    diffuse_color = cmds.getAttr(material + '.color')[0]
+    diffuse_scale = cmds.getAttr(material + '.diffuse')
+    cmds.setAttr(diffuse_brdf + '.reflectance', diffuse_color[0] * diffuse_scale, diffuse_color[1] * diffuse_scale, diffuse_color[2] * diffuse_scale, type='float3')
     if color_connection: 
-        info("connecting {0}.outColor to {1}.diffuse_reflectance".format(color_connection, bsdf))
-        cmds.connectAttr(color_connection + '.outColor', bsdf + '.diffuse_reflectance')
+        info("connecting {0}.outColor to {1}.reflectance".format(color_connection, diffuse_brdf))
+        cmds.connectAttr(color_connection + '.outColor', diffuse_brdf + '.reflectance')
+    cmds.connectAttr(diffuse_brdf + '.outColor', mix_brdf + '.bsdf0')
 
-    # glossy
-    color_value = cmds.getAttr(material + '.specularColor')[0]
-    cmds.setAttr(bsdf + '.glossy_reflectance', color_value[0], color_value[1], color_value[2], type='float3')
+    # glossy component
+    glossy_brdf = create_shading_node('microfacet_brdf')
+    #cmds.setAttr(glossy_brdf + '.mdf', 'blinn', type='string')
+    material_type = cmds.nodeType(material)
+    if material_type == 'phong':
+        mdf_param = cmds.getAttr(material + '.cosinePower') * 1.3
+    else:
+        mdf_param = 10.0
+    cmds.setAttr(glossy_brdf + '.mdf_parameter', mdf_param, mdf_param, mdf_param, type='float3')
+    specular_color = cmds.getAttr(material + '.specularColor')[0]
+    cmds.setAttr(glossy_brdf + '.reflectance', specular_color[0], specular_color[1], specular_color[2], type='float3')
     if specular_color_connection:
-        info("connecting {0}.outColor to {1}.glossy_reflectance".format(specular_color_connection, bsdf))
-        cmds.connectAttr(specular_color_connection + '.outColor', bsdf + '.glossy_reflectance')
+        info("connecting {0}.outColor to {1}.reflectance".format(specular_color_connection, glossy_brdf))
+        cmds.connectAttr(specular_color_connection + '.outColor', glossy_brdf + '.reflectance')
+    cmds.connectAttr(glossy_brdf + '.outColor', mix_brdf + '.bsdf1')
 
-    # transparency
-    color_value = cmds.getAttr(material + '.transparency')[0]
-    cmds.setAttr(new_material_node + '.alpha_map_color', color_value[0], color_value[1], color_value[2], type='float3')
+    # alpha mapping
+    transparency_color = cmds.getAttr(material + '.transparency')[0]
+    cmds.setAttr(new_material_node + '.alpha_map_color', transparency_color[0], transparency_color[1], transparency_color[2], type='float3')
     if transparency_connection:
         info("connecting {0}.outColor to {1}.alpha_map_color".format(transparency_connection, new_material_node))
         cmds.connectAttr(transparency_connection + '.outColor', new_material_node + '.alpha_map_color')
-
-    # shininess
-    material_type = cmds.nodeType(material)
-    if material_type == 'phong':
-        shininess = cmds.getAttr(material + '.cosinePower')
-    elif material_type == 'blinn':
-        # 0..1 -> 100..0
-        shininess = 100.0 * (1.0 - cmds.getAttr(material + '.eccentricity'))
-    else:
-        shininess = 0.0
-    shininess = max(shininess, 0.0)
-    cmds.setAttr(bsdf + '.shininess_u', shininess, shininess, shininess, type='float3')
-    cmds.setAttr(bsdf + '.shininess_v', shininess, shininess, shininess, type='float3')
 
     material_shading_group = cmds.listConnections(material, type='shadingEngine')
     if material_shading_group != None:
