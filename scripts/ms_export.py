@@ -2295,16 +2295,17 @@ def build_as_shading_nodes(params, root_assembly, current_maya_shading_node):
             current_shading_node.parameters.append(new_shading_node_parameter)
 
         elif current_maya_shading_node.attributes[attrib_key].__class__.__name__ == 'MFile':
+            texture_entity = get_from_list(root_assembly.textures, current_maya_shading_node.attributes[attrib_key].safe_name)
 
-            new_texture_entity = get_from_list(root_assembly.textures, current_maya_shading_node.attributes[attrib_key].safe_name)
+            if texture_entity is None:
+                texture_entity, texture_instance = m_file_to_as_texture(params, current_maya_shading_node.attributes[attrib_key])
+                root_assembly.textures.append(texture_entity)
+                root_assembly.texture_instances.append(texture_instance)
+            else:
+                texture_instance = texture_entity.instantiate()
+                root_assembly.texture_instances.append(texture_instance)
 
-            if new_texture_entity is None:
-                new_texture_entity, new_texture_instance = m_file_to_as_texture(params, current_maya_shading_node.attributes[attrib_key])
-
-                root_assembly.textures.append(new_texture_entity)
-                root_assembly.texture_instances.append(new_texture_instance)
-
-            new_shading_node_parameter = AsParameter(attrib_key, new_texture_instance.name)
+            new_shading_node_parameter = AsParameter(attrib_key, texture_instance.name)
             current_shading_node.parameters.append(new_shading_node_parameter)
 
         elif current_maya_shading_node.attributes[attrib_key].__class__.__name__ == 'MColorConnection':
