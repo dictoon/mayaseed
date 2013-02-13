@@ -2033,7 +2033,7 @@ def construct_transform_descendents(params, root_assembly, parent_assembly, matr
                         mesh_instance.material_assignments.append(AsObjectInstanceMaterialAssignment('0', 'back', 'as_default_material'))
 
             for maya_generic_material in mesh.generic_materials:
-                as_material = convert_maya_generic_material(root_assembly, maya_generic_material)
+                as_material = convert_maya_generic_material(params, root_assembly, maya_generic_material)
                 
                 mesh_instance.material_assignments.append(AsObjectInstanceMaterialAssignment(maya_generic_material.safe_name, 'front', as_material.name))
                 mesh_instance.material_assignments.append(AsObjectInstanceMaterialAssignment(maya_generic_material.safe_name, 'back', as_material.name))
@@ -2045,7 +2045,7 @@ def construct_transform_descendents(params, root_assembly, parent_assembly, matr
 # convert_maya_generic_material function.
 #--------------------------------------------------------------------------------------------------
 
-def convert_maya_generic_material(root_assembly, generic_material):
+def convert_maya_generic_material(params, root_assembly, generic_material):
 
     # check if material already exits in the root assembly
     new_material = get_from_list(root_assembly.materials, generic_material.safe_name)
