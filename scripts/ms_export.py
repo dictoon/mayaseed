@@ -574,7 +574,6 @@ class MFile():
             self.name = maya_file_node
             self.safe_name = ms_commands.legalize_name(self.name)
             self.image_name = cmds.getAttr(self.name + '.fileTextureName')
-            self.resolved_image_name = ms_commands.get_file_texture_name(self.name)
             self.is_animated = cmds.getAttr(self.name + '.useFrameExtension')
             self.alpha_is_luminance = cmds.getAttr(self.name + '.alphaIsLuminance')
             self.autodetect_alpha = params['autodetect_alpha']
