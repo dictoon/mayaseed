@@ -179,6 +179,10 @@ def get_maya_params(render_settings_node):
     params['pt_ibl_bsdf_samples'] = cmds.getAttr(render_settings_node + '.pt_ibl_bsdf_samples')
     params['pt_ibl_env_samples'] = cmds.getAttr(render_settings_node + '.pt_ibl_env_samples')
     params['pt_max_path_length'] = cmds.getAttr(render_settings_node + '.pt_max_path_length')
+
+    print '??1', params['pt_max_path_length']
+
+
     params['pt_next_event_estimation'] = cmds.getAttr(render_settings_node + '.pt_next_event_estimation')
     params['pt_rr_min_path_length'] = cmds.getAttr(render_settings_node + '.pt_rr_min_path_length')
 
