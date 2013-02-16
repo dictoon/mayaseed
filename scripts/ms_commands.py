@@ -216,10 +216,10 @@ def convert_texture_to_exr(file_path, export_root, texture_dir, overwrite=True, 
 
 
 #--------------------------------------------------------------------------------------------------
-# Check if an object is exportable.
+# Check if an object is visible for the current frame.
 #--------------------------------------------------------------------------------------------------
 
-def shape_is_exportable(node_name):
+def shape_is_visible(node_name):
 
     # check if the node exists
     if not cmds.objExists(node_name):
