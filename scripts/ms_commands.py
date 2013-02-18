@@ -247,6 +247,19 @@ def shape_is_visible(node_name):
 
 
 #--------------------------------------------------------------------------------------------------
+# check if a transform or any of its parents are set as visible
+#--------------------------------------------------------------------------------------------------
+
+def visible_in_heirarchy(parent):
+    parents = cmds.listRelatives(parent, ap=True)
+    if parents is not None:
+        if cmds.getAttr(parents[0] + '.visibility') == False:
+            return False
+        return visible_in_heirarchy(parents)
+    
+    return True
+
+#--------------------------------------------------------------------------------------------------
 # Check if an object has a shader connected.
 #--------------------------------------------------------------------------------------------------
 
