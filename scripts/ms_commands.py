@@ -260,6 +260,25 @@ def visible_in_heirarchy(parent):
     return True
 
 #--------------------------------------------------------------------------------------------------
+# Check keys on a given attribute are consistant.
+#--------------------------------------------------------------------------------------------------
+
+def keys_are_constant(attr, value=None):
+
+    keys = cmds.keyframe(attr, q=True, vc=True, absolute=True)
+
+    if value == None:
+        value = keys[0]
+
+    for key in keys:
+        print key
+        if key != value:
+            return False
+    
+    return True
+
+
+#--------------------------------------------------------------------------------------------------
 # Check if an object has a shader connected.
 #--------------------------------------------------------------------------------------------------
 
