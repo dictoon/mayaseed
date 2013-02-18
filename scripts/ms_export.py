@@ -2373,7 +2373,10 @@ def export_container(render_settings_node):
 
     export_finish_time = time.time()
 
-    ms_commands.info('Export finished in %.2f seconds, see the script editor for details.' % (export_finish_time - export_start_time))
+    completed_message = 'Export completed in %.2f seconds, see the script editor for details.' % (export_finish_time - export_start_time)
+
+    ms_commands.info(completed_message)
+    cmds.confirmDialog(message=completed_message, button='ok')
 
 
 #--------------------------------------------------------------------------------------------------
