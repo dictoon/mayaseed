@@ -530,8 +530,16 @@ def convert_selected_materials():
     materials = cmds.ls(sl=True, mat=True)
 
     if not materials:
-        warning('no materials selected') 
-        return
+        selection = cmds.ls(sl=True, tr=True)
+        if selection is None:
+            error('No valid selection')
+            return
+        materials = []
+        shape_node_connections = cmds.listRelatives(selection[0], shapes=True)
+        if shape_node_connections is not None:
+            materials.append(has_shader_connected(shape_node_connections[0]))
+
+    print materials
 
     for material in materials:
         convert_material(material)
