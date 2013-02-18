@@ -1660,7 +1660,10 @@ def m_file_to_as_texture(params, m_file, postfix='', file_number=0):
 
     as_texture = AsTexture()
     as_texture.name = m_file.safe_name + postfix
-    as_texture.file_name = AsParameter('filename', m_file.image_file_names[file_number])
+    if m_file.is_animated:
+        as_texture.file_name = AsParameter('filename', m_file.image_file_names[file_number])
+    else:
+        as_texture.file_name = AsParameter('filename', m_file.image_file_names[0])
 
     as_texture_instance = as_texture.instantiate()
     if m_file.autodetect_alpha:
