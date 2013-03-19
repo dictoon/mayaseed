@@ -260,7 +260,7 @@ def visible_in_hierarchy(parent):
     return True
 
 #--------------------------------------------------------------------------------------------------
-# Check keys on a given attribute are consistant.
+# Check keys on a given attribute are constant.
 #--------------------------------------------------------------------------------------------------
 
 def keys_are_constant(attr, value=None):
