@@ -487,7 +487,7 @@ class MMesh(MTransformChild):
 
         # if the shape current transform is visible export
         # otherwise skip export and just append a null
-        if ms_commands.visible_in_heirarchy(self.transform.name):
+        if ms_commands.visible_in_hierarchy(self.transform.name):
 
             # set file path as relative value
             self.mesh_file_names.append(output_file_path)
