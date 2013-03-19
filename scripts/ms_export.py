@@ -2170,7 +2170,7 @@ def convert_maya_ms_material_network(params, root_assembly, ms_material, non_mb_
                 front_material.surface_shader = AsParameter('surface_shader', new_surface_shader.name)
             if ms_material.displacement_map_front is not None:
 
-                texture, texture_instance = m_file_to_as_texture(params, ms_material.displacement_map_frontnon_mb_sample_number, '_displacement_back', non_mb_sample_number)
+                texture, texture_instance = m_file_to_as_texture(params, ms_material.displacement_map_front, '_displacement_back', non_mb_sample_number)
                 existing_texture = get_from_list(root_assembly.textures, texture.name)
                 existing_texture_instance = get_from_list(root_assembly.texture_instances, texture_instance.name)
 
