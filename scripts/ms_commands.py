@@ -265,7 +265,7 @@ def visible_in_hierarchy(parent):
 
 def keys_are_constant(attr, value=None):
 
-    keys = cmds.keyframe(attr, q=True, vc=True, absolute=True)
+    keys = cmds.keyframe(attr, q=True, valueChange=True, absolute=True)
 
     if value == None:
         value = keys[0]
