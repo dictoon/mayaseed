@@ -538,7 +538,6 @@ class MCamera(MTransformChild):
         # transform even though it's not a 'correct' representation of the Maya scene.
 
         self.world_space_matrices = []
-
         self.dof = cmds.getAttr(self.name + '.depthOfField')
         self.focal_distance_values = []
         self.focus_region_scale = cmds.getAttr(self.name + '.focusRegionScale')

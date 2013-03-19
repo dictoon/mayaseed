@@ -271,7 +271,6 @@ def keys_are_constant(attr, value=None):
         value = keys[0]
 
     for key in keys:
-        print key
         if key != value:
             return False
     
@@ -538,8 +537,6 @@ def convert_selected_materials():
         shape_node_connections = cmds.listRelatives(selection[0], shapes=True)
         if shape_node_connections is not None:
             materials.append(has_shader_connected(shape_node_connections[0]))
-
-    print materials
 
     for material in materials:
         convert_material(material)
