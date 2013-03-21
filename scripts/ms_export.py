@@ -2310,12 +2310,11 @@ def build_as_shading_nodes(params, root_assembly, current_maya_shading_node, non
 
                 root_assembly.textures.append(texture_entity)
                 root_assembly.texture_instances.append(texture_instance)
-
             else:
                 texture_instance = texture_entity.instantiate()
+                root_assembly.texture_instances.append(texture_instance)
             
             new_shading_node_parameter = AsParameter(attrib_key, texture_instance.name)
-            
             current_shading_node.parameters.append(new_shading_node_parameter)
 
         elif current_maya_shading_node.attributes[attrib_key].__class__.__name__ == 'MColorConnection':
