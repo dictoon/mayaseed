@@ -216,10 +216,10 @@ def convert_texture_to_exr(file_path, export_root, texture_dir, overwrite=True, 
 
 
 #--------------------------------------------------------------------------------------------------
-# Check if an object is exportable.
+# Check if an object is visible for the current frame.
 #--------------------------------------------------------------------------------------------------
 
-def shape_is_exportable(node_name):
+def transform_is_visible(node_name):
 
     # check if the node exists
     if not cmds.objExists(node_name):
@@ -243,6 +243,37 @@ def shape_is_exportable(node_name):
         if not cmds.getAttr(node_name + '.overrideVisibility'):
             return False
 
+    return True
+
+
+#--------------------------------------------------------------------------------------------------
+# check if a transform or any of its parents are set as visible
+#--------------------------------------------------------------------------------------------------
+
+def visible_in_hierarchy(parent):
+    parents = cmds.listRelatives(parent, ap=True)
+    if parents is not None:
+        if cmds.getAttr(parents[0] + '.visibility') == False:
+            return False
+        return visible_in_hierarchy(parents)
+    
+    return True
+
+#--------------------------------------------------------------------------------------------------
+# Check keys on a given attribute are constant.
+#--------------------------------------------------------------------------------------------------
+
+def keys_are_constant(attr, value=None):
+
+    keys = cmds.keyframe(attr, q=True, valueChange=True, absolute=True)
+
+    if value == None:
+        value = keys[0]
+
+    for key in keys:
+        if key != value:
+            return False
+    
     return True
 
 
@@ -498,8 +529,14 @@ def convert_selected_materials():
     materials = cmds.ls(sl=True, mat=True)
 
     if not materials:
-        warning('no materials selected') 
-        return
+        selection = cmds.ls(sl=True, tr=True)
+        if selection is None:
+            error('No valid selection')
+            return
+        materials = []
+        shape_node_connections = cmds.listRelatives(selection[0], shapes=True)
+        if shape_node_connections is not None:
+            materials.append(has_shader_connected(shape_node_connections[0]))
 
     for material in materials:
         convert_material(material)

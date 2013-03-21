@@ -59,22 +59,6 @@ global proc loadPopup(string $attr) {
 
 
 //--------------------------------------------------------------------------------------------------
-// Export button.
-//--------------------------------------------------------------------------------------------------
-
-global proc AEexportButton(string $attr) {
-    string $nodeNameTokens[];
-    tokenize $attr "." $nodeNameTokens;
-    string $export_command = "python(\"import ms_export\\nms_export.export(\\\"" + $nodeNameTokens[0] + "\\\")\")";
-    print $export_command;
-    button -label "Export" -width 200 -height 30 -bgc 0 0.6 0.8 -ebg false -c $export_command;
-}
-
-global proc AE_edit_export_button(string $attr) {
-}
-
-
-//--------------------------------------------------------------------------------------------------
 // Environment picker.
 //--------------------------------------------------------------------------------------------------
 
@@ -202,9 +186,6 @@ global proc setCameraConnection(string $nodeName) {
 
 global proc AEms_renderSettingsTemplate(string $nodeName) {
     editorTemplate -beginNoOptimize;
-
-    editorTemplate -callCustom "AEexportButton" "AE_edit_export_button" "export";
-
     editorTemplate -beginScrollLayout;
         editorTemplate -beginLayout "Export Settings" -collapse false;
             editorTemplate -addControl "output_directory";
