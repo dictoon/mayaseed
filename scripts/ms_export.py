@@ -2384,7 +2384,7 @@ def export_container(render_settings_node):
 
 def export(render_settings_node):
 
-    """ This function is a wrapper for export_container so that we can profile the export easily """
+    """ This function is a wrapper for export_container so that we can profile the export easily"""
 
     if cmds.getAttr(render_settings_node + '.profile_export'):
         import cProfile
