@@ -217,6 +217,7 @@ global proc AEms_renderSettingsTemplate(string $nodeName) {
             editorTemplate -addControl "frame_width";
             editorTemplate -addControl "frame_height";
             editorTemplate -addControl "color_space";
+            editorTemplate -addControl "export_straight_alpha";
         editorTemplate -endLayout;
 
         editorTemplate -beginLayout "Environment Settings" -collapse true;

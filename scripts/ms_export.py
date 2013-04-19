@@ -153,6 +153,7 @@ def get_maya_params(render_settings_node):
 
     params['output_res_width'] = cmds.getAttr(render_settings_node + '.width')
     params['output_res_height'] = cmds.getAttr(render_settings_node + '.height')
+    params['export_straight_alpha'] = cmds.getAttr(render_settings_node + '.export_straight_alpha')
 
     # Custom final configuration.
 
@@ -1471,12 +1472,15 @@ class AsFrame():
         self.camera = None
         self.color_space = AsParameter('color_space', 'linear_rgb')
         self.resolution = None
+        self.premultiplied_alpha = AsParameter('premultiplied_alpha', 'true')
+
 
     def emit_xml(self, doc):
         doc.start_element('frame name="%s"' % self.name)
         self.camera.emit_xml(doc)
         self.color_space.emit_xml(doc)
         self.resolution.emit_xml(doc)
+        self.premultiplied_alpha.emit_xml(doc)
         doc.end_element('frame')
 
 
@@ -1742,6 +1746,9 @@ def translate_maya_scene(params, maya_scene, maya_environment):
         # note: frame camera is set when the camera is retrieved for the scene element
         as_frame.resolution = AsParameter('resolution', '%i %i' % (params['output_res_width'], params['output_res_height']))
         as_frame.color_space.value = params['output_color_space']
+
+        if params['export_straight_alpha']:
+            as_frame.premultiplied_alpha.value = 'false'
 
         # create configurations object
         as_configurations = AsConfigurations()
