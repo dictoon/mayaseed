@@ -181,6 +181,11 @@ def ms_renderSettings_nodeInitializer():
     height_AttrInt.setHidden(False)
     height_AttrInt.setKeyable(True)
 
+    # export straight
+    export_straight_alpha_nAttr = OpenMaya.MFnNumericAttribute()
+    ms_renderSettings.export_straight_alpha = export_straight_alpha_nAttr.create("export_straight_alpha", "export_straight", OpenMaya.MFnNumericData.kBoolean, True)
+
+
     # custom final config
     export_custom_final_config_nAttr = OpenMaya.MFnNumericAttribute()
     ms_renderSettings.export_custom_final_config = export_custom_final_config_nAttr.create("export_custom_final_config", "export_final", OpenMaya.MFnNumericData.kBoolean, True)  
@@ -375,6 +380,7 @@ def ms_renderSettings_nodeInitializer():
     ms_renderSettings.addAttribute(ms_renderSettings.color_space)
     ms_renderSettings.addAttribute(ms_renderSettings.width)
     ms_renderSettings.addAttribute(ms_renderSettings.height)
+    ms_renderSettings.addAttribute(ms_renderSettings.export_straight_alpha)
 
     ms_renderSettings.addAttribute(ms_renderSettings.export_custom_final_config)
 
