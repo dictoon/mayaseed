@@ -627,6 +627,7 @@ def convert_surface_shader_material(material):
     out_color_connection = get_connected_node(material + '.outColor')
     out_transparency_connection = get_connected_node(material + '.outTransparency')
 
+    # surface shader
     surface_shader = create_shading_node('constant_surface_shader')
     cmds.connectAttr(surface_shader + '.outColor', new_material_node + '.surface_shader_front_color')
 
@@ -637,7 +638,7 @@ def convert_surface_shader_material(material):
         info("connecting {0}.outColor to {1}.color".format(out_color_connection, surface_shader))
         cmds.connectAttr(out_color_connection + '.outColor', surface_shader + '.color')
 
-    # transparency
+    # alpha mapping
     color_value = cmds.getAttr(material + '.outTransparency')[0]
     cmds.setAttr(new_material_node + '.alpha_map_color', color_value[0], color_value[1], color_value[2], type='float3')
     if out_transparency_connection:
@@ -659,20 +660,21 @@ def convert_lambert_material(material):
     color_connection = get_connected_node(material + '.color')
     transparency_connection = get_connected_node(material + '.transparency')
 
+    # BRDF and surface shader
     brdf = create_shading_node('lambertian_brdf')
     surface_shader = create_shading_node('physical_surface_shader')
 
     cmds.connectAttr(brdf + '.outColor', new_material_node + '.BSDF_front_color')
     cmds.connectAttr(surface_shader + '.outColor', new_material_node + '.surface_shader_front_color')
 
-    # color
+    # reflectance
     color_value = cmds.getAttr(material + '.color')[0]
     cmds.setAttr(brdf + '.reflectance', color_value[0], color_value[1], color_value[2], type='float3')
     if color_connection: 
         info("connecting {0}.outColor to {1}.reflectance".format(color_connection, surface_shader))
         cmds.connectAttr(color_connection + '.outColor', brdf + '.reflectance')
 
-    # transparency
+    # alpha mapping
     color_value = cmds.getAttr(material + '.transparency')[0]
     cmds.setAttr(new_material_node + '.alpha_map_color', color_value[0], color_value[1], color_value[2], type='float3')
     if transparency_connection:
