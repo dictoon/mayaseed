@@ -950,10 +950,9 @@ class AsColor():
     def __init__(self):
         self.name = None
         self.RGB_color = [0.5, 0.5, 0.5]
-        self.alpha = 1
+        self.alpha = 1.0
         self.multiplier = AsParameter('multiplier', '1.0')
         self.color_space = AsParameter('color_space', 'srgb')
-        self.wavelength_range = '400.0, 700.0'
 
     def emit_xml(self, doc):
         doc.start_element('color name="%s"' % self.name)
@@ -963,9 +962,11 @@ class AsColor():
         doc.start_element('values')
         doc.append_line('%.6f %.6f %.6f' % (self.RGB_color[0], self.RGB_color[1], self.RGB_color[2]))
         doc.end_element('values')
+
         doc.start_element('alpha')
         doc.append_line('%.6f' % self.alpha)
         doc.end_element('alpha')
+
         doc.end_element('color')
 
 
@@ -1462,7 +1463,6 @@ class AsFrame():
         self.color_space = AsParameter('color_space', 'linear_rgb')
         self.resolution = None
         self.premultiplied_alpha = AsParameter('premultiplied_alpha', 'true')
-
 
     def emit_xml(self, doc):
         doc.start_element('frame name="%s"' % self.name)
