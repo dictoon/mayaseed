@@ -254,8 +254,8 @@ def get_maya_scene(params):
     geo_dir = '_geometry'
     ms_commands.create_dir(os.path.join(params['output_directory'], geo_dir))
 
-    environment = None
     # get environment
+    environment = None
     if params['environment']:
         environment = MMsEnvironment(params, params['environment'])
         environment.add_environment_sample(params['output_directory'], texture_dir, 0)
@@ -265,28 +265,23 @@ def get_maya_scene(params):
     frame_sample_number = 1
 
     while current_frame <= end_frame:
-        cmds.currentTime(current_frame)
-
         ms_commands.info("Adding motion samples, frame {0}...".format(current_frame))
 
-        # if this is the first sample of a frame set initial_sample True
-        if frame_sample_number == 1:
-            initial_sample = True
-        else:
-            initial_sample = False
+        cmds.currentTime(current_frame)
+
+        # determine if this is the first sample of a frame
+        initial_sample = (frame_sample_number == 1)
 
         for transform in maya_root_transforms:
             add_scene_sample(transform, params['export_transformation_blur'], params['export_deformation_blur'], params['export_camera_blur'], current_frame, start_frame, frame_sample_number, initial_sample, params['output_directory'], geo_dir, texture_dir)
 
-
         frame_sample_number += 1
-
         if frame_sample_number == params['motion_samples']:
             frame_sample_number = 1
 
         current_frame += sample_increment
 
-        # add code to export textures here
+        # TODO: add code to export textures here
 
     # return to pre-export time
     cmds.currentTime(start_time)
@@ -296,10 +291,8 @@ def get_maya_scene(params):
 
 #--------------------------------------------------------------------------------------------------
 # add_scene_sample function.
+# TODO: needs mechanism to sample frames for camera and transforms on whole frame numbers for non mb scenes
 #--------------------------------------------------------------------------------------------------
-
-
-# needs mechanism to sample frames for camera and transforms on whole frame numbers for non mb scenes
 
 def add_scene_sample(m_transform, transform_blur, deform_blur, camera_blur, current_frame, start_frame, frame_sample_number, initial_sample, export_root, geo_dir, tex_dir):
 
