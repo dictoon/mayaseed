@@ -476,18 +476,15 @@ class MMesh(MTransformChild):
             for material_name in attached_material_names:
                 if cmds.nodeType(material_name) == 'ms_appleseed_material':
                     self.ms_materials.append(MMsMaterial(self.params, material_name))
-
                 else:
                     self.generic_materials.append(MGenericMaterial(self.params, material_name))
 
-
     def add_deform_sample(self, export_root, geo_dir, time):
-        file_name = '%s_%i_%i.obj' % (self.safe_short_name, self.id, time)
-        output_file_path = os.path.join(geo_dir, file_name)
-
-        # if the shape current transform is visible export
+        # if the shape current transform is visible, export;
         # otherwise skip export and just append a null
         if ms_commands.visible_in_hierarchy(self.transform.name):
+            file_name = '%s_%i_%i.obj' % (self.safe_short_name, self.id, time)
+            output_file_path = os.path.join(geo_dir, file_name)
 
             # set file path as relative value
             self.mesh_file_names.append(output_file_path)
@@ -496,7 +493,6 @@ class MMesh(MTransformChild):
             absolute_file_path = os.path.join(export_root, output_file_path)
             if not os.path.exists(absolute_file_path) or self.params['overwrite_existing_geometry']:
                 self.params['obj_exporter'](self.name, absolute_file_path, overwrite=True)
-
         else:
             self.mesh_file_names.append(None)
 
