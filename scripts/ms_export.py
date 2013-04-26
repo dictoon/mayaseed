@@ -915,9 +915,14 @@ class AsParameter():
         self.name = name
         self.value = value
 
+    def as_normalized_path(self):
+        return AsParameter(self.name, ms_commands.normalize_path(self.value))
+
     def emit_xml(self, doc):
-        if (self.value is not None) and self.value != '':
-            doc.append_parameter(self.name, str(self.value))
+        if self.value is not None:
+            value_string = str(self.value)
+            if len(value_string) > 0:
+                doc.append_parameter(self.name, value_string)
 
 
 #--------------------------------------------------------------------------------------------------
@@ -931,6 +936,12 @@ class AsParameters():
     def __init__(self, name=None):
         self.name = name
         self.parameters = []
+
+    def as_normalized_path(self):
+        result = AsParameters(self.name)
+        for parameter in self.parameters:
+            result.parameters.append(parameter.as_normalized_path())
+        return result
 
     def emit_xml(self, doc):
         doc.start_element('parameters name="%s"' % self.name)
@@ -1023,7 +1034,7 @@ class AsTexture():
     def emit_xml(self, doc):
         doc.start_element('texture name="%s" model="%s"' % (self.name, self.model))
         self.color_space.emit_xml(doc)
-        self.file_name.emit_xml(doc)
+        self.file_name.as_normalized_path().emit_xml(doc)
         doc.end_element('texture')
 
 
@@ -1073,7 +1084,7 @@ class AsObject():
 
     def emit_xml(self, doc):
         doc.start_element('object name="%s" model="%s"' % (self.name, self.model))
-        self.file_names.emit_xml(doc)
+        self.file_names.as_normalized_path().emit_xml(doc)
         doc.end_element('object')
 
 

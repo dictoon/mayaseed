@@ -770,3 +770,11 @@ def matrix_remove_scale(m):
                      0.0, 0.0, 0.0, 1.0]
 
     return matrix_multiply(m, inverse_scale)
+
+
+#--------------------------------------------------------------------------------------------------
+# Normalize a path to the Posix format (using / as directory separator), regardless of the host.
+#--------------------------------------------------------------------------------------------------
+
+def normalize_path(path):
+    return path.replace('\\', '/') if os.name == "nt" else path
