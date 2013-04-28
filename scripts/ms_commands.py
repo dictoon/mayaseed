@@ -179,6 +179,7 @@ def find_path_to_imf_copy():
 
     return None if imf_copy_path is None else os.path.join(imf_copy_path, 'imf_copy')
 
+
 def convert_texture_to_exr(file_path, export_root, texture_dir, overwrite=True, pass_through=False, relative=True):
     relative_path = os.path.join(texture_dir, os.path.splitext(os.path.split(file_path)[1])[0] + '.exr')
     dest_file = os.path.join(export_root, relative_path)
@@ -263,6 +264,7 @@ def visible_in_hierarchy(parent):
         return visible_in_hierarchy(parents)
     
     return True
+
 
 #--------------------------------------------------------------------------------------------------
 # Check keys on a given attribute are constant.
