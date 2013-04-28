@@ -83,7 +83,7 @@ def buildMenu():
 
     # convert materials
     cmds.menuItem(divider=True, parent='ms_menu')
-    cmds.menuItem('menu_convert_maya_materials', subMenu=True, label='Convert Maya materials', to=True, parent='ms_menu')
+    cmds.menuItem('menu_convert_maya_materials', subMenu=True, label='Convert Maya Materials', to=True, parent='ms_menu')
 
     cmds.menuItem(label='Selected Materials', parent='menu_convert_maya_materials', command='import ms_commands\nms_commands.convert_selected_materials()')
     cmds.menuItem(label='All Materials', parent='menu_convert_maya_materials', command='import ms_commands\nms_commands.convert_all_materials()')
