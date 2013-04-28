@@ -328,34 +328,41 @@ def get_entity_defs(xml_file_path, list=False):
     dom = parseString(data)
 
     for entity in dom.getElementsByTagName('entity'):
+        entity_model = entity.getAttribute('model')
+
         # create new dict entry to store the node info
-        nodes[entity.getAttribute('model')] = Node(entity.getAttribute('model'), entity.getAttribute('type'))
+        nodes[entity_model] = Node(entity_model, entity.getAttribute('type'))
 
         for child in entity.childNodes:
-            if child.nodeName =='parameters':
-                # add an attribute and give it a name
-                nodes[entity.getAttribute('model')].attributes[child.getAttribute('name')] = Attribute(child.getAttribute('name'))
+            if child.nodeName != 'parameters':
+                continue
+                
+            # add an attribute and give it a name
+            child_name = child.getAttribute('name')
+            nodes[entity_model].attributes[child_name] = Attribute(child_name)
 
-                # iterate over child nodes and check that they are nodes not text
-                for param in child.childNodes:
-                    if not param.nodeName == '#text': 
-                        # node is a parameter with single value
-                        if param.nodeName == 'parameter':
-                            # get attribute type
-                            if param.getAttribute('name') == 'widget':
-                                nodes[entity.getAttribute('model')].attributes[child.getAttribute('name')].type = param.getAttribute('value')
-                            elif param.getAttribute('name') == 'default':
-                                nodes[entity.getAttribute('model')].attributes[child.getAttribute('name')].default_value = param.getAttribute('value')
-                            elif param.getAttribute('name') == 'label':
-                                nodes[entity.getAttribute('model')].attributes[child.getAttribute('name')].label = param.getAttribute('value')
+            for param in child.childNodes:
+                if param.nodeName == '#text':
+                    continue
 
-                        # node is a parameter with multiple values
-                        elif param.nodeName == 'parameters':
-                            # if the node contains entity types we are interested
-                            if param.getAttribute('name') == 'entity_types':
-                                for node in param.childNodes:
-                                    if node.nodeName == 'parameter':
-                                        nodes[entity.getAttribute('model')].attributes[child.getAttribute('name')].entity_types.append(node.getAttribute('name'))
+                # node is a parameter with single value
+                if param.nodeName == 'parameter':
+                    name = param.getAttribute('name')
+                    value = param.getAttribute('value')
+                    if name == 'widget':
+                        nodes[entity_model].attributes[child_name].type = value
+                    elif name == 'default':
+                        nodes[entity_model].attributes[child_name].default_value = value
+                    elif name == 'label':
+                        nodes[entity_model].attributes[child_name].label = value
+
+                # node is a parameter with multiple values
+                elif param.nodeName == 'parameters':
+                    # if the node contains entity types we are interested
+                    if param.getAttribute('name') == 'entity_types':
+                        for node in param.childNodes:
+                            if node.nodeName == 'parameter':
+                                nodes[entity_model].attributes[child_name].entity_types.append(node.getAttribute('name'))
 
     if list:
         print 'Found the following appleseed nodes:\n'
@@ -415,16 +422,16 @@ def create_shading_node(model, name=None, entity_defs_obj=False):
         if entity_key == model:
             for attr_key in entity_defs[entity_key].attributes.keys():
                 attr = entity_defs[entity_key].attributes[attr_key]
-                if attr.type == 'entity_picker':
+                if attr.type == 'text_box' or attr.type == 'dropdown_list':
+                     cmds.addAttr(shading_node_name, longName=attr_key, dt="string")
+                     cmds.setAttr(shading_node_name + '.' + attr_key, attr.default_value, type="string")
+                elif attr.type == 'entity_picker':
                     # if there is a default value, use it
                     if attr.default_value:
                         default_value = float(attr.default_value)
                         add_color_attr(shading_node_name, attr_key, (default_value, default_value, default_value))
                     else:
                         add_color_attr(shading_node_name, attr_key)
-                elif attr.type == 'text_box':
-                     cmds.addAttr(shading_node_name, longName=attr_key, dt="string")
-                     cmds.setAttr(shading_node_name + '.' + attr_key, attr.default_value, type="string")
             break
 
     return shading_node_name

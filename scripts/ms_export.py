@@ -746,21 +746,20 @@ class MMsMaterial():
     def get_connections(self, attr_name):
         connection = MColorConnection(self.params, attr_name)
 
-        if connection.connected_node is not None:
-            if connection.connected_node_type == 'ms_appleseed_shading_node':
-                shading_node = MMsShadingNode(self.params, connection.connected_node)
-                self.shading_nodes = self.shading_nodes + [shading_node] + shading_node.child_shading_nodes
-                self.colors += shading_node.colors
-                self.textures += shading_node.textures
-                return shading_node
-
-            elif connection.connected_node_type == 'file':
-                texture_node = MFile(self.params, connection.connected_node)
-                self.textures += [texture_node]
-                return texture_node
-
-        else:
+        if connection.connected_node is None:
             return None
+
+        if connection.connected_node_type == 'ms_appleseed_shading_node':
+            shading_node = MMsShadingNode(self.params, connection.connected_node)
+            self.shading_nodes = self.shading_nodes + [shading_node] + shading_node.child_shading_nodes
+            self.colors += shading_node.colors
+            self.textures += shading_node.textures
+            return shading_node
+
+        elif connection.connected_node_type == 'file':
+            texture_node = MFile(self.params, connection.connected_node)
+            self.textures += [texture_node]
+            return texture_node
 
 
 #--------------------------------------------------------------------------------------------------
@@ -849,58 +848,47 @@ class MMsShadingNode():
         self.name = maya_ms_shading_node_name
         self.safe_name = ms_commands.legalize_name(self.name)
 
-        self.type = cmds.getAttr(self.name + '.node_type')    #bsdf, edf etc
-        self.model = cmds.getAttr(self.name + '.node_model')  #lambertian etc
+        self.type = cmds.getAttr(self.name + '.node_type')    # bsdf, edf etc.
+        self.model = cmds.getAttr(self.name + '.node_model')  # lambertian etc.
 
         self.child_shading_nodes = []
         self.attributes = dict()
         self.colors = []
         self.textures = []
 
-        #add the correct attributes based on the entity defs xml
+        # add the correct attributes based on the entity defs xml
         for attribute_key in params['entity_defs'][self.model].attributes.keys():
-            if params['entity_defs'][self.model].attributes[attribute_key].type is not 'dropdown_list':
-                self.attributes[attribute_key] = ''
+            self.attributes[attribute_key] = ''
 
         for attribute_key in self.attributes.keys():
             maya_attribute = self.name + '.' + attribute_key
 
-            # create variable to store the final string value
-            attribute_value = ''
-
             # if the attribute is a color/entity
             if params['entity_defs'][self.model].attributes[attribute_key].type == 'entity_picker':
-
                 color_connection = MColorConnection(self.params, maya_attribute)
 
                 if color_connection.connected_node:
-
                     # if the node is an appleseed shading node
                     if color_connection.connected_node_type == 'ms_appleseed_shading_node':
                         shading_node = MMsShadingNode(self.params, color_connection.connected_node)
-                        attribute_value = shading_node
-                        self.child_shading_nodes = self.child_shading_nodes + [shading_node] + shading_node.child_shading_nodes
+                        self.attributes[attribute_key] = shading_node
+                        self.child_shading_nodes += [shading_node] + shading_node.child_shading_nodes
                         self.colors += shading_node.colors
-                        self.textures = self.textures + shading_node.textures
+                        self.textures += shading_node.textures
 
                     # else if it's a Maya texture node
                     elif color_connection.connected_node_type == 'file':
                         texture_node = MFile(self.params, color_connection.connected_node)
+                        self.attributes[attribute_key] = texture_node
                         self.textures += [texture_node]
-                        attribute_value = texture_node
 
                 # no node is connected, just use the color value
                 else:
-                    attribute_value = color_connection
+                    self.attributes[attribute_key] = color_connection
 
-            elif params['entity_defs'][self.model].attributes[attribute_key].type == 'dropdown_list':
-                pass
-            # the node must be a text entity
+            # the attribute is a string or an item from a drop-down list
             else:
-                attribute_value = str(cmds.getAttr(maya_attribute))
-
-            # add attribute to dict
-            self.attributes[attribute_key] = attribute_value
+                self.attributes[attribute_key] = str(cmds.getAttr(maya_attribute))
 
 
 #--------------------------------------------------------------------------------------------------
@@ -1944,7 +1932,7 @@ def translate_maya_scene(params, maya_scene, maya_environment):
 
 def construct_transform_descendents(params, root_assembly, parent_assembly, matrix_stack, maya_transform, mb_sample_number_list, non_mb_sample_number, camera_blur, transformation_blur, object_blur):
 
-    """ this function recursivley builds an as object hierarchy from a Maya scene """
+    """ this function recursively builds an appleseed object hierarchy from a Maya scene """
 
     current_assembly = parent_assembly
     current_matrix_stack = matrix_stack + [maya_transform.matrices[non_mb_sample_number]]
