@@ -52,25 +52,31 @@ class ms_info_dial():
     def __init__(self):
         if cmds.window('ms_info_window', query=True, exists=True):
             cmds.deleteUI('ms_info_window')
-        window = cmds.window('ms_info_window', title='Mayaseed info', sizeable=False)
+
+        window = cmds.window('ms_info_window', title='About Mayaseed', sizeable=False)
+
         cmds.columnLayout(rs=10, columnOffset=['both', 20], width=600)
+
         cmds.rowLayout(numberOfColumns=2)
         cmds.text('', width=30)
         cmds.image(image=os.path.join(ROOT_DIRECTORY, 'graphics', 'mayaseed.png'))
         cmds.setParent('..')
-        cmds.text('Version: ' + MAYASEED_VERSION)
-        cmds.text(open(os.path.join(ROOT_DIRECTORY, 'scripts', 'about.txt'),'r').read(), width=500, wordWrap=True, al='left')
+
+        cmds.text('Version ' + MAYASEED_VERSION)
+        cmds.text('Mayaseed is a Maya plugin for exporting scenes to the appleseed renderer.')
+        cmds.text('Written by Jonathan Topf.')
+
         cmds.rowLayout(numberOfColumns=4)
-        cmds.button( label='Mayaseed website', command=('import webbrowser\nwebbrowser.open_new_tab("http://www.jonathantopf.com/mayaseed/")'))
-        cmds.button( label='appleseed website', command=('import webbrowser\nwebbrowser.open_new_tab("http://appleseedhq.net/")'))
+        cmds.button(label='Mayaseed website', command=('import webbrowser\nwebbrowser.open_new_tab("' + MAYASEED_URL + '")'))
+        cmds.button(label='appleseed website', command=('import webbrowser\nwebbrowser.open_new_tab("' + APPLESEED_URL + '")'))
         cmds.text('', width=166)
-        cmds.button( label='Close', command=('import maya.cmds as cmds\ncmds.deleteUI(\"' + window + '\", window=True)'), width=100)
+        cmds.button(label='Close', command=('import maya.cmds as cmds\ncmds.deleteUI(\"' + window + '\", window=True)'), width=100)
         cmds.setParent('..')
-        cmds.rowLayout(numberOfColumns=2)
-        cmds.text('', width=478)
-        cmds.text('jt')
-        cmds.setParent('..')
+
         cmds.text('')
+
+        cmds.setParent('..')
+
         cmds.showWindow(window)
 
 
