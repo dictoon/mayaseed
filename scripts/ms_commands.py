@@ -38,7 +38,7 @@ import math
 # Constants.
 #--------------------------------------------------------------------------------------------------
 
-MAYASEED_VERSION = '0.3.3'
+MAYASEED_VERSION = '0.3.4'
 MAYASEED_URL = 'https://github.com/jupiter-jazz/Mayaseed'
 APPLESEED_URL = 'http://appleseedhq.net/'
 ROOT_DIRECTORY = os.path.split((os.path.dirname(inspect.getfile(inspect.currentframe()))))[0]

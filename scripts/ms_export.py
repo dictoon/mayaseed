@@ -562,6 +562,7 @@ class MFile():
     def __init__(self, params, maya_file_node, source_node=False, attribute=False):
         self.params = params
         self.image_file_names = []
+        self.converted_images = set()
         self.node_type = cmds.nodeType(maya_file_node)
         
         if self.node_type == 'file':
@@ -583,7 +584,6 @@ class MFile():
             else:
                 self.has_uv_placement = False
 
-
         else:
             self.source_node = source_node
             self.attribute = attribute
@@ -600,9 +600,10 @@ class MFile():
             image_name = ms_commands.convert_connection_to_image(self.source_node, self.attribute, os.path.join(export_root, texture_dir, ('{0}_{1}.iff'.format(self.name, time))))
 
         if self.params['convert_textures_to_exr']:
-            converted_image = ms_commands.convert_texture_to_exr(image_name, export_root, texture_dir, overwrite=self.params['overwrite_existing_textures'], pass_through=False)
-
-            self.image_file_names.append(converted_image)
+            if image_name not in self.converted_images:
+                self.converted_images.add(image_name)
+                converted_image_name = ms_commands.convert_texture_to_exr(image_name, export_root, texture_dir, overwrite=self.params['overwrite_existing_textures'], pass_through=False)
+                self.image_file_names.append(converted_image_name)
         else:
             self.image_file_names.append(image_name)
 
