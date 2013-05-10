@@ -34,7 +34,7 @@ reload(ms_commands)
 import ms_export_obj
 import time
 
-inch_to_meter = 0.02539999983236
+INCH_TO_METER = 0.02539999983236
 
 
 #--------------------------------------------------------------------------------------------------
@@ -219,7 +219,7 @@ def get_maya_scene(params):
 
     start_time = cmds.currentTime(query=True)
 
-    # the Maya scene is stored as a list of root transforms that contain mesh's/geometry/lights as children
+    # the Maya scene is stored as a list of root transforms that contain meshes/geometry/lights as children
     maya_root_transforms = []
 
     # find all root transforms and create Mtransforms from them
@@ -537,10 +537,10 @@ class MCamera(MTransformChild):
         maya_film_aspect = cmds.getAttr(self.name + '.horizontalFilmAperture') / cmds.getAttr(self.name + '.verticalFilmAperture')
 
         if maya_resolution_aspect > maya_film_aspect:
-            self.film_width = float(cmds.getAttr(self.name + '.horizontalFilmAperture')) * inch_to_meter * 100
+            self.film_width = float(cmds.getAttr(self.name + '.horizontalFilmAperture')) * INCH_TO_METER * 100
             self.film_height = self.film_width / maya_resolution_aspect
         else:
-            self.film_height = float(cmds.getAttr(self.name + '.verticalFilmAperture')) * inch_to_meter * 100
+            self.film_height = float(cmds.getAttr(self.name + '.verticalFilmAperture')) * INCH_TO_METER * 100
             self.film_width = self.film_height * maya_resolution_aspect
 
     def add_matrix_sample(self):
@@ -548,7 +548,7 @@ class MCamera(MTransformChild):
         self.world_space_matrices.append(ms_commands.matrix_remove_scale(world_space_matrix))
 
     def add_focal_distance_sample(self):
-        self.focal_distance_values.append(cmds.getAttr(self.name + '.focusDistance') )
+        self.focal_distance_values.append(cmds.getAttr(self.name + '.focusDistance'))
 
 
 #--------------------------------------------------------------------------------------------------
