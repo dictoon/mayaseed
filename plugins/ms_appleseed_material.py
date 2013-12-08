@@ -197,7 +197,7 @@ def nodeInitializer():
 
     # bump amplitude
     bump_amplitude_AttrInt = OpenMaya.MFnNumericAttribute()
-    appleseed_material.bump_amplitude = bump_amplitude_AttrInt.create("bump_amplitude", "bump_amplitude", OpenMaya.MFnNumericData.kInt, 1)
+    appleseed_material.bump_amplitude = bump_amplitude_AttrInt.create("bump_amplitude", "bump_amplitude", OpenMaya.MFnNumericData.kFloat, 1.0)
     bump_amplitude_AttrInt.setHidden(False)
     bump_amplitude_AttrInt.setKeyable(True)
     appleseed_material.addAttribute( appleseed_material.bump_amplitude )
@@ -213,7 +213,7 @@ def nodeInitializer():
     numericAttributeFn.setStorable( True )
     numericAttributeFn.setDefault( 0.5,0.5,0.5 )
     appleseed_material.addAttribute( appleseed_material.hardwareColInAttribute )
-    
+
     #==================================
     # OUTPUT NODE ATTRIBUTE(S)
     #==================================    

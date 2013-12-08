@@ -663,6 +663,15 @@ def convert_phong_blinn_material(material):
     cmds.setAttr(mix_brdf + '.weight1', 0.2, 0.2, 0.2, type='float3')       # glossy weight
     cmds.connectAttr(mix_brdf + '.outColor', converted_material + '.BSDF_front_color')
 
+    # bump component
+    bump_node = cmds.listConnections(material + '.normalCamera')
+    if bump_node is not None and len(bump_node) > 0:
+        bump_tex = cmds.listConnections(bump_node[0] + '.bumpValue')
+        cmds.setAttr(converted_material + '.bump_amplitude', cmds.getAttr(bump_node[0] + '.bumpDepth'))
+        if bump_tex is not None:
+            cmds.connectAttr(bump_tex[0] + '.outColor', converted_material + '.displacement_map_front')
+            cmds.connectAttr(bump_tex[0] + '.outColor', converted_material + '.displacement_map_back')
+
     return converted_material
 
 
