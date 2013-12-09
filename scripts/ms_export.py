@@ -2140,10 +2140,10 @@ def convert_maya_ms_material_network(params, root_assembly, ms_material, non_mb_
         bump_amplitude = None
         # create displacement attributes
         if ms_material.displacement_mode == 0:
-            displacement_mode = AsParameter('displacement_mode', 'bump')
+            displacement_mode = AsParameter('displacement_method', 'bump')
             bump_amplitude = AsParameter('bump_amplitude', str(ms_material.bump_amplitude))
         else:
-            displacement_mode = AsParameter('displacement_mode', 'normal')
+            displacement_mode = AsParameter('displacement_method', 'normal')
             if ms_material.normal_map_up == '0':
                 normal_map_up = AsParameter('normal_map_up', 'y')
             else:
