@@ -327,8 +327,9 @@ def add_scene_sample(m_transform, transform_blur, deform_blur, camera_blur, curr
     for camera in m_transform.child_cameras:
         if camera_blur or initial_sample or (frame_sample_number == 1):
             camera.add_matrix_sample()
-        if (frame_sample_number == 1):
+        if frame_sample_number == 1:
             camera.add_focal_distance_sample()
+            camera.add_focal_length_sample()
 
     for transform in m_transform.child_transforms:
         add_scene_sample(transform, transform_blur, deform_blur, camera_blur, current_frame, start_frame, frame_sample_number, initial_sample, export_root, geo_dir, tex_dir)
@@ -529,8 +530,8 @@ class MCamera(MTransformChild):
         self.world_space_matrices = []
         self.dof = cmds.getAttr(self.name + '.depthOfField')
         self.focal_distance_values = []
+        self.focal_length_values = []
         self.focus_region_scale = cmds.getAttr(self.name + '.focusRegionScale')
-        self.focal_length = float(cmds.getAttr(self.name + '.focalLength')) / 10
         self.f_stop = self.focus_region_scale * cmds.getAttr(self.name + '.fStop')
 
         maya_resolution_aspect = float(self.params['output_res_width']) / float(self.params['output_res_height'])
@@ -549,6 +550,9 @@ class MCamera(MTransformChild):
 
     def add_focal_distance_sample(self):
         self.focal_distance_values.append(cmds.getAttr(self.name + '.focusDistance'))
+
+    def add_focal_length_sample(self):
+        self.focal_length_values.append(float(cmds.getAttr(self.name + '.focalLength')) / 10)
 
 
 #--------------------------------------------------------------------------------------------------
@@ -1856,7 +1860,7 @@ def translate_maya_scene(params, maya_scene, maya_environment):
         as_camera = AsCamera()
         as_camera.name = camera.safe_name
         as_camera.film_dimensions = AsParameter('film_dimensions', '%f %f' % (camera.film_width, camera.film_height))
-        as_camera.focal_length = AsParameter('focal_length', camera.focal_length)
+        as_camera.focal_length = AsParameter('focal_length', camera.focal_length_values[non_mb_sample_number])
         as_camera.shutter_open_time.value = params['shutter_open_time']
         as_camera.shutter_close_time.value = params['shutter_close_time']
 
