@@ -166,7 +166,7 @@ def find_path_to_imf_copy():
     #   Linux           ?                                   ?
     #
 
-    maya_base_path = os.path.split(sys.path[0])[0]
+    maya_base_path = os.environ['MAYA_LOCATION']
     imf_copy_path = None
 
     if mel.eval('getApplicationVersionAsFloat()') >= 2013.0:
